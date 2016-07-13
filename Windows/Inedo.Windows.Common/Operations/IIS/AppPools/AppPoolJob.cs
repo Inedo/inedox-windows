@@ -5,7 +5,7 @@ using Inedo.Agents;
 using Inedo.Diagnostics;
 using Microsoft.Web.Administration;
 
-namespace Inedo.Extensions.Windows.Operations.IIS
+namespace Inedo.Extensions.Windows.Operations.IIS.AppPools
 {
     internal sealed class AppPoolJob : RemoteJob
     {

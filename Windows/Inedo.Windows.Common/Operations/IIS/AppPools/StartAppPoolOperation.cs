@@ -8,22 +8,22 @@ using Inedo.Otter.Extensibility.Operations;
 #endif
 using Inedo.Documentation;
 
-namespace Inedo.Extensions.Windows.Operations.IIS
+namespace Inedo.Extensions.Windows.Operations.IIS.AppPools
 {
-    [DisplayName("Stop App Pool")]
-    [Description("Stops an application pool.")]
-    [ScriptAlias("Stop-AppPool")]
-    [SeeAlso(typeof(StartAppPoolOperation))]
+    [DisplayName("Start App Pool")]
+    [Description("Starts an application pool.")]
+    [ScriptAlias("Start-AppPool")]
+    [SeeAlso(typeof(StopAppPoolOperation))]
     [ScriptNamespace(Namespaces.IIS)]
-    public sealed class StopAppPoolOperation : AppPoolOperationBase
+    public sealed class StartAppPoolOperation : AppPoolOperationBase
     {
-        internal override AppPoolOperationType OperationType => AppPoolOperationType.Stop;
+        internal override AppPoolOperationType OperationType => AppPoolOperationType.Start;
 
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
             return new ExtendedRichDescription(
                 new RichDescription(
-                    "Stop ",
+                    "Start ",
                     new Hilite(config[nameof(ApplicationPoolName)]),
                     " App Pool"
                 )

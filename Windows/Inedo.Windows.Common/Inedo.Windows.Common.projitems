@@ -11,11 +11,11 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Functions\PsEvalVariableFunction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Namespaces.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPoolJob.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPoolOperationBase.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\RecycleAppPoolOperation.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\StartAppPoolOperation.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\StopAppPoolOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPools\AppPoolJob.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPools\AppPoolOperationBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPools\RecycleAppPoolOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPools\StartAppPoolOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPools\StopAppPoolOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\PowerShell\PSCallOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\PowerShell\PSCallOperationEditor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\PowerShell\PSExecuteOperation.cs" />

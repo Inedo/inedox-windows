@@ -11,7 +11,7 @@ using Inedo.BuildMaster.Extensibility;
 using Inedo.BuildMaster.Extensibility.Operations;
 #endif
 
-namespace Inedo.Extensions.Windows.Operations.IIS
+namespace Inedo.Extensions.Windows.Operations.IIS.AppPools
 {
     [Tag(Tags.IIS)]
     [Tag(Tags.ApplicationPools)]

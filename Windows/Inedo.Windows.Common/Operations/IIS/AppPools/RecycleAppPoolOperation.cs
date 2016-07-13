@@ -8,7 +8,7 @@ using Inedo.Otter.Extensibility;
 using Inedo.Otter.Extensibility.Operations;
 #endif
 
-namespace Inedo.Extensions.Windows.Operations.IIS
+namespace Inedo.Extensions.Windows.Operations.IIS.AppPools
 {
     [DisplayName("Recycle App Pool")]
     [Description("Recycles an application pool.")]

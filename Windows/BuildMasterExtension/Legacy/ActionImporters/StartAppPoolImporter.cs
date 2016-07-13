@@ -1,6 +1,6 @@
 ﻿using Inedo.BuildMaster.Extensibility.Operations;
 using Inedo.BuildMasterExtensions.Windows.Iis;
-using Inedo.Extensions.Windows.Operations.IIS;
+using Inedo.Extensions.Windows.Operations.IIS.AppPools;
 
 namespace Inedo.BuildMasterExtensions.Windows.Legacy.ActionImporters
 {
