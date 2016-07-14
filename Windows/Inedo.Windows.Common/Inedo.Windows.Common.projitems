@@ -9,13 +9,25 @@
     <Import_RootNamespace>Inedo.Extensions.Windows</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Configurations\IIS\IisAppPoolConfiguration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Configurations\IIS\IisConfigurationBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Configurations\IIS\IisObjectState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Configurations\IIS\IisSiteConfiguration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Configurations\IIS\IisVirtualDirectoryConfiguration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Functions\PsEvalVariableFunction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Namespaces.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPools\AppPoolJob.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPools\AppPoolOperationBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPools\EnsureIisAppPoolOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPools\RecycleAppPoolOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPools\StartAppPoolOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPools\StopAppPoolOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\Sites\EnsureIisSiteOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\Sites\SiteJob.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\Sites\SiteOperationBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\Sites\StartSiteOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\Sites\StopSiteOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\VirtualDirectories\EnsureIisVirtualDirectoryOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\PowerShell\PSCallOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\PowerShell\PSCallOperationEditor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\PowerShell\PSExecuteOperation.cs" />
