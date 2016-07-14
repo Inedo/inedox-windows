@@ -1,4 +1,4 @@
-﻿namespace Inedo.Extensions
+﻿namespace Inedo.Extensions.Windows
 {
     internal static class Tags
     {
@@ -7,6 +7,5 @@
         public const string PowerShell = "powershell";
         public const string Services = "services";
         public const string Sites = "sites";
-        public const string Http = "http";
     }
 }
