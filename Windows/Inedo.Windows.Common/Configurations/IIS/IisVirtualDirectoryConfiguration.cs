@@ -21,6 +21,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
     [DisplayName("IIS Virtual Directory")]
     [DefaultProperty(nameof(Path))]
     [Serializable]
+    [PersistFrom("Inedo.Otter.Extensions.Configurations.IIS.IisVirtualDirectoryConfiguration,OtterCoreEx")]
     public sealed class IisVirtualDirectoryConfiguration : IisConfigurationBase, IHasCredentials
     {
 

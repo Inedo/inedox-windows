@@ -23,6 +23,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
     [Serializable]
     [DefaultProperty(nameof(Name))]
     [DisplayName("IIS Application Pool")]
+    [PersistFrom("Inedo.Otter.Extensions.Configurations.IIS.IisAppPoolConfiguration,OtterCoreEx")]
     public sealed class IisAppPoolConfiguration : IisConfigurationBase, IHasCredentials<UsernamePasswordCredentials>
     {
         // https://technet.microsoft.com/en-us/library/cc745955.aspx
