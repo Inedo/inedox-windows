@@ -14,6 +14,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Configurations\IIS\IisObjectState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Configurations\IIS\IisSiteConfiguration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Configurations\IIS\IisVirtualDirectoryConfiguration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Configurations\Services\WindowsServiceConfiguration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Functions\PsEvalVariableFunction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Namespaces.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPools\AppPoolJob.cs" />
@@ -32,6 +33,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Operations\PowerShell\PSCallOperationEditor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\PowerShell\PSExecuteOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\Services\ControlServiceJob.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Operations\Services\EnsureServiceOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\Services\StartServiceOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\Services\StopServiceOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PowerShell\ExecutePowerShellJob.cs" />
