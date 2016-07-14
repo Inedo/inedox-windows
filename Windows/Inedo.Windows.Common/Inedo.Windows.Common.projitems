@@ -9,6 +9,12 @@
     <Import_RootNamespace>Inedo.Extensions</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)HTTP\Operations\HttpFileUploadOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)HTTP\Operations\HttpGetOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)HTTP\Operations\HttpMethod.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)HTTP\Operations\HttpOperationBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)HTTP\Operations\HttpPostOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)HTTP\Operations\StatusCodeRangeList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Namespaces.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Properties\AssemblyInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tags.cs" />
