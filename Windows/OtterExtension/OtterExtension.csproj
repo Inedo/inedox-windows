@@ -75,6 +75,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Operations\PSDscOperation.cs" />
+    <Compile Include="Operations\PSEnsureOperation.cs" />
+    <Compile Include="PowerShell\ExecutePowerShellDscJob.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
