@@ -48,7 +48,7 @@
     <Reference Include="Microsoft.Web.Administration, Version=7.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Web.Administration.7.0.0.0\lib\net20\Microsoft.Web.Administration.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Otter.Web.Controls, Version=1.3.0.1, Culture=neutral, PublicKeyToken=4da0d93b7176269b, processorArchitecture=MSIL">
       <HintPath>..\packages\Inedo.Otter.SDK.1.3.0\lib\net45\Otter.Web.Controls.dll</HintPath>
