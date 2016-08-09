@@ -94,7 +94,8 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
                     DefaultValue = p.DefaultValue,
                     Description = p.Description,
                     IsBooleanOrSwitch = p.IsBooleanOrSwitch,
-                    Name = p.Name
+                    Name = p.Name,
+                    Value = action.Arguments.GetValueOrDefault(p.Name)
                 })
             };
         }
