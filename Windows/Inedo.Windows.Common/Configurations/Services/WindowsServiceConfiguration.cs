@@ -21,6 +21,7 @@ namespace Inedo.Extensions.Windows.Configurations.Services
 {
     [DisplayName("Service")]
     [PersistFrom("Inedo.Otter.Extensions.Configurations.WindowsServices.WindowsServiceConfiguration,OtterCoreEx")]
+    [Serializable]
     public sealed class WindowsServiceConfiguration : PersistedConfiguration, IExistential, IHasCredentials<UsernamePasswordCredentials>
     {
         [Required]

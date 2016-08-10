@@ -19,6 +19,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
     [Description("Describes an IIS Site with a single application and a single virtual directory.")]
     [DefaultProperty(nameof(Name))]
     [PersistFrom("Inedo.Otter.Extensions.Configurations.IIS.IisSiteConfiguration,OtterCoreEx")]
+    [Serializable]
     public sealed class IisSiteConfiguration : IisConfigurationBase
     {
         [Required]

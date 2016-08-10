@@ -22,6 +22,7 @@ namespace Inedo.Extensions.Windows.Operations.Services
     [DisplayName("Ensure Service")]
     [Description("Ensures the configuration of a Windows service on a server.")]
     [ScriptAlias("Ensure-Service")]
+    [Serializable]
     [ScriptNamespace(Namespaces.Windows, PreferUnqualified = true)]
     [Tag(Tags.Services)]
     [Example(@"

@@ -17,6 +17,7 @@ using Microsoft.Web.Administration;
 
 namespace Inedo.Extensions.Windows.Configurations.IIS
 {
+    [Serializable]
     public abstract class IisConfigurationBase : PersistedConfiguration, IExistential
     {
         internal IisConfigurationBase()
