@@ -50,7 +50,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [Persistent]
         [ScriptAlias("Binding")]
         [DisplayName("Binding")]
-        [Description("The value of this property is a colon-delimited string of the format: <IPAddress>:<Port>:<HostName> - You may leave the host name blank. "
+        [Description("The value of this property is a colon-delimited string of the format: «IPAddress»:«Port»:«HostName» - You may leave the host name blank. "
                      + "You can set the IP address to \"*\" to indicate that the site is bound to all IP addresses. A port number is required.")]
         public string BindingInformation { get; set; }
 
