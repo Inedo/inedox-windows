@@ -116,11 +116,18 @@ namespace Inedo.Extensions.Windows.PowerShell
             var scriptNameParts = fullScriptName.Split(new[] { "::" }, 2, StringSplitOptions.None);
             if (scriptNameParts.Length == 2)
             {
-                applicationId = DB.Applications_GetApplications(null, true).FirstOrDefault(a => string.Equals(a.Application_Name, scriptNameParts[0], StringComparison.OrdinalIgnoreCase))?.Application_Id;
-                if (applicationId == null)
+                if (string.Equals(scriptNameParts[0], "GLOBAL", StringComparison.OrdinalIgnoreCase))
                 {
-                    logger.LogError($"Invalid application name {scriptNameParts[0]}.");
-                    return null;
+                    applicationId = null;
+                }
+                else
+                {
+                    applicationId = DB.Applications_GetApplications(null, true).FirstOrDefault(a => string.Equals(a.Application_Name, scriptNameParts[0], StringComparison.OrdinalIgnoreCase))?.Application_Id;
+                    if (applicationId == null)
+                    {
+                        logger.LogError($"Invalid application name {scriptNameParts[0]}.");
+                        return null;
+                    }
                 }
 
                 scriptName = scriptNameParts[1];

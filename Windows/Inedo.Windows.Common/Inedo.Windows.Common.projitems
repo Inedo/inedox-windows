@@ -16,6 +16,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Configurations\IIS\IisVirtualDirectoryConfiguration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Configurations\Services\WindowsServiceConfiguration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Functions\PsEvalVariableFunction.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LooselyQualifiedName.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Namespaces.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPools\AppPoolJob.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPools\AppPoolOperationBase.cs" />

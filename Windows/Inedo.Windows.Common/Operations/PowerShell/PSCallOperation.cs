@@ -72,7 +72,7 @@ pscall hdars (
             var longDesc = new RichDescription();
 
             bool longDescInclused = false;
-            var scriptName = QualifiedName.TryParse(defaultArg);
+            var scriptName = LooselyQualifiedName.TryParse(defaultArg);
             if (scriptName != null)
             {
                 var info = PowerShellScriptInfo.TryLoad(scriptName);

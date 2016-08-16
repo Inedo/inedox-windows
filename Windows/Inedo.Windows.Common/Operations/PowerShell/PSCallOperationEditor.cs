@@ -45,7 +45,7 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
             if (action.PositionalArguments?.Count != 1)
                 return new LiteralHtml("Cannot edit this statement; the target script name is not present.");
 
-            var scriptName = QualifiedName.Parse(action.PositionalArguments[0]);
+            var scriptName = LooselyQualifiedName.Parse(action.PositionalArguments[0]);
             var info = PowerShellScriptInfo.TryLoad(scriptName);
             if (info == null)
                 return new LiteralHtml("Cannot edit this statement; script metatdata could not be parsed.");
@@ -84,7 +84,7 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
             if (action.PositionalArguments?.Count != 1)
                 return null;
 
-            var scriptName = QualifiedName.Parse(action.PositionalArguments[0]);
+            var scriptName = LooselyQualifiedName.Parse(action.PositionalArguments[0]);
 
             var info = PowerShellScriptInfo.TryLoad(scriptName);
             if (info == null)

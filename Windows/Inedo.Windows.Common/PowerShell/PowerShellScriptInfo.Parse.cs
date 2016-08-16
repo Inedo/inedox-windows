@@ -95,11 +95,12 @@ namespace Inedo.Extensions.Windows.PowerShell
                 parameters: parameters.Select(p => new PowerShellParameterInfo(p.Name))
             );
         }
-        public static PowerShellScriptInfo TryLoad(QualifiedName scriptName)
+        public static PowerShellScriptInfo TryLoad(LooselyQualifiedName scriptName)
         {
 #if BuildMaster
+
             int? applicationId = null;
-            if (!string.IsNullOrWhiteSpace(scriptName.Namespace))
+            if (!string.IsNullOrWhiteSpace(scriptName.Namespace) && !string.Equals(scriptName.Name, "GLOBAL", StringComparison.OrdinalIgnoreCase))
             {
                 applicationId = DB.Applications_GetApplications(null, true)
                     .FirstOrDefault(a => string.Equals(a.Application_Name, scriptName.Namespace, StringComparison.OrdinalIgnoreCase))
