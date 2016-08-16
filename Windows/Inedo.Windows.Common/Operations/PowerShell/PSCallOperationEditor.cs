@@ -12,6 +12,7 @@ using Inedo.Extensions.Windows.PowerShell;
 using Inedo.ExecutionEngine;
 using Inedo.Web.Controls;
 using Inedo.Web.DP;
+using Inedo.Web.Controls.SimpleHtml;
 
 namespace Inedo.Extensions.Windows.Operations.PowerShell
 {
@@ -63,10 +64,13 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
 
             return new SimpleVirtualCompositeControl(
                 new SlimFormField("Script name:", info.Name ?? scriptName.ToString()),
-                new KoElement(
-                    KoBind.@foreach(nameof(PSCallOperationModel.Arguments)),
-                    field
-                ),
+                new Div(
+                    new KoElement(
+                        KoBind.@foreach(nameof(PSCallOperationModel.Arguments)),
+                        field
+                    )
+                )
+                { Class = "argument-container" },
                 new SlimFormField(
                     "Parameters:",
                     KoBind.visible($"{nameof(PSCallOperationModel.Arguments)}().length == 0"),
