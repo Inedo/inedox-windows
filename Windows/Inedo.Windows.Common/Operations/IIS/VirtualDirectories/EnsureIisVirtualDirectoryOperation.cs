@@ -107,7 +107,7 @@ IIS::Ensure-VirtualDirectory(
                         return Complete(uninclused);
                     }
 
-                    return Complete(IisVirtualDirectoryConfiguration.FromMwaVirtualDirectory(this, vdir, this.Template));
+                    return Complete(IisVirtualDirectoryConfiguration.FromMwaVirtualDirectory(this, this.Template.SiteName, vdir, this.Template));
                 }
         }
 #endif
