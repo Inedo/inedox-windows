@@ -93,12 +93,12 @@ namespace Inedo.BuildMasterExtensions.Windows.Shell
                 .ToDictionary(p => p[0], p => p[1], StringComparer.OrdinalIgnoreCase);
         }
 
-        private IVariableEvaluationContext GetVariableEvaluationContext()
+        private ILegacyVariableEvaluationContext GetVariableEvaluationContext()
         {
             // StandardEvaluationContext should probably be moved to SDK.
             // For now create instance using reflection.
 
-            return (IVariableEvaluationContext)Activator.CreateInstance(
+            return (ILegacyVariableEvaluationContext)Activator.CreateInstance(
                 Type.GetType("Inedo.BuildMaster.Variables.LegacyVariableEvaluationContext,BuildMaster", true),
                 (IGenericBuildMasterContext)this.Context,
                 this.Context.Variables
