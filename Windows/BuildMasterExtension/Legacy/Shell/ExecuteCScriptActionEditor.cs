@@ -30,7 +30,7 @@ namespace Inedo.BuildMasterExtensions.Windows.Shell
 
         protected override void CreateChildControls()
         {
-            this.ctlScriptPath = new FileBrowserTextBox { Required = true };
+            this.ctlScriptPath = new FileBrowserTextBox { IncludeFiles = true, Required = true };
 
             this.txtArguments = new ValidatingTextBox();
 

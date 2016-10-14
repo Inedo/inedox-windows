@@ -100,7 +100,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [DisplayName("Password")]
         [ScriptAlias("Password")]
         [MappedCredential(nameof(UsernamePasswordCredentials.Password))]
-        [Persistent]
+        [Persistent(Encrypted = true)]
         public string ProcessModel_Password { get; set; }
 #endregion
 

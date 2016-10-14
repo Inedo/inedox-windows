@@ -52,8 +52,9 @@ namespace Inedo.BuildMasterExtensions.Windows.Services
         protected override void CreateChildControls()
         {
             this.txtExePath = new FileBrowserTextBox
-            {                
+            {
                 Required = true,
+                IncludeFiles = true,
                 DefaultText = @"ex: C:\Program Files\Example\MyExampleService.exe"
             };
 

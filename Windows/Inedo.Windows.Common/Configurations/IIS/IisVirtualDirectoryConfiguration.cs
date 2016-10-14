@@ -76,9 +76,13 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [Persistent]
         public string Password { get; set; }
 
-        public static IisVirtualDirectoryConfiguration FromMwaVirtualDirectory(ILogger logger, VirtualDirectory vdir, IisVirtualDirectoryConfiguration template = null)
+#if Otter
+        public override string ConfigurationKey => this.SiteName + "/" + this.Path?.TrimStart('/');
+#endif
+        public static IisVirtualDirectoryConfiguration FromMwaVirtualDirectory(ILogger logger, string siteName, VirtualDirectory vdir, IisVirtualDirectoryConfiguration template = null)
         {
             var config = new IisVirtualDirectoryConfiguration();
+            config.SiteName = siteName;
             config.SetPropertiesFromMwa(logger, vdir, template);
             return config;
         }
