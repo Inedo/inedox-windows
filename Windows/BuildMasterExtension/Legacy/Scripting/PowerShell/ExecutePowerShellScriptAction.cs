@@ -99,7 +99,7 @@ namespace Inedo.BuildMasterExtensions.Windows.Shell
             // For now create instance using reflection.
 
             return (IVariableEvaluationContext)Activator.CreateInstance(
-                Type.GetType("Inedo.BuildMaster.Variables.StandardVariableEvaluationContext,BuildMaster", true),
+                Type.GetType("Inedo.BuildMaster.Variables.LegacyVariableEvaluationContext,BuildMaster", true),
                 (IGenericBuildMasterContext)this.Context,
                 this.Context.Variables
             );

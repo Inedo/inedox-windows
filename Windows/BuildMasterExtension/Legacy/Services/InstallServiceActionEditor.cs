@@ -10,7 +10,7 @@ namespace Inedo.BuildMasterExtensions.Windows.Services
 {
     internal sealed class InstallServiceActionEditor : ActionEditorBase
     {
-        private SourceControlFileFolderPicker txtExePath;
+        private FileBrowserTextBox txtExePath;
         private ValidatingTextBox txtArguments;
         private ValidatingTextBox txtServiceName;
         private ValidatingTextBox txtDisplayName;
@@ -51,8 +51,8 @@ namespace Inedo.BuildMasterExtensions.Windows.Services
 
         protected override void CreateChildControls()
         {
-            this.txtExePath = new SourceControlFileFolderPicker
-            {
+            this.txtExePath = new FileBrowserTextBox
+            {                
                 Required = true,
                 DefaultText = @"ex: C:\Program Files\Example\MyExampleService.exe"
             };

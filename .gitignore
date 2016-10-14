@@ -244,3 +244,4 @@ ModelManifest.xml
 # FAKE - F# Make
 .fake/
 /visual studio 2015/settings
+/Windows/Visual Studio 2015/settings/CurrentSettings.vssettings

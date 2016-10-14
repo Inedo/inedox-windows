@@ -8,7 +8,7 @@ namespace Inedo.BuildMasterExtensions.Windows.Shell
 {
     internal sealed class ExecuteCScriptActionEditor : ActionEditorBase
     {
-        private SourceControlFileFolderPicker ctlScriptPath;
+        private FileBrowserTextBox ctlScriptPath;
         private ValidatingTextBox txtArguments;
 
         public override void BindToForm(ActionBase extension)
@@ -30,7 +30,7 @@ namespace Inedo.BuildMasterExtensions.Windows.Shell
 
         protected override void CreateChildControls()
         {
-            this.ctlScriptPath = new SourceControlFileFolderPicker { Required = true };
+            this.ctlScriptPath = new FileBrowserTextBox { Required = true };
 
             this.txtArguments = new ValidatingTextBox();
 
