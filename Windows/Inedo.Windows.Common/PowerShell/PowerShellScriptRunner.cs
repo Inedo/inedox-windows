@@ -79,7 +79,7 @@ namespace Inedo.Extensions.Windows.PowerShell
 
             foreach (var var in variables)
             {
-                this.LogDebug($"Importing {var.Key}={var.Value}");
+                this.LogDebug($"Importing {var.Key}...");
                 runspace.SessionStateProxy.SetVariable(var.Key, var.Value);
             }
 
@@ -102,7 +102,7 @@ namespace Inedo.Extensions.Windows.PowerShell
 
             foreach (var p in parameters)
             {
-                this.LogDebug($"Assigning parameter {p.Key}={p.Value}");
+                this.LogDebug($"Assigning parameter {p.Key}...");
                 powerShell.AddParameter(p.Key, p.Value);
             }
 
