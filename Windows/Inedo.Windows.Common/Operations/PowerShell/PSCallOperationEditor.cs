@@ -19,7 +19,11 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
     internal sealed class PSCallOperationEditor : OperationEditor
     {
         public PSCallOperationEditor()
+#if BuildMaster
+            : base(typeof(PSCallOperation), null)
+#elif Otter
             : base(typeof(PSCallOperation))
+#endif
         {
         }
 
@@ -103,11 +107,8 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
                 })
             };
         }
-#if BuildMaster
-        public override ActionStatement CreateActionStatement(QualifiedName name, object _model)
-#elif Otter
+
         public override ActionStatement CreateActionStatement(object _model)
-#endif
         {
             var model = (PSCallOperationModel)_model;
             return new ActionStatement("PSCall",
