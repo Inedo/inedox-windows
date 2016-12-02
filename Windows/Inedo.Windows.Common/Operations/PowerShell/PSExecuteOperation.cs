@@ -23,10 +23,13 @@ namespace Inedo.Extensions.Windows.Operations
     [ScriptNamespace(Namespaces.PowerShell, PreferUnqualified = true)]
     [DefaultProperty(nameof(ScriptText))]
     [Tag(Tags.PowerShell)]
-    [Note("If you are attempting to write the results of a Format-* call to the Otter log, you may see "
+    [Note("This operation will inject PowerShell variables from the execution engine runtime that match PowerShell variable expressions. This means you won't get an error if you use an undeclared variable in your script, but some expressions that PowerShell interoplates at runtime (such as a variable inside of a string), cannot be replaced by the operation.")]
+    [Note("If you are attempting to write the results of a Format-* call to the  log, you may see "
         + "messages similar to \"Microsoft.PowerShell.Commands.Internal.Format.FormatEntryData\". To convert this to text, "
         + "use the Out-String commandlet at the end of your command chain.")]
+#if Otter
     [Note("This script will execute in simulation mode; you set the RunOnSimulation parameter to false to prevent this behavior, or you can use the $IsSimulation variable function within the script.")]
+#endif
     [Example(@"
 # writes the list of services running on the computer to the Otter log
 psexec >>
@@ -57,12 +60,14 @@ psexec >>
         [DisplayName("Capture verbose")]
         [Description("Captures the PowerShell Write-Verbose stream into the Otter debug log. The default is false.")]
         public bool VerboseLogging { get; set; }
-
+#if BuildMaster
+        private bool RunOnSimulation => false;
+#elif Otter
         [ScriptAlias("RunOnSimulation")]
         [DisplayName("Run on simulation")]
         [Description("Indicates whether the script will execute in simulation mode. The default is false.")]
         public bool RunOnSimulation { get; set; }
-
+#endif
         public override async Task ExecuteAsync(IOperationExecutionContext context)
         {
             if (context.Simulation && !this.RunOnSimulation)
