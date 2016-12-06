@@ -124,6 +124,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [Description("Specifies the reset period (in minutes) for CPU monitoring and throttling limits on the application pool. When the number of minutes elapsed since the last process accounting reset equals the number specified by this property, IIS resets the CPU timers for both the logging and limit intervals. Setting the value of Limit Interval to 0 disables CPU monitoring.")]
         [ScriptAlias("CpuResetInterval")]
         [Persistent]
+        [TimeSpanUnit(TimeSpanUnit.Minutes)]
         public TimeSpan? Cpu_ResetInterval { get; set; }
 
         [Category("CPU")]
