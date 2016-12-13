@@ -142,7 +142,7 @@
   <Import Project="..\Inedo.Windows.Common\Inedo.Windows.Common.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>powershell -Command "if (Test-Path C:\Projects\BuildMaster\ExtensionLib -PathType Container) { Compress-Archive -Path '$(TargetDir)*' -DestinationPath C:\Projects\BuildMaster\ExtensionLib\$(TargetName).zip -Force; Move-Item C:\Projects\BuildMaster\ExtensionLib\$(TargetName).zip -Destination C:\Projects\BuildMaster\ExtensionLib\$(TargetName).bmx -Force }"</PostBuildEvent>
+    <PostBuildEvent>powershell -Command "if (Test-Path C:\Projects\BuildMaster\Extensions -PathType Container) { Compress-Archive -Path '$(TargetDir)*' -DestinationPath C:\Projects\BuildMaster\Extensions\$(TargetName).zip -Force; Move-Item C:\Projects\BuildMaster\Extensions\$(TargetName).zip -Destination C:\Projects\BuildMaster\Extensions\$(TargetName).bmx -Force }"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 #if BuildMaster
 using Inedo.BuildMaster.Data;
+using Inedo.BuildMaster.Extensibility.RaftRepositories;
 using Inedo.BuildMaster.Web.Controls.Plans;
 #elif Otter
 using Inedo.Otter.Web.Controls.Plans;
@@ -16,11 +17,24 @@ using Inedo.Web.Controls.SimpleHtml;
 
 namespace Inedo.Extensions.Windows.Operations.PowerShell
 {
+#if BuildMaster
+    internal sealed class NullOperationContext : IOperationEditorContext
+    {
+        public static readonly IOperationEditorContext Instance = new NullOperationContext();
+
+        public int? ApplicationId => null;
+        public int? PlanId => null;
+        public string PlanName => null;
+        public RaftItemType? PlanType => null;
+        public int? RaftId => null;
+    }
+#endif
+
     internal sealed class PSCallOperationEditor : OperationEditor
     {
         public PSCallOperationEditor()
 #if BuildMaster
-            : base(typeof(PSCallOperation), null)
+            : base(typeof(PSCallOperation), NullOperationContext.Instance)
 #elif Otter
             : base(typeof(PSCallOperation))
 #endif
