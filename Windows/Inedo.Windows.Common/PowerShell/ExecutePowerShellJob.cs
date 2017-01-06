@@ -12,6 +12,11 @@ namespace Inedo.Extensions.Windows.PowerShell
 {
     internal sealed class ExecutePowerShellJob : RemoteJob
     {
+        private int currentPercent;
+        private string currentActivity = string.Empty;
+
+        public event EventHandler<PSProgressEventArgs> ProgressUpdate;
+
         public string ScriptText { get; set; }
         public bool DebugLogging { get; set; }
         public bool VerboseLogging { get; set; }
@@ -80,6 +85,8 @@ namespace Inedo.Extensions.Windows.PowerShell
                             }
                         };
                 }
+
+                runner.ProgressUpdate += (s, e) => this.NotifyProgressUpdate(e.PercentComplete, e.Activity);
 
                 var outVariables = this.OutVariables.ToDictionary(v => v, v => (string)null, StringComparer.OrdinalIgnoreCase);
 
@@ -150,6 +157,27 @@ namespace Inedo.Extensions.Windows.PowerShell
                 Output = output,
                 OutVariables = vars
             };
+        }
+
+        protected override void DataReceived(byte[] data)
+        {
+            int percent = data[0];
+            var activity = InedoLib.UTF8Encoding.GetString(data, 1, data.Length - 1);
+            this.ProgressUpdate?.Invoke(this, new PSProgressEventArgs(percent, activity));
+        }
+
+        private void NotifyProgressUpdate(int percent, string activity)
+        {
+            if (percent != this.currentPercent || activity != this.currentActivity)
+            {
+                this.currentPercent = percent;
+                this.currentActivity = activity;
+
+                var buffer = new byte[InedoLib.UTF8Encoding.GetByteCount(activity) + 1];
+                buffer[0] = (byte)percent;
+                InedoLib.UTF8Encoding.GetBytes(activity, 0, activity.Length, buffer, 1);
+                this.Post(buffer);
+            }
         }
 
         public sealed class Result

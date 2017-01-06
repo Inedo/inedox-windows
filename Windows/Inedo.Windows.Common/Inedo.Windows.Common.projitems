@@ -47,6 +47,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)PowerShell\PowerShellScriptInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PowerShell\PowerShellScriptInfo.Parse.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PowerShell\PowerShellScriptRunner.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PowerShell\PSProgressEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PowerShell\PSUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PowerShell\ShouldExitEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Properties\AssemblyInfo.cs" />

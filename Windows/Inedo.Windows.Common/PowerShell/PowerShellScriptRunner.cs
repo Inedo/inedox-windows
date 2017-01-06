@@ -32,6 +32,7 @@ namespace Inedo.Extensions.Windows.PowerShell
 
         public event EventHandler<PowerShellOutputEventArgs> OutputReceived;
         public event EventHandler<LogMessageEventArgs> MessageLogged;
+        public event EventHandler<PSProgressEventArgs> ProgressUpdate;
 
         public Runspace Runspace => this.runspaceFactory.Value;
         public bool DebugLogging { get; set; }
@@ -96,6 +97,8 @@ namespace Inedo.Extensions.Windows.PowerShell
                     var rubbish = output[e.Index];
                     this.OnOutputReceived(rubbish);
                 };
+
+            powerShell.Streams.Progress.DataAdded += (s, e) => this.OnProgressUpdate(powerShell.Streams.Progress[e.Index]);
 
             powerShell.Streams.AttachLogging(this);
             powerShell.AddScript(script);
@@ -208,5 +211,6 @@ namespace Inedo.Extensions.Windows.PowerShell
         }
 
         private void OnOutputReceived(PSObject obj) => this.OutputReceived?.Invoke(this, new PowerShellOutputEventArgs(obj));
+        private void OnProgressUpdate(ProgressRecord p) => this.ProgressUpdate?.Invoke(this, new PSProgressEventArgs(p.PercentComplete, p.Activity ?? string.Empty));
     }
 }

@@ -48,7 +48,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             var job = new ExecutePowerShellJob
             {
                 ScriptText = scriptText,
-                DebugLogging = true,
+                DebugLogging = false,
                 VerboseLogging = true,
                 CollectOutput = collectOutput,
                 LogOutput = !collectOutput,

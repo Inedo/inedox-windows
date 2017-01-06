@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.Threading.Tasks;
-using Inedo.Agents;
 #if BuildMaster
 using Inedo.BuildMaster.Extensibility;
 using Inedo.BuildMaster.Extensibility.Operations;
@@ -10,9 +9,11 @@ using Inedo.Otter.Extensibility;
 using Inedo.Otter.Extensibility.Operations;
 using Inedo.Otter.Extensions;
 #endif
+using Inedo.Agents;
 using Inedo.Extensions.Windows.PowerShell;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
+using System.Threading;
 
 namespace Inedo.Extensions.Windows.Operations
 {
@@ -43,6 +44,8 @@ psexec >>
 ")]
     public sealed class PSExecuteOperation : ExecuteOperation
     {
+        private PSProgressEventArgs currentProgress;
+
         [Required]
         [ScriptAlias("Text")]
         [Description("The PowerShell script text.")]
@@ -90,9 +93,17 @@ psexec >>
 
             job.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
 
+            job.ProgressUpdate += (s, e) => Interlocked.Exchange(ref this.currentProgress, e);
+
             var result = (ExecutePowerShellJob.Result)await jobRunner.ExecuteJobAsync(job, context.CancellationToken);
             if (result.ExitCode != null)
                 this.LogDebug("Script exit code: " + result.ExitCode);
+        }
+
+        public override OperationProgress GetProgress()
+        {
+            var p = this.currentProgress;
+            return new OperationProgress(p?.PercentComplete, p?.Activity);
         }
 
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
