@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading;
 using System.Threading.Tasks;
 #if BuildMaster
 using Inedo.BuildMaster.Extensibility;
@@ -34,6 +35,8 @@ pscall hdars (
 ")]
     public sealed class PSCallOperation : ExecuteOperation, ICustomArgumentMapper
     {
+        private PSProgressEventArgs currentProgress;
+
         public RuntimeValue DefaultArgument { get; set; }
         public IReadOnlyDictionary<string, RuntimeValue> NamedArguments { get; set; }
         public IDictionary<string, RuntimeValue> OutArguments { get; set; }
@@ -59,8 +62,14 @@ pscall hdars (
                 fullScriptName: fullScriptName,
                 arguments: this.NamedArguments,
                 outArguments: this.OutArguments,
-                collectOutput: false
+                collectOutput: false,
+                progressUpdateHandler: (s, e) => Interlocked.Exchange(ref this.currentProgress, e)
             );
+        }
+        public override OperationProgress GetProgress()
+        {
+            var p = this.currentProgress;
+            return new OperationProgress(p?.PercentComplete, p?.Activity);
         }
 
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)

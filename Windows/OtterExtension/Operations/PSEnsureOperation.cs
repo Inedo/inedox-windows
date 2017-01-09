@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading;
 using System.Threading.Tasks;
 using Inedo.Agents;
 using Inedo.Diagnostics;
@@ -53,6 +54,8 @@ PSEnsure(
 ")]
     public sealed class PSEnsureOperation : EnsureOperation
     {
+        private PSProgressEventArgs currentProgress;
+
         [Required]
         [ScriptAlias("Key")]
         [DisplayName("Configuration key")]
@@ -159,7 +162,8 @@ PSEnsure(
                     fullScriptName: this.CollectScriptAsset,
                     arguments: this.CollectScriptParams ?? new Dictionary<string, RuntimeValue>(),
                     outArguments: new Dictionary<string, RuntimeValue>(),
-                    collectOutput: !this.UseExitCode
+                    collectOutput: !this.UseExitCode,
+                    progressUpdateHandler: (s, e) => Interlocked.Exchange(ref this.currentProgress, e)
                 );
             }
             else
@@ -177,6 +181,7 @@ PSEnsure(
                 };
 
                 job.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
+                job.ProgressUpdate += (s, e) => Interlocked.Exchange(ref this.currentProgress, e);
 
                 result = await jobRunner.ExecuteJobAsync(job, context.CancellationToken) as ExecutePowerShellJob.Result;
             }
@@ -206,7 +211,8 @@ PSEnsure(
                     fullScriptName: this.ConfigureScriptAsset,
                     arguments: this.ConfigureScriptParams ?? new Dictionary<string, RuntimeValue>(),
                     outArguments: new Dictionary<string, RuntimeValue>(),
-                    collectOutput: false
+                    collectOutput: false,
+                    progressUpdateHandler: (s, e) => Interlocked.Exchange(ref this.currentProgress, e)
                 );
             }
             else
@@ -224,6 +230,7 @@ PSEnsure(
                 };
 
                 job.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
+                job.ProgressUpdate += (s, e) => Interlocked.Exchange(ref this.currentProgress, e);
 
                 result = await jobRunner.ExecuteJobAsync(job, context.CancellationToken) as ExecutePowerShellJob.Result;
                 if (result.ExitCode != null)
@@ -238,6 +245,12 @@ PSEnsure(
                 Key = this.ConfigurationKey,
                 Value = this.ExpectedValue
             };
+        }
+
+        public override OperationProgress GetProgress()
+        {
+            var p = this.currentProgress;
+            return new OperationProgress(p?.PercentComplete, p?.Activity);
         }
 
         private bool ValidateConfiguration()

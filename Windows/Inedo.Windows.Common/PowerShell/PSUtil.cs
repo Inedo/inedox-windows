@@ -18,7 +18,7 @@ namespace Inedo.Extensions.Windows.PowerShell
 {
     internal static class PSUtil
     {
-        public static async Task<ExecutePowerShellJob.Result> ExecuteScriptAsync(ILogger logger, IOperationExecutionContext context, string fullScriptName, IReadOnlyDictionary<string, RuntimeValue> arguments, IDictionary<string, RuntimeValue> outArguments, bool collectOutput)
+        public static async Task<ExecutePowerShellJob.Result> ExecuteScriptAsync(ILogger logger, IOperationExecutionContext context, string fullScriptName, IReadOnlyDictionary<string, RuntimeValue> arguments, IDictionary<string, RuntimeValue> outArguments, bool collectOutput, EventHandler<PSProgressEventArgs> progressUpdateHandler)
         {
             var scriptText = GetScriptText(logger, fullScriptName, context);
 
@@ -58,6 +58,8 @@ namespace Inedo.Extensions.Windows.PowerShell
             };
 
             job.MessageLogged += (s, e) => logger.Log(e.Level, e.Message);
+            if (progressUpdateHandler != null)
+                job.ProgressUpdate += progressUpdateHandler;
 
             var result = (ExecutePowerShellJob.Result)await jobRunner.ExecuteJobAsync(job, context.CancellationToken);
             if (result.ExitCode != null)
