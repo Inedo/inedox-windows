@@ -175,7 +175,8 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         {
             var props = base.GetPropertiesForDisplay(hideEncrypted);
 
-            props[nameof(this.Bindings)] = string.Join(Environment.NewLine, this.Bindings.Select(b => BindingInfo.FromMap(b)));
+            if (this.Bindings != null)
+                props[nameof(this.Bindings)] = string.Join(Environment.NewLine, this.Bindings.Select(b => BindingInfo.FromMap(b)));
 
             return props;
         }
