@@ -1,14 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
+using Inedo.ExecutionEngine;
 #if Otter
 using Inedo.Otter.Extensibility;
 using Inedo.Otter.Extensibility.Configurations;
+using Inedo.Otter.Extensions;
 #elif BuildMaster
 using Inedo.BuildMaster.Extensibility;
 using Inedo.BuildMaster.Extensibility.Configurations;
+using Inedo.BuildMaster.Web;
 #endif
 using Inedo.Serialization;
 using Microsoft.Web.Administration;
@@ -20,7 +24,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
     [DefaultProperty(nameof(Name))]
     [PersistFrom("Inedo.Otter.Extensions.Configurations.IIS.IisSiteConfiguration,OtterCoreEx")]
     [Serializable]
-    public sealed class IisSiteConfiguration : IisConfigurationBase
+    public sealed class IisSiteConfiguration : IisConfigurationBase, IMissingPersistentPropertyHandler
     {
         [Required]
         [Persistent]
@@ -40,19 +44,34 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [DisplayName("Virtual directory physical path")]
         [Description("The path to the web site files on disk.")]
         public string VirtualDirectoryPhysicalPath { get; set; }
-
+        
         [Persistent]
-        [ScriptAlias("Protocol")]
-        [DisplayName("Protocol")]
-        [Description("The HTTP protocol used by the site. Valid values are \"http\" or \"https\".")]
-        public string BindingProtocol { get; set; }
-
-        [Persistent]
-        [ScriptAlias("Binding")]
-        [DisplayName("Binding")]
-        [Description("The value of this property is a colon-delimited string of the format: «IPAddress»:«Port»:«HostName» - You may leave the host name blank. "
-                     + "You can set the IP address to \"*\" to indicate that the site is bound to all IP addresses. A port number is required.")]
-        public string BindingInformation { get; set; }
+        [ScriptAlias("Bindings")]
+        [DisplayName("Bindings")]
+        [FieldEditMode(FieldEditMode.Multiline)]
+        #region [Description]...
+        [Description(@"Bindings are entered as a list of maps, e.g.:<br />
+<pre>
+@(
+    %(
+        IPAddress: 192.0.2.100, 
+        Port: 80, 
+        HostName: example.com, 
+        Protocol: http
+    ),
+    %(
+        IPAddress: 192.0.2.101, 
+        Port: 443, 
+        HostName: secure.example.com,
+        Protocol: https,
+        CertificateStoreName: WebHosting,
+        CertificateHash: 51599BF2909EA984793481F0DF946C57E4FD5DEA
+    )
+)
+</pre>
+")]
+        #endregion
+        public IEnumerable<IReadOnlyDictionary<string, RuntimeValue>> Bindings { get; set; }
 
         public static IisSiteConfiguration FromMwaSite(ILogger logger, Site site, IisSiteConfiguration template = null)
         {
@@ -86,18 +105,20 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
                 }
             }
 
-            var bind = site.Bindings.FirstOrDefault();
-            if (bind == null)
+            var siteBindings = site.Bindings
+                .Select(b => BindingInfo.FromBindingInformation(b.BindingInformation, b.Protocol, b.CertificateStoreName, b.CertificateHash))
+                .ToArray();
+
+            if (siteBindings.Length == 0)
             {
                 logger.LogWarning("Site does not have a Binding configured.");
             }
             else
             {
-                if (template == null || template.BindingProtocol != null)
-                    config.BindingProtocol = bind.Protocol;
-
-                if (template == null || template.BindingInformation != null)
-                    config.BindingInformation = bind.BindingInformation;
+                if (template == null || template.Bindings != null)
+                {
+                    config.Bindings = siteBindings.Select(b => b.ToDictionary()).ToArray();
+                }
             }
 
             return config;
@@ -114,9 +135,6 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
             if (site.Applications.Count > 1)
                 logger.LogWarning("Site has more than one Application defined; this will only configure the first one.");
-
-            if (site.Bindings.Count > 1)
-                logger.LogWarning("Site has more than one Binding defined; this will only configure the first one.");
 
             var app = site.Applications.FirstOrDefault();
             if (app == null)
@@ -138,18 +156,71 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             if (config.VirtualDirectoryPhysicalPath != null)
                 vdir.PhysicalPath = config.VirtualDirectoryPhysicalPath;
 
-            var bind = site.Bindings.FirstOrDefault();
-            if (bind == null)
+            var templateBindings = GetTemplateBindings(config);
+
+            logger.LogDebug("Clearing bindings...");
+            site.Bindings.Clear();
+            logger.LogDebug("Setting bindings...");
+            foreach (var binding in templateBindings)
             {
-                logger.LogDebug("Site does not have a Binding; creating Binding...");
-                bind = site.Bindings.Add(config.BindingInformation, config.BindingProtocol);
+                if (binding.CertificateHash.Length > 0)
+                    site.Bindings.Add(binding.BindingInformation, binding.CertificateHash, binding.CertificateStoreName);
+                else
+                    site.Bindings.Add(binding.BindingInformation, binding.Protocol);
             }
+        }
 
-            if (config.BindingProtocol != null)
-                bind.Protocol = config.BindingProtocol;
+#if Otter
+        public override IDictionary<string, string> GetPropertiesForDisplay(bool hideEncrypted)
+        {
+            var props = base.GetPropertiesForDisplay(hideEncrypted);
 
-            if (config.BindingInformation != null)
-                bind.BindingInformation = config.BindingInformation;
+            props[nameof(this.Bindings)] = string.Join(Environment.NewLine, this.Bindings.Select(b => BindingInfo.FromMap(b)));
+
+            return props;
+        }
+
+        public override ComparisonResult Compare(PersistedConfiguration other)
+        {
+            var result = base.Compare(other);
+
+            var differences = result.Differences.Where(d => d.Name != nameof(this.Bindings)).ToList();
+
+            var template = this.Bindings.Select(b => BindingInfo.FromMap(b)).ToHashSet();
+            var actual = ((IisSiteConfiguration)other).Bindings.Select(b => BindingInfo.FromMap(b)).ToHashSet();
+
+            if (template.SetEquals(actual))
+                return new ComparisonResult(differences);
+
+            var diff = new Difference(nameof(this.Bindings), string.Join("; ", template), string.Join("; ", actual));
+            differences.Add(diff);
+
+            return new ComparisonResult(differences);
+        }
+#endif
+
+        private static BindingInfo[] GetTemplateBindings(IisSiteConfiguration config)
+        {
+            var templateBindings =
+                    (from b in config.Bindings ?? Enumerable.Empty<IReadOnlyDictionary<string, RuntimeValue>>()
+                     let info = BindingInfo.FromMap(b)
+                     where info != null
+                     select info)
+                .ToArray();
+
+            return templateBindings;
+        }
+
+        public void OnDeserializedMissingProperties(IReadOnlyDictionary<string, string> missingProperties)
+        {
+            string info = missingProperties.GetValueOrDefault("BindingInformation");
+            string protocol = missingProperties.GetValueOrDefault("BindingProtocol");
+            if (info == null || protocol == null)
+                return;
+
+            var legacyBindingInfo = BindingInfo.FromBindingInformation(info, protocol, null, null);
+
+            this.Bindings = new[] { legacyBindingInfo.ToDictionary() };
         }
     }
 }

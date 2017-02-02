@@ -8,6 +8,7 @@ using Inedo.BuildMaster.Extensibility.RaftRepositories;
 using Inedo.BuildMaster.Web.Controls.Plans;
 #elif Otter
 using Inedo.Otter.Web.Controls.Plans;
+using Inedo.Otter.Extensibility.RaftRepositories;
 #endif
 using Inedo.Extensions.Windows.PowerShell;
 using Inedo.ExecutionEngine;
@@ -17,7 +18,6 @@ using Inedo.Web.Controls.SimpleHtml;
 
 namespace Inedo.Extensions.Windows.Operations.PowerShell
 {
-#if BuildMaster
     internal sealed class NullOperationContext : IOperationEditorContext
     {
         public static readonly IOperationEditorContext Instance = new NullOperationContext();
@@ -28,16 +28,11 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
         public RaftItemType? PlanType => null;
         public int? RaftId => null;
     }
-#endif
 
     internal sealed class PSCallOperationEditor : OperationEditor
     {
         public PSCallOperationEditor()
-#if BuildMaster
             : base(typeof(PSCallOperation), NullOperationContext.Instance)
-#elif Otter
-            : base(typeof(PSCallOperation))
-#endif
         {
         }
 
@@ -77,8 +72,8 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
             field.HelpText = new LiteralHtml(argumentDesc.ToString());
             field.Controls.Add(
                 new Element("input",
-                    new ElementAttribute("type", "text"),
-                    new KoBindAttribute("planargvalue", nameof(Argument.Value))));
+                    new KoBindAttribute("planargvalue", nameof(Argument.Value)))
+                { Attributes = { ["type"] = "text" } });
 
             return new SimpleVirtualCompositeControl(
                 new SlimFormField("Script name:", info.Name ?? scriptName.ToString()),

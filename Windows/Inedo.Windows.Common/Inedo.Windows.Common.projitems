@@ -9,6 +9,7 @@
     <Import_RootNamespace>Inedo.Extensions.Windows</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Configurations\IIS\BindingInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Configurations\IIS\IisAppPoolConfiguration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Configurations\IIS\IisConfigurationBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Configurations\IIS\IisObjectState.cs" />

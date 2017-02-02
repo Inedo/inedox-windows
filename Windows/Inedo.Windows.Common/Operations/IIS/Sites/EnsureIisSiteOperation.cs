@@ -14,6 +14,7 @@ using Inedo.BuildMaster.Extensibility.Operations;
 #endif
 using Inedo.Extensions.Windows.Configurations.IIS;
 using Microsoft.Web.Administration;
+using System.Linq;
 
 namespace Inedo.Extensions.Windows.Operations.IIS.Sites
 {
@@ -31,8 +32,14 @@ IIS::Ensure-Site(
     Name: Otter,
     AppPool: OtterAppPool,
     Path: E:\Websites\Otter,
-    Protocol: http,
-    Binding: 192.0.2.100:80:example.com 
+    Bindings: @(
+        %(
+            IPAddress: 192.0.2.100, 
+            Port: 80, 
+            HostName: example.com, 
+            Protocol: http
+        )
+    )
 );
 
 # ensures that the Default Web Site is removed from the web server
@@ -45,12 +52,16 @@ IIS::Ensure-Site(
     {
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
-            return new ExtendedRichDescription(
-                new RichDescription(
-                    "Ensure ",
-                    new Hilite(config[nameof(IisSiteConfiguration.Name)])
-                )
-            );
+            var shortDesc = new RichDescription("Ensure IIS Site: ", new Hilite(config[nameof(IisSiteConfiguration.Name)]));
+
+            string appPool = config[nameof(IisSiteConfiguration.ApplicationPoolName)];
+            string vdir = config[nameof(IisSiteConfiguration.VirtualDirectoryPhysicalPath)];
+            bool explicitDoesNotExist = string.Equals(config[nameof(IisSiteConfiguration.Exists)], "false", StringComparison.OrdinalIgnoreCase);
+
+            if (string.IsNullOrEmpty(appPool) || string.IsNullOrEmpty(vdir) || explicitDoesNotExist)
+                return new ExtendedRichDescription(shortDesc, new RichDescription("does not exist"));
+            else
+                return new ExtendedRichDescription(shortDesc, new RichDescription("application pool ", new Hilite(appPool), "; virtual directory path: ", new Hilite(vdir)));
         }
 
 #if Otter
@@ -93,7 +104,8 @@ IIS::Ensure-Site(
                         this.LogDebug("Does not exist. Creating...");
                         if (!context.Simulation)
                         {
-                            site = manager.Sites.Add(this.Template.Name, this.Template.BindingProtocol, this.Template.BindingInformation, this.Template.VirtualDirectoryPhysicalPath);
+                            var binding = BindingInfo.FromMap(this.Template.Bindings.First());
+                            site = manager.Sites.Add(this.Template.Name, this.Template.VirtualDirectoryPhysicalPath, int.Parse(binding.Port));
                             manager.CommitChanges();
                         }
 
