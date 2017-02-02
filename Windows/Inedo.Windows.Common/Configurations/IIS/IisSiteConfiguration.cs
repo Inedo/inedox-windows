@@ -184,6 +184,9 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         {
             var result = base.Compare(other);
 
+            if (this.Bindings == null)
+                return result;
+
             var differences = result.Differences.Where(d => d.Name != nameof(this.Bindings)).ToList();
 
             var template = this.Bindings.Select(b => BindingInfo.FromMap(b)).ToHashSet();
