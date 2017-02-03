@@ -33,6 +33,8 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
         public string BindingInformation => $"{this.IpAddress}:{this.Port}:{this.HostName}";
 
+        public static BindingInfo FromBindingInformation(string info, string protocol) => FromBindingInformation(info, protocol, null, null);
+
         public static BindingInfo FromBindingInformation(string info, string protocol, string certificateStoreName, byte[] certificateHash)
         {
             if (info == null)

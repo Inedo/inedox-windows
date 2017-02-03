@@ -9,13 +9,16 @@ using Inedo.ExecutionEngine;
 using Inedo.Otter.Extensibility;
 using Inedo.Otter.Extensibility.Configurations;
 using Inedo.Otter.Extensions;
+using Inedo.Otter.Web.Controls;
 #elif BuildMaster
 using Inedo.BuildMaster.Extensibility;
 using Inedo.BuildMaster.Extensibility.Configurations;
 using Inedo.BuildMaster.Web;
+using Inedo.BuildMaster.Web.Controls;
 #endif
 using Inedo.Serialization;
 using Microsoft.Web.Administration;
+using Inedo.Extensions.Windows.SuggestionProviders;
 
 namespace Inedo.Extensions.Windows.Configurations.IIS
 {
@@ -24,7 +27,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
     [DefaultProperty(nameof(Name))]
     [PersistFrom("Inedo.Otter.Extensions.Configurations.IIS.IisSiteConfiguration,OtterCoreEx")]
     [Serializable]
-    public sealed class IisSiteConfiguration : IisConfigurationBase, IMissingPersistentPropertyHandler
+    public sealed class IisSiteConfiguration : IisConfigurationBase
     {
         [Required]
         [Persistent]
@@ -44,8 +47,26 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [DisplayName("Virtual directory physical path")]
         [Description("The path to the web site files on disk.")]
         public string VirtualDirectoryPhysicalPath { get; set; }
-        
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
         [Persistent]
+        [ScriptAlias("Binding")]
+        [DisplayName("Binding")]
+#if Otter
+        [IgnoreConfigurationDrift]
+#endif
+        public string BindingInformation { get; set; }
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Persistent]
+        [ScriptAlias("Protocol")]
+        [DisplayName("Protocol")]
+#if Otter
+        [IgnoreConfigurationDrift]
+#endif
+        public string BindingProtocol { get; set; }
+
+        [Persistent]
+        [SuggestibleValue(typeof(LegacyBindingSuggestionProvider))]
         [ScriptAlias("Bindings")]
         [DisplayName("Bindings")]
         [FieldEditMode(FieldEditMode.Multiline)]
@@ -105,6 +126,12 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
                 }
             }
 
+            if (template?.BindingInformation != null && template?.Bindings != null)
+            {
+                logger.LogWarning("Template configuration has both Binding and Bindings specified; the Binding and Protocol properties "
+                    + "will be ignored and should be removed from the operation via Text Mode of the Plan Editor.");
+            }
+
             var siteBindings = site.Bindings
                 .Select(b => BindingInfo.FromBindingInformation(b.BindingInformation, b.Protocol, b.CertificateStoreName, b.CertificateHash))
                 .ToArray();
@@ -115,7 +142,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             }
             else
             {
-                if (template == null || template.Bindings != null)
+                if (template == null || (template.Bindings != null || template.BindingInformation != null))
                 {
                     config.Bindings = siteBindings.Select(b => b.ToDictionary()).ToArray();
                 }
@@ -187,6 +214,9 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
             var differences = result.Differences.Where(d => d.Name != nameof(this.Bindings)).ToList();
 
+            if (this.Bindings == null && this.BindingInformation != null)
+                this.Bindings = new[] { BindingInfo.FromBindingInformation(this.BindingInformation, this.BindingProtocol).ToDictionary() };
+
             if (this.Bindings == null)
                 return new ComparisonResult(differences);
 
@@ -205,26 +235,23 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
         private static BindingInfo[] GetTemplateBindings(IisSiteConfiguration config)
         {
-            var templateBindings =
-                    (from b in config.Bindings ?? Enumerable.Empty<IReadOnlyDictionary<string, RuntimeValue>>()
-                     let info = BindingInfo.FromMap(b)
-                     where info != null
-                     select info)
-                .ToArray();
+            if (config.BindingInformation != null && config.BindingProtocol != null && config.Bindings == null)
+            {
+                // use legacy operation property values only if "Binding" script alias is present and "Bindings" is not
+                var legacyBindingInfo = BindingInfo.FromBindingInformation(config.BindingInformation, config.BindingProtocol);
+                return new[] { legacyBindingInfo };
+            }
+            else
+            {
+                var templateBindings =
+                        (from b in config.Bindings ?? Enumerable.Empty<IReadOnlyDictionary<string, RuntimeValue>>()
+                         let info = BindingInfo.FromMap(b)
+                         where info != null
+                         select info)
+                    .ToArray();
 
-            return templateBindings;
-        }
-
-        public void OnDeserializedMissingProperties(IReadOnlyDictionary<string, string> missingProperties)
-        {
-            string info = missingProperties.GetValueOrDefault("BindingInformation");
-            string protocol = missingProperties.GetValueOrDefault("BindingProtocol");
-            if (info == null || protocol == null)
-                return;
-
-            var legacyBindingInfo = BindingInfo.FromBindingInformation(info, protocol, null, null);
-
-            this.Bindings = new[] { legacyBindingInfo.ToDictionary() };
+                return templateBindings;
+            }
         }
     }
 }

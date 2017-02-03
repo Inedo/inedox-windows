@@ -52,6 +52,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)PowerShell\PSUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PowerShell\ShouldExitEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Properties\AssemblyInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SuggestionProviders\LegacyBindingSuggestionProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tags.cs" />
   </ItemGroup>
 </Project>
