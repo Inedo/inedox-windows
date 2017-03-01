@@ -54,7 +54,7 @@ namespace Inedo.Extensions.Windows.PowerShell
                 if (RuntimeVariableName.IsLegalVariableName(var))
                 {
                     var varName = new RuntimeVariableName(var, RuntimeValueType.Scalar);
-                    var varValue = context.TryGetVariableValue(varName);
+                    var varValue = context.TryGetVariableValue(varName) ?? TryGetFunctionValue(varName, context);
                     if (varValue != null)
                         results[var] = varValue.Value.AsString();
                 }
@@ -62,6 +62,32 @@ namespace Inedo.Extensions.Windows.PowerShell
 
             return results;
         }
+
+#if Otter
+        private static RuntimeValue? TryGetFunctionValue(RuntimeVariableName functionName, IOperationExecutionContext context)
+        {
+            try
+            {
+                return context.TryGetFunctionValue(functionName.ToString());
+            }
+            catch
+            {
+                return null;
+            }
+        }
+#elif BuildMaster
+        private static RuntimeValue? TryGetFunctionValue(RuntimeVariableName functionName, IOperationExecutionContext context)
+        {
+            try
+            {
+                return context.TryEvaluateFunction(functionName, new RuntimeValue[0]);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+#endif
 
         public Task<int?> RunAsync(string script, CancellationToken cancellationToken)
         {
