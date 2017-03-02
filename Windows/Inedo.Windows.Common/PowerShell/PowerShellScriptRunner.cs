@@ -91,13 +91,13 @@ namespace Inedo.Extensions.Windows.PowerShell
 
         public Task<int?> RunAsync(string script, CancellationToken cancellationToken)
         {
-            return this.RunAsync(script, new Dictionary<string, object>(), new Dictionary<string, string>(), cancellationToken);
+            return this.RunAsync(script, new Dictionary<string, object>(), new Dictionary<string, object>(), cancellationToken);
         }
-        public Task<int?> RunAsync(string script, Dictionary<string, object> variables, Dictionary<string, string> outVariables, CancellationToken cancellationToken)
+        public Task<int?> RunAsync(string script, Dictionary<string, object> variables, Dictionary<string, object> outVariables, CancellationToken cancellationToken)
         {
-            return this.RunAsync(script, new Dictionary<string, object>(), new Dictionary<string, object>(), new Dictionary<string, string>(), cancellationToken);
+            return this.RunAsync(script, new Dictionary<string, object>(), new Dictionary<string, object>(), new Dictionary<string, object>(), cancellationToken);
         }
-        public async Task<int?> RunAsync(string script, Dictionary<string, object> variables, Dictionary<string, object> parameters, Dictionary<string, string> outVariables, CancellationToken cancellationToken)
+        public async Task<int?> RunAsync(string script, Dictionary<string, object> variables, Dictionary<string, object> parameters, Dictionary<string, object> outVariables, CancellationToken cancellationToken)
         {
             var runspace = this.Runspace;
 
@@ -145,7 +145,7 @@ namespace Inedo.Extensions.Windows.PowerShell
                     await Task.Factory.FromAsync(powerShell.BeginInvoke((PSDataCollection<PSObject>)null, output), powerShell.EndInvoke);
 
                     foreach (var var in outVariables.Keys.ToList())
-                        outVariables[var] = powerShell.Runspace.SessionStateProxy.GetVariable(var)?.ToString();
+                        outVariables[var] = powerShell.Runspace.SessionStateProxy.GetVariable(var);
                 }
                 finally
                 {

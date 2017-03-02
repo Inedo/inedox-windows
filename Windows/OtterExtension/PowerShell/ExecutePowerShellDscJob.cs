@@ -48,7 +48,7 @@ namespace Inedo.Extensions.Windows.PowerShell
                         }
                     };
 
-                int? exitCode = await runner.RunAsync(this.ScriptText, new Dictionary<string, object>(), new Dictionary<string, string>(), cancellationToken);
+                int? exitCode = await runner.RunAsync(this.ScriptText, new Dictionary<string, object>(), new Dictionary<string, object>(), cancellationToken);
 
                 return new Result
                 {
