@@ -66,9 +66,28 @@ namespace Inedo.Extensions.Windows.PowerShell
                 logger.LogDebug("Script exit code: " + result.ExitCode);
 
             foreach (var var in result.OutVariables)
-                outArguments[var.Key] = var.Value;
+                outArguments[var.Key] = ToRuntimeValue(var.Value);
 
             return result;
+        }
+
+        private static RuntimeValue ToRuntimeValue(object value)
+        {
+            if (value is System.Collections.IDictionary)
+            {
+                var dict = ((System.Collections.IDictionary)value);
+                return new RuntimeValue(dict.Keys.Cast<object>().ToDictionary(k => k?.ToString(), k => ToRuntimeValue(dict[k])));
+            }
+            if (value is string)
+            {
+                return new RuntimeValue(value?.ToString());
+            }
+            if (value is System.Collections.IEnumerable)
+            {
+                var list = ((System.Collections.IEnumerable)value);
+                return new RuntimeValue(list.Cast<object>().Select(ToRuntimeValue));
+            }
+            return new RuntimeValue(value?.ToString());
         }
 
         private static string GetScriptText(ILogger logger, string fullScriptName, IOperationExecutionContext context)

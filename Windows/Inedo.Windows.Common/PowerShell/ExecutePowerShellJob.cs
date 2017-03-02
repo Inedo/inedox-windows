@@ -88,7 +88,7 @@ namespace Inedo.Extensions.Windows.PowerShell
 
                 runner.ProgressUpdate += (s, e) => this.NotifyProgressUpdate(e.PercentComplete, e.Activity);
 
-                var outVariables = this.OutVariables.ToDictionary(v => v, v => (string)null, StringComparer.OrdinalIgnoreCase);
+                var outVariables = this.OutVariables.ToDictionary(v => v, v => (object)null, StringComparer.OrdinalIgnoreCase);
 
                 int? exitCode = await runner.RunAsync(this.ScriptText, this.Variables, this.Parameters, outVariables, cancellationToken);
 
@@ -124,9 +124,44 @@ namespace Inedo.Extensions.Windows.PowerShell
             foreach (var v in data.OutVariables)
             {
                 writer.Write(v.Key ?? string.Empty);
-                writer.Write(v.Value ?? string.Empty);
+                WriteRuntimeValue(writer, v.Value);
             }
         }
+
+        private static void WriteRuntimeValue(BinaryWriter writer, object value)
+        {
+            if (value is System.Collections.IDictionary dict)
+            {
+                writer.Write((byte)'%');
+                SlimBinaryFormatter.WriteLength(writer, dict.Count);
+                foreach (var key in dict.Keys)
+                {
+                    writer.Write(key?.ToString() ?? string.Empty);
+                    WriteRuntimeValue(writer, dict[key]);
+                }
+            }
+            else if (value is string)
+            {
+                writer.Write((byte)'$');
+                writer.Write(value?.ToString() ?? string.Empty);
+            }
+            else if (value is System.Collections.IEnumerable)
+            {
+                var list = ((System.Collections.IEnumerable)value).Cast<object>().ToList();
+                writer.Write((byte)'@');
+                SlimBinaryFormatter.WriteLength(writer, list.Count);
+                foreach (var element in list)
+                {
+                    WriteRuntimeValue(writer, element);
+                }
+            }
+            else
+            {
+                writer.Write((byte)'$');
+                writer.Write(value?.ToString() ?? string.Empty);
+            }
+        }
+
         public override object DeserializeResponse(Stream stream)
         {
             var reader = new BinaryReader(stream, InedoLib.UTF8Encoding);
@@ -143,11 +178,11 @@ namespace Inedo.Extensions.Windows.PowerShell
                 output.Add(reader.ReadString());
 
             count = SlimBinaryFormatter.ReadLength(stream);
-            var vars = new Dictionary<string, string>(count, StringComparer.OrdinalIgnoreCase);
+            var vars = new Dictionary<string, object>(count, StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < count; i++)
             {
                 var key = reader.ReadString();
-                var value = reader.ReadString();
+                var value = ReadRuntimeValue(reader);
                 vars[key] = value;
             }
 
@@ -157,6 +192,40 @@ namespace Inedo.Extensions.Windows.PowerShell
                 Output = output,
                 OutVariables = vars
             };
+        }
+
+        private static object ReadRuntimeValue(BinaryReader reader)
+        {
+            byte type = reader.ReadByte();
+            switch (type)
+            {
+                case (byte)'%':
+                    {
+                        var count = SlimBinaryFormatter.ReadLength(reader);
+                        var dict = new Dictionary<string, object>(count, StringComparer.OrdinalIgnoreCase);
+                        for (int i = 0; i < count; i++)
+                        {
+                            var key = reader.ReadString();
+                            var value = ReadRuntimeValue(reader);
+                            dict[key] = value;
+                        }
+                        return dict;
+                    }
+                case (byte)'@':
+                    {
+                        var count = SlimBinaryFormatter.ReadLength(reader);
+                        var list = new List<object>(count);
+                        for (int i = 0; i < count; i++)
+                        {
+                            list.Add(ReadRuntimeValue(reader));
+                        }
+                        return list;
+                    }
+                case (byte)'$':
+                    return reader.ReadString();
+                default:
+                    throw new InvalidDataException($"Invalid runtime variable type specifier '{type}'");
+            }
         }
 
         protected override void DataReceived(byte[] data)
@@ -184,7 +253,7 @@ namespace Inedo.Extensions.Windows.PowerShell
         {
             public int? ExitCode { get; set; }
             public List<string> Output { get; set; }
-            public Dictionary<string, string> OutVariables { get; set; }
+            public Dictionary<string, object> OutVariables { get; set; }
         }
     }
 }
