@@ -216,7 +216,11 @@ namespace Inedo.Extensions.Windows.PowerShell
         {
             if (value.ValueType == RuntimeValueType.Scalar)
             {
-                return value.AsString() ?? string.Empty;
+                var s = value.AsString() ?? string.Empty;
+                if (s.StartsWith(Functions.PsCredentialVariableFunction.Prefix))
+                    return Functions.PsCredentialVariableFunction.Deserialize(s.Substring(Functions.PsCredentialVariableFunction.Prefix.Length));
+
+                return s;
             }
             else if (value.ValueType == RuntimeValueType.Vector)
             {

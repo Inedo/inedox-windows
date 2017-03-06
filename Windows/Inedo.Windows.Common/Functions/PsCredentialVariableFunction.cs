@@ -1,36 +1,30 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Security;
+using System.Management.Automation;
+using System.Runtime.InteropServices;
 #if BuildMaster
 using Inedo.BuildMaster.Extensibility;
 using Inedo.BuildMaster.Extensibility.VariableFunctions;
 #elif Otter
 using Inedo.Otter;
 using Inedo.Otter.Extensibility;
-using Inedo.Otter.Extensibility.Operations;
 using Inedo.Otter.Extensibility.VariableFunctions;
 #endif
-using Inedo.Extensions.Windows.PowerShell;
 using Inedo.Documentation;
-using System.Security;
-using System.Management.Automation;
-using System.Security.Cryptography;
-using System.Runtime.InteropServices;
 
 namespace Inedo.Extensions.Windows.Functions
 {
     [ScriptAlias("PSCredential")]
     [Description("Returns a PSCredential object that can be passed to PowerShell scripts.")]
     [Tag("PowerShell")]
-//    [Example(@"
-//# set the $NextYear variable to the value of... next year
-//set $PowershellScript = >>
-//(Get-Date).year + 1
-//>>;
-
-//set $NextYear = $PSEval($PowershellScript);
-
-//Log-Information $NextYear;
-//")]
+    [Example(@"
+# convert user and password to a PSCredential object
+PSCall MyPowerShellScript
+(
+    Credentials: $PSCredential(user, password)
+);
+")]
     [Category("PowerShell")]
     public sealed class PsCredentialVariableFunction : ScalarVariableFunction
     {
