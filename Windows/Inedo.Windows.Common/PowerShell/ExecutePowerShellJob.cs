@@ -130,7 +130,8 @@ namespace Inedo.Extensions.Windows.PowerShell
 
         private static void WriteRuntimeValue(BinaryWriter writer, object value)
         {
-            if (value is System.Collections.IDictionary dict)
+            var dict = value as System.Collections.IDictionary;
+            if (dict != null)
             {
                 writer.Write((byte)'%');
                 SlimBinaryFormatter.WriteLength(writer, dict.Count);
