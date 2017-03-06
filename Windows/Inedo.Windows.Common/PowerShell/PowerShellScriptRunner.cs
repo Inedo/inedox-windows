@@ -56,7 +56,13 @@ namespace Inedo.Extensions.Windows.PowerShell
                     var varName = new RuntimeVariableName(var, RuntimeValueType.Scalar);
                     var varValue = context.TryGetVariableValue(varName) ?? TryGetFunctionValue(varName, context);
                     if (varValue != null)
-                        results[var] = varValue.Value.AsString();
+                    {
+                        var s = varValue.Value.AsString();
+                        if (s.StartsWith(Functions.PsCredentialVariableFunction.Prefix))
+                            results[var] = Functions.PsCredentialVariableFunction.Deserialize(s.Substring(Functions.PsCredentialVariableFunction.Prefix.Length));
+                        else
+                            results[var] = s;
+                    }
                 }
             }
 
