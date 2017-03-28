@@ -85,14 +85,20 @@ namespace Inedo.Extensions.Windows.PowerShell
                             name: p.Name,
                             description: d.Select(t => t.Value).FirstOrDefault(),
                             defaultValue: p.DefaultValue,
-                            isBooleanOrSwitch: p.IsBooleanOrSwitch
+                            isBooleanOrSwitch: p.IsBooleanOrSwitch,
+                            isOutput: p.IsOutput
                         ),
                         StringComparer.OrdinalIgnoreCase)
                 );
             }
 
             return new PowerShellScriptInfo(
-                parameters: parameters.Select(p => new PowerShellParameterInfo(p.Name))
+                parameters: parameters.Select(p => new PowerShellParameterInfo(
+                    name: p.Name,
+                    defaultValue: p.DefaultValue,
+                    isBooleanOrSwitch: p.IsBooleanOrSwitch,
+                    isOutput: p.IsOutput
+                ))
             );
         }
         public static PowerShellScriptInfo TryLoad(LooselyQualifiedName scriptName)
@@ -218,6 +224,13 @@ namespace Inedo.Extensions.Windows.PowerShell
                     return string.Equals(this.Type, "switch", StringComparison.OrdinalIgnoreCase)
                         || string.Equals(this.Type, "bool", StringComparison.OrdinalIgnoreCase)
                         || string.Equals(this.Type, "System.Boolean", StringComparison.OrdinalIgnoreCase);
+                }
+            }
+            public bool IsOutput
+            {
+                get
+                {
+                    return string.Equals(this.Type, "ref", StringComparison.OrdinalIgnoreCase);
                 }
             }
 

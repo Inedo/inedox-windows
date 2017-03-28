@@ -14,10 +14,10 @@ namespace Inedo.Extensions.Windows.PowerShell
         /// <param name="name">The name of the parameter.</param>
         /// <param name="description">The description of the parameter.</param>
         /// <param name="defaultValue">The default value of the parameter.</param>
-        /// <param name="isBooleanOrSwitch">The input type code most appropriate for the parameter. See <see cref="Domains.ScriptParameterTypes"/> for valid values.</param>
+        /// <param name="isBooleanOrSwitch">True if this is a boolean variable.</param>
+        /// <param name="isOutput">True if this is an output variable.</param>
         /// <exception cref="ArgumentNullException"><paramref name="name"/> is null or empty.</exception>
-        /// <exception cref="ArgumentException"><paramref name="isBooleanOrSwitch"/> is not one of the values in <see cref="Domains.ScriptParameterTypes"/>.</exception>
-        public PowerShellParameterInfo(string name, string description = null, string defaultValue = null, bool isBooleanOrSwitch = false)
+        public PowerShellParameterInfo(string name, string description = null, string defaultValue = null, bool isBooleanOrSwitch = false, bool isOutput = false)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
@@ -26,6 +26,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             this.Description = description;
             this.DefaultValue = defaultValue;
             this.IsBooleanOrSwitch = isBooleanOrSwitch;
+            this.IsOutput = isOutput;
         }
 
         /// <summary>
@@ -41,9 +42,13 @@ namespace Inedo.Extensions.Windows.PowerShell
         /// </summary>
         public string DefaultValue { get; private set; }
         /// <summary>
-        /// Gets whether the parameter is a boolean or switch
+        /// Gets whether the parameter is a boolean or switch.
         /// </summary>
         public bool IsBooleanOrSwitch { get; private set; }
+        /// <summary>
+        /// Gets whether the parameter is an output parameter.
+        /// </summary>
+        public bool IsOutput { get; private set; }
 
         /// <summary>
         /// Returns a <see cref="System.String" /> that represents this instance.

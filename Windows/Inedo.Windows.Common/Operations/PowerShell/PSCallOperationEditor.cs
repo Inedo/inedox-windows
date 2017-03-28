@@ -111,8 +111,9 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
                     DefaultValue = p.DefaultValue,
                     Description = p.Description,
                     IsBooleanOrSwitch = p.IsBooleanOrSwitch,
+                    IsOutput = p.IsOutput,
                     Name = p.Name,
-                    Value = action.Arguments.GetValueOrDefault(p.Name)
+                    Value = p.IsOutput ? action.OutArguments.GetValueOrDefault(p.Name)?.ToString() : action.Arguments.GetValueOrDefault(p.Name)
                 })
             };
         }
@@ -122,9 +123,12 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
             var model = (PSCallOperationModel)_model;
             return new ActionStatement("PSCall",
                 model.Arguments
-                    .Where(a => !string.IsNullOrEmpty(a.Value))
+                    .Where(a => !string.IsNullOrEmpty(a.Value) && !a.IsOutput)
                     .ToDictionary(a => a.Name, a => a.Value),
-                new[] { model.ScriptName }
+                new[] { model.ScriptName },
+                model.Arguments
+                    .Where(a => !string.IsNullOrEmpty(a.Value) && RuntimeVariableName.TryParse(a.Value) != null && a.IsOutput)
+                    .ToDictionary(a => a.Name, a => RuntimeVariableName.Parse(a.Value))
             );
         }
     }
