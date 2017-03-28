@@ -151,7 +151,7 @@ namespace Inedo.Extensions.Windows.PowerShell
                     await Task.Factory.FromAsync(powerShell.BeginInvoke((PSDataCollection<PSObject>)null, output), powerShell.EndInvoke);
 
                     foreach (var var in outVariables.Keys.ToList())
-                        outVariables[var] = powerShell.Runspace.SessionStateProxy.GetVariable(var);
+                        outVariables[var] = UnwrapReference(powerShell.Runspace.SessionStateProxy.GetVariable(var));
                 }
                 finally
                 {
@@ -160,6 +160,15 @@ namespace Inedo.Extensions.Windows.PowerShell
             }
 
             return exitCode;
+        }
+
+        private object UnwrapReference(object value)
+        {
+            if (value is PSReference reference)
+            {
+                return reference.Value;
+            }
+            return value;
         }
 
         public void Dispose()
