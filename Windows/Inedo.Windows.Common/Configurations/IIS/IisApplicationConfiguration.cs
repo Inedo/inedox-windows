@@ -18,15 +18,14 @@ using Microsoft.Web.Administration;
 
 namespace Inedo.Extensions.Windows.Configurations.IIS
 {
-    [DisplayName("IIS Virtual Directory")]
-    [DefaultProperty(nameof(Path))]
+    [DisplayName("IIS Application")]
+    [DefaultProperty(nameof(ApplicationPath))]
     [Serializable]
-    [PersistFrom("Inedo.Otter.Extensions.Configurations.IIS.IisVirtualDirectoryConfiguration,OtterCoreEx")]
-    public sealed class IisVirtualDirectoryConfiguration : IisConfigurationBase, IHasCredentials
+    public sealed class IisApplicationConfiguration : IisConfigurationBase, IHasCredentials
     {
 
         [DisplayName("Site name")]
-        [Description("The name of this site where the virtual directory would exist")]
+        [Description("The name of this site where the application would exist")]
         [ScriptAlias("Site")]
         [ConfigurationKey]
         [Persistent]
@@ -34,37 +33,29 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         public string SiteName { get; set; }
 
         [DisplayName("Application path")]
-        [Description("The relative URL of the application containing the virtual directory, such as /")]
-        [ScriptAlias("ApplicationPath")]
-        [ConfigurationKey]
-        [Persistent]
-        [DefaultValue("/")]
-        public string ApplicationPath { get; set; }
-
-        [DisplayName("Virtual path")]
         [Description("The relative URL of the path, such as /hdars")]
         [ScriptAlias("Path")]
         [ConfigurationKey]
         [Persistent]
         [Required]
-        public string Path { get; set; }
+        public string ApplicationPath { get; set; }
 
         [DisplayName("Physical path")]
-        [Description("Physical path to the content for the virtual directory, such as c:\\hdars.")]
+        [Description("Physical path to the content for the application, such as c:\\hdars.")]
         [ScriptAlias("PhysicalPath")]
         [Persistent]
         public string PhysicalPath { get; set; }
 
         [Category("Impersonation")]
         [DisplayName("Logon method")]
-        [Description("Specifies the type of the logon operation to perform when calling LogonUser to acquire the user token impersonated to access the physical path for the virtual directory.")]
+        [Description("Specifies the type of the logon operation to perform when calling LogonUser to acquire the user token impersonated to access the physical path for the application.")]
         [ScriptAlias("LogonMethod")]
         [Persistent]
         public AuthenticationLogonMethod? LogonMethod { get; set; }
 
         [Category("Impersonation")]
         [DisplayName("Otter credentials")]
-        [Description("The Otter credential name to be impersonated when accessing the physical path for the virtual directory. If a credential name is specified, the username and password fields will be ignored.")]
+        [Description("The Otter credential name to be impersonated when accessing the physical path for the application. If a credential name is specified, the username and password fields will be ignored.")]
         [ScriptAlias("Credentials")]
         [Persistent]
         public string CredentialName { get; set; }
@@ -78,27 +69,27 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
         [Category("Impersonation")]
         [DisplayName("Password")]
-        [Description("Physical path to the content for the virtual directory, such as c:\\hdars.")]
         [ScriptAlias("Password")]
         [MappedCredential(nameof(UsernamePasswordCredentials.Password))]
         [Persistent]
         public string Password { get; set; }
 
-        public string FullPath => this.ApplicationPath?.TrimEnd('/') + "/" + this.Path?.TrimStart('/');
 #if Otter
-        public override string ConfigurationKey => this.SiteName + this.FullPath;
+        public override string ConfigurationKey => this.SiteName + "/" + this.ApplicationPath?.TrimStart('/');
 #endif
-        public static IisVirtualDirectoryConfiguration FromMwaVirtualDirectory(ILogger logger, string siteName, VirtualDirectory vdir, IisVirtualDirectoryConfiguration template = null)
+        public static IisApplicationConfiguration FromMwaApplication(ILogger logger, string siteName, Application app, IisApplicationConfiguration template = null)
         {
-            var config = new IisVirtualDirectoryConfiguration();
+            var config = new IisApplicationConfiguration();
             config.SiteName = siteName;
-            config.SetPropertiesFromMwa(logger, vdir, template);
+            config.ApplicationPath = app.Path;
+            config.SetPropertiesFromMwa(logger, app.VirtualDirectories["/"], template);
             return config;
         }
 
-        public static void SetMwaVirtualDirectory(ILogger logger, IisVirtualDirectoryConfiguration config, VirtualDirectory vdir)
+        public static void SetMwaApplication(ILogger logger, IisApplicationConfiguration config, Application app)
         {
-            config.SetPropertiesOnMwa(logger, vdir);
+            app.Path = config.ApplicationPath;
+            config.SetPropertiesOnMwa(logger, app.VirtualDirectories["/"]);
         }
 
         protected override bool SkipTemplateProperty(IisConfigurationBase template, PropertyInfo templateProperty)
@@ -109,7 +100,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             if (templateProperty.Name == nameof(ApplicationPath))
                 return true;
 
-            if (!string.IsNullOrEmpty((template as IisVirtualDirectoryConfiguration)?.CredentialName) 
+            if (!string.IsNullOrEmpty((template as IisApplicationConfiguration)?.CredentialName)
                 && Attribute.IsDefined(templateProperty, typeof(MappedCredentialAttribute)))
                 return false;
 

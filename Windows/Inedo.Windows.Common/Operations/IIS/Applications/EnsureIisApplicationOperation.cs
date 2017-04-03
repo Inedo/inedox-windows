@@ -15,26 +15,26 @@ using Inedo.BuildMaster.Extensibility.Operations;
 using Inedo.Extensions.Windows.Configurations.IIS;
 using Microsoft.Web.Administration;
 
-namespace Inedo.Extensions.Windows.Operations.IIS.VirtualDirectories
+namespace Inedo.Extensions.Windows.Operations.IIS.Applications
 {
     [Serializable]
-    [DisplayName("Ensure Virtual Directory")]
-    [Description("Ensures the existence of a virtual directory within an IIS site.")]
-    [ScriptAlias("Ensure-VirtualDirectory")]
+    [DisplayName("Ensure Application")]
+    [Description("Ensures the existence of an application within an IIS site.")]
+    [ScriptAlias("Ensure-Application")]
     [ScriptNamespace(Namespaces.IIS)]
     [SeeAlso(typeof(Sites.EnsureIisSiteOperation))]
-    [SeeAlso(typeof(Applications.EnsureIisApplicationOperation))]
+    [SeeAlso(typeof(VirtualDirectories.EnsureIisVirtualDirectoryOperation))]
     [Tag(Tags.IIS)]
     [Tag(Tags.Sites)]
     [Example(@"
-# ensures that the hdars virtual directory pool is present on the web server
-IIS::Ensure-VirtualDirectory(
+# ensures that the hdars application is present on the web server
+IIS::Ensure-Application(
     Site: Hdars,
     Path: /hdars,
     PhysicalPath: C:\hdars
 );
 ")]
-    public sealed class EnsureIisVirtualDirectoryOperation : RemoteEnsureOperation<IisVirtualDirectoryConfiguration>
+    public sealed class EnsureIisApplicationOperation : RemoteEnsureOperation<IisApplicationConfiguration>
     {
         private readonly static object lockbox = new object();
 
@@ -42,30 +42,16 @@ IIS::Ensure-VirtualDirectory(
         {
             var shortDesc = new RichDescription(
                 "Ensure ",
-                new Hilite(config[nameof(IisVirtualDirectoryConfiguration.Path)]),
-                " Virtual Directory");
+                new Hilite(config[nameof(IisApplicationConfiguration.ApplicationPath)]),
+                " Application");
             var longDesc = new RichDescription(
                 "on site ",
-                new Hilite(config[nameof(IisVirtualDirectoryConfiguration.SiteName)]));
-            if (string.Equals(config[nameof(IisVirtualDirectoryConfiguration.Exists)], bool.FalseString, StringComparison.OrdinalIgnoreCase))
+                new Hilite(config[nameof(IisApplicationConfiguration.SiteName)]));
+            if (string.Equals(config[nameof(IisApplicationConfiguration.Exists)], bool.FalseString, StringComparison.OrdinalIgnoreCase))
             {
                 longDesc.AppendContent("does not exist");
                 return new ExtendedRichDescription(shortDesc, longDesc);
             }
-
-            longDesc.AppendContent(" at ", new DirectoryHilite(config[nameof(IisVirtualDirectoryConfiguration.PhysicalPath)]));
-
-            var credential = config[nameof(IisVirtualDirectoryConfiguration.CredentialName)];
-            var username = config[nameof(IisVirtualDirectoryConfiguration.UserName)];
-            var logon = config[nameof(IisVirtualDirectoryConfiguration.LogonMethod)];
-
-            if (!string.IsNullOrEmpty(credential))
-                longDesc.AppendContent(" impersonate with credentials ", new Hilite(credential));
-            else if (!string.IsNullOrEmpty(username))
-                longDesc.AppendContent(" impersonate with username ", new Hilite(username));
-
-            if (!string.IsNullOrEmpty(logon))
-                longDesc.AppendContent(" (logon: ", new Hilite(logon), ")");
 
             return new ExtendedRichDescription(shortDesc, longDesc);
         }
@@ -76,17 +62,16 @@ IIS::Ensure-VirtualDirectory(
             if (this.Template == null)
                 throw new InvalidOperationException("Template is not set.");
 
-            this.LogDebug($"Looking for Virtual Directory \"{this.Template.FullPath}\"...");
+            this.LogDebug($"Looking for Application \"{this.Template.ApplicationPath}\"...");
 
             lock (lockbox)
                 using (var manager = new ServerManager())
                 {
-                    var uninclused = new IisVirtualDirectoryConfiguration
+                    var uninclused = new IisApplicationConfiguration
                     {
                         Exists = false,
-                        Path = this.Template.Path,
-                        SiteName = this.Template.SiteName,
-                        ApplicationPath = this.Template.ApplicationPath
+                        ApplicationPath = this.Template.ApplicationPath,
+                        SiteName = this.Template.SiteName
                     };
 
                     var site = manager.Sites[this.Template.SiteName];
@@ -101,14 +86,8 @@ IIS::Ensure-VirtualDirectory(
                         this.LogInformation($"Application \"{this.Template.ApplicationPath}\" does not exist.");
                         return Complete(uninclused);
                     }
-                    var vdir = app.VirtualDirectories[this.Template.Path];
-                    if (vdir == null)
-                    {
-                        this.LogInformation($"Virtual Directory \"{this.Template.Path}\" does not exist.");
-                        return Complete(uninclused);
-                    }
 
-                    return Complete(IisVirtualDirectoryConfiguration.FromMwaVirtualDirectory(this, this.Template.SiteName, vdir, this.Template));
+                    return Complete(IisApplicationConfiguration.FromMwaApplication(this, this.Template.SiteName, app, this.Template));
                 }
         }
 #endif
@@ -124,55 +103,48 @@ IIS::Ensure-VirtualDirectory(
                     var site = manager.Sites[this.Template.SiteName];
                     if (site == null)
                     {
-                        this.LogWarning($"Site \"{this.Template.SiteName}\" does not exist, cannot ensure a vdir on it.");
+                        this.LogWarning($"Site \"{this.Template.SiteName}\" does not exist, cannot ensure an application on it.");
                         return Complete();
                     }
                     var app = site.Applications[this.Template.ApplicationPath];
-                    if (app == null)
-                    {
-                        this.LogWarning($"Application \"{this.Template.ApplicationPath}\" does not exist, cannot ensure a vdir on it.");
-                        return Complete();
-                    }
-
-                    var vdir = app.VirtualDirectories[this.Template.Path];
                     if (this.Template.Exists)
                     {
-                        if (vdir == null)
+                        if (app == null)
                         {
                             this.LogDebug("Does not exist. Creating...");
                             if (!context.Simulation)
                             {
-                                vdir = app.VirtualDirectories.Add(this.Template.Path, this.Template.PhysicalPath);
+                                app = site.Applications.Add(this.Template.ApplicationPath, this.Template.PhysicalPath);
                                 manager.CommitChanges();
                             }
 
-                            this.LogInformation($"Virtual Directory \"{this.Template.FullPath}\" added.");
-                            vdir = app.VirtualDirectories[this.Template.Path];
+                            this.LogInformation($"Application \"{this.Template.ApplicationPath}\" added.");
+                            app = site.Applications[this.Template.ApplicationPath];
                         }
 
                         this.LogDebug("Applying configuration...");
                         if (!context.Simulation)
-                            IisVirtualDirectoryConfiguration.SetMwaVirtualDirectory(this, this.Template, vdir);
+                            IisApplicationConfiguration.SetMwaApplication(this, this.Template, app);
 
                     }
                     else
                     {
-                        if (vdir == null)
+                        if (app == null)
                         {
-                            this.LogWarning("Virtual directory doesn't exist.");
+                            this.LogWarning("Application doesn't exist.");
                             return Complete();
                         }
 
                         this.LogDebug("Exists. Deleting...");
                         if (!context.Simulation)
-                            app.VirtualDirectories.Remove(vdir);
+                            site.Applications.Remove(app);
                     }
 
                     this.LogDebug("Committing configuration...");
                     if (!context.Simulation)
                         manager.CommitChanges();
 
-                    this.LogInformation($"Virtual Directory \"{this.Template.FullPath}\" {(this.Template.Exists ? "configured" : "removed")}.");
+                    this.LogInformation($"Application \"{this.Template.ApplicationPath}\" {(this.Template.Exists ? "configured" : "removed")}.");
                 }
 
             return Complete();
