@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using Inedo.ExecutionEngine;
+using Microsoft.Web.Administration;
 
 namespace Inedo.Extensions.Windows.Configurations.IIS
 {
     internal sealed class BindingInfo : IEquatable<BindingInfo>
     {
-        public BindingInfo(string ipAddress, string port, string hostName, string protocol, string certificateStoreName, byte[] certificateHash)
+        public BindingInfo(string ipAddress, string port, string hostName, string protocol, string certificateStoreName, byte[] certificateHash, BindingSslFlags sslFlags)
         {
             if (string.IsNullOrEmpty(ipAddress))
                 throw new ArgumentNullException(nameof(ipAddress));
@@ -22,6 +23,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             this.Protocol = AH.CoalesceString(protocol?.Trim(), "http");
             this.CertificateStoreName = AH.CoalesceString(certificateStoreName?.Trim(), "My");
             this.CertificateHash = certificateHash ?? new byte[0];
+            this.SslFlags = sslFlags;
         }
 
         public string IpAddress { get; }
@@ -30,22 +32,37 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         public string Protocol { get; }
         public string CertificateStoreName { get; }
         public byte[] CertificateHash { get; }
+        public BindingSslFlags SslFlags { get; }
+
+        [Flags]
+        public enum BindingSslFlags
+        {
+            ServerNameIndication = 1,
+            UseCentralizedStore = 2
+        }
+
+        public void Modify(Binding binding)
+        {
+            binding.SetAttributeValue("sslFlags", (int)this.SslFlags);
+        }
 
         public string BindingInformation => $"{this.IpAddress}:{this.Port}:{this.HostName}";
 
         public static BindingInfo FromBindingInformation(string info, string protocol) => FromBindingInformation(info, protocol, null, null);
 
-        public static BindingInfo FromBindingInformation(string info, string protocol, string certificateStoreName, byte[] certificateHash)
+        public static BindingInfo FromBindingInformation(string info, string protocol, string certificateStoreName, byte[] certificateHash, Binding binding = null)
         {
             if (info == null)
                 return null;
 
             var parts = info.Split(':');
 
+            var sslFlags = (BindingSslFlags)Convert.ToInt32(binding?.GetAttributeValue("sslFlags") ?? 0);
+
             if (parts.Length == 2)
-                return new BindingInfo(parts[0], parts[1], null, protocol, certificateStoreName, certificateHash);
+                return new BindingInfo(parts[0], parts[1], null, protocol, certificateStoreName, certificateHash, sslFlags);
             else if (parts.Length == 3)
-                return new BindingInfo(parts[0], parts[1], parts[2], protocol, certificateStoreName, certificateHash);
+                return new BindingInfo(parts[0], parts[1], parts[2], protocol, certificateStoreName, certificateHash, sslFlags);
             else
                 return null;
         }
@@ -65,8 +82,13 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             string certificateStoreName = map.GetValueOrDefault("CertificateStoreName").AsString();
             string protocol = map.GetValueOrDefault("Protocol").AsString();
             string certificateHash = map.GetValueOrDefault("CertificateHash").AsString();
+            BindingSslFlags sslFlags = 0;
+            if (map.GetValueOrDefault("ServerNameIndication").AsBoolean() ?? false)
+                sslFlags |= BindingSslFlags.ServerNameIndication;
+            if (map.GetValueOrDefault("UseCentralizedStore").AsBoolean() ?? false)
+                sslFlags |= BindingSslFlags.UseCentralizedStore;
 
-            return new BindingInfo(ipAddress, port, hostName, protocol, certificateStoreName, HexStringToByteArray(certificateHash));
+            return new BindingInfo(ipAddress, port, hostName, protocol, certificateStoreName, HexStringToByteArray(certificateHash), sslFlags);
         }
 
         public IReadOnlyDictionary<string, RuntimeValue> ToDictionary()
@@ -83,6 +105,11 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
                 dict["CertificateHash"] = ByteArrayToHexString(this.CertificateHash);
                 dict["CertificateStoreName"] = this.CertificateStoreName;
             }
+
+            if ((this.SslFlags & BindingSslFlags.ServerNameIndication) != 0)
+                dict["ServerNameIndication"] = true;
+            if ((this.SslFlags & BindingSslFlags.UseCentralizedStore) != 0)
+                dict["UseCentralizedStore"] = true;
 
             return new ReadOnlyDictionary<string, RuntimeValue>(dict);
         }
@@ -102,7 +129,8 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
                 ^ StringComparer.OrdinalIgnoreCase.GetHashCode(this.Protocol)
                 ^ StringComparer.OrdinalIgnoreCase.GetHashCode(this.CertificateStoreName)
                 ^ StringComparer.OrdinalIgnoreCase.GetHashCode(this.HostName)
-                ^ StructuralComparisons.StructuralEqualityComparer.GetHashCode(this.CertificateHash);
+                ^ StructuralComparisons.StructuralEqualityComparer.GetHashCode(this.CertificateHash)
+                ^ (int)this.SslFlags;
         }
 
         public override bool Equals(object obj) => Equals(this, obj as BindingInfo);
@@ -120,7 +148,8 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
                 && StringComparer.OrdinalIgnoreCase.Equals(a.Protocol, b.Protocol)
                 && StringComparer.OrdinalIgnoreCase.Equals(a.CertificateStoreName, b.CertificateStoreName)
                 && StringComparer.OrdinalIgnoreCase.Equals(a.HostName, b.HostName)
-                && StructuralComparisons.StructuralEqualityComparer.Equals(a.CertificateHash, b.CertificateHash);
+                && StructuralComparisons.StructuralEqualityComparer.Equals(a.CertificateHash, b.CertificateHash)
+                && a.SslFlags == b.SslFlags;
         }
 
         private static string ByteArrayToHexString(byte[] bytes)

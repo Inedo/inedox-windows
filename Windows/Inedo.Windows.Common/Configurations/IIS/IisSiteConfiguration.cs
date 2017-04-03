@@ -86,7 +86,9 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         HostName: secure.example.com,
         Protocol: https,
         CertificateStoreName: WebHosting,
-        CertificateHash: 51599BF2909EA984793481F0DF946C57E4FD5DEA
+        CertificateHash: 51599BF2909EA984793481F0DF946C57E4FD5DEA,
+        ServerNameIndication: true,
+        UseCentralizedStore: false
     )
 )
 </pre>
@@ -133,7 +135,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             }
 
             var siteBindings = site.Bindings
-                .Select(b => BindingInfo.FromBindingInformation(b.BindingInformation, b.Protocol, b.CertificateStoreName, b.CertificateHash))
+                .Select(b => BindingInfo.FromBindingInformation(b.BindingInformation, b.Protocol, b.CertificateStoreName, b.CertificateHash, b))
                 .ToArray();
 
             if (siteBindings.Length == 0)
@@ -191,9 +193,9 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             foreach (var binding in templateBindings)
             {
                 if (binding.CertificateHash.Length > 0)
-                    site.Bindings.Add(binding.BindingInformation, binding.CertificateHash, binding.CertificateStoreName);
+                    binding.Modify(site.Bindings.Add(binding.BindingInformation, binding.CertificateHash, binding.CertificateStoreName));
                 else
-                    site.Bindings.Add(binding.BindingInformation, binding.Protocol);
+                    binding.Modify(site.Bindings.Add(binding.BindingInformation, binding.Protocol));
             }
         }
 
