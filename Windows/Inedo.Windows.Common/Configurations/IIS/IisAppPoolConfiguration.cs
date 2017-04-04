@@ -358,8 +358,8 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
         private static bool SkipTemplateProperty(IisAppPoolConfiguration template, PropertyInfo templateProperty)
         {
-            if (templateProperty.Name == nameof(Status))
-                return false;
+            if (templateProperty.Name == nameof(Status) || templateProperty.Name == nameof(Exists))
+                return true;
 
             var value = templateProperty.GetValue(template);
             if (value != null)

@@ -180,7 +180,10 @@ IIS::Ensure-AppPool(
 
                         this.LogDebug("Applying configuration...");
                         if (!context.Simulation)
+                        {
                             IisAppPoolConfiguration.SetMwaApplicationPool(this, this.Template, pool);
+                            manager.CommitChanges();
+                        }
 
                         if (this.Template.Status.HasValue)
                         {
