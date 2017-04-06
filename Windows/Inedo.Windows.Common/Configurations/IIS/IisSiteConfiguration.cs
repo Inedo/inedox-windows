@@ -192,10 +192,14 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             logger.LogDebug("Setting bindings...");
             foreach (var binding in templateBindings)
             {
+                Binding iisBinding;
+                
                 if (binding.CertificateHash.Length > 0)
-                    binding.Modify(site.Bindings.Add(binding.BindingInformation, binding.CertificateHash, binding.CertificateStoreName));
+                    iisBinding = site.Bindings.Add(binding.BindingInformation, binding.CertificateHash, binding.CertificateStoreName);
                 else
-                    binding.Modify(site.Bindings.Add(binding.BindingInformation, binding.Protocol));
+                    iisBinding = site.Bindings.Add(binding.BindingInformation, binding.Protocol);
+                
+                iisBinding.SetAttributeValue("sslFlags", (int)binding.SslFlags);
             }
         }
 

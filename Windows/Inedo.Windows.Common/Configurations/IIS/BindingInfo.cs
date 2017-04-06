@@ -8,6 +8,14 @@ using Microsoft.Web.Administration;
 
 namespace Inedo.Extensions.Windows.Configurations.IIS
 {
+    [Flags]
+    public enum BindingSslFlags
+    {
+        None = 0,
+        ServerNameIndication = 1,
+        UseCentralizedStore = 2
+    }
+
     internal sealed class BindingInfo : IEquatable<BindingInfo>
     {
         public BindingInfo(string ipAddress, string port, string hostName, string protocol, string certificateStoreName, byte[] certificateHash, BindingSslFlags sslFlags)
@@ -33,18 +41,6 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         public string CertificateStoreName { get; }
         public byte[] CertificateHash { get; }
         public BindingSslFlags SslFlags { get; }
-
-        [Flags]
-        public enum BindingSslFlags
-        {
-            ServerNameIndication = 1,
-            UseCentralizedStore = 2
-        }
-
-        public void Modify(Binding binding)
-        {
-            binding.SetAttributeValue("sslFlags", (int)this.SslFlags);
-        }
 
         public string BindingInformation => $"{this.IpAddress}:{this.Port}:{this.HostName}";
 
@@ -125,12 +121,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         public override int GetHashCode()
         {
             return StringComparer.OrdinalIgnoreCase.GetHashCode(this.IpAddress)
-                ^ StringComparer.OrdinalIgnoreCase.GetHashCode(this.Port)
-                ^ StringComparer.OrdinalIgnoreCase.GetHashCode(this.Protocol)
-                ^ StringComparer.OrdinalIgnoreCase.GetHashCode(this.CertificateStoreName)
-                ^ StringComparer.OrdinalIgnoreCase.GetHashCode(this.HostName)
-                ^ StructuralComparisons.StructuralEqualityComparer.GetHashCode(this.CertificateHash)
-                ^ (int)this.SslFlags;
+                ^ StringComparer.OrdinalIgnoreCase.GetHashCode(this.Port);
         }
 
         public override bool Equals(object obj) => Equals(this, obj as BindingInfo);
