@@ -110,7 +110,7 @@ IIS::Ensure-Site(
                         }
 
                         this.LogInformation($"Site \"{this.Template.Name}\" added.");
-                        this.LogDebug("Reloading configuration...", this.Template.Name);
+                        this.LogDebug("Reloading configuration...");
                         site = manager.Sites[this.Template.Name];
                     }
 

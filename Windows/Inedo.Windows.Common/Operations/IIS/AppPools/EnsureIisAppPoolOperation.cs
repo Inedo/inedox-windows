@@ -174,7 +174,7 @@ IIS::Ensure-AppPool(
                             }
 
                             this.LogInformation($"Application Pool \"{this.Template.Name}\" added.");
-                            this.LogDebug("Reloading configuration...", this.Template.Name);
+                            this.LogDebug("Reloading configuration...");
                             pool = manager.ApplicationPools[this.Template.Name];
                         }
 
@@ -187,6 +187,9 @@ IIS::Ensure-AppPool(
 
                         if (this.Template.Status.HasValue)
                         {
+                            this.LogDebug("Reloading configuration...");
+                            pool = manager.ApplicationPools[this.Template.Name];
+
                             if (this.Template.Status.Value == IisObjectState.Started && pool.State == ObjectState.Stopped)
                             {
                                 this.LogDebug($"Starting application pool...");
