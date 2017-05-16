@@ -226,8 +226,15 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             if (this.Bindings == null)
                 return new ComparisonResult(differences);
 
+            var otherBindings = ((IisSiteConfiguration)other).Bindings;
+            if (otherBindings == null && ((IisSiteConfiguration)other).BindingInformation != null)
+                otherBindings = new[] { BindingInfo.FromBindingInformation(((IisSiteConfiguration)other).BindingInformation, ((IisSiteConfiguration)other).BindingProtocol).ToDictionary() };
+
+            if (otherBindings == null)
+                otherBindings = Enumerable.Empty<IReadOnlyDictionary<string, RuntimeValue>>();
+
             var template = this.Bindings.Select(b => BindingInfo.FromMap(b)).ToHashSet();
-            var actual = ((IisSiteConfiguration)other).Bindings.Select(b => BindingInfo.FromMap(b)).ToHashSet();
+            var actual = otherBindings.Select(b => BindingInfo.FromMap(b)).ToHashSet();
 
             if (template.SetEquals(actual))
                 return new ComparisonResult(differences);
