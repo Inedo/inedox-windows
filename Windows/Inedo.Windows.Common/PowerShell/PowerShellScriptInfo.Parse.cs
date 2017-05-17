@@ -130,7 +130,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             }
 #elif Otter
             using (var raft = RaftRepository.OpenRaft(scriptName.Namespace ?? RaftRepository.DefaultName))
-            using (var item = raft.OpenRaftItem(RaftItemType.Script, scriptName.Name + ".ps1", FileMode.Open, FileAccess.Read))
+            using (var item = raft?.OpenRaftItem(RaftItemType.Script, scriptName.Name + ".ps1", FileMode.Open, FileAccess.Read))
             {
                 if (item == null)
                     return null;
