@@ -152,24 +152,11 @@ PSDsc cHdarsResource::cHdars (
 
             string keyName = this.ExtractConfigurationKeyName((DictionaryConfiguration)actual);
 
-            if (!results.AreEqual)
-            {
-                context.DbContext.Servers_SetConfigurationStatus(
-                    Server_Id: context.ServerId,
-                    ServerConfigurationType_Name: "DSC-" + this.ResourceName,
-                    ServerConfigurationKey_Name: keyName,
-                    ServerConfiguration_Status_Code: Domains.ServerConfigurationStatus.Drifted
-                );
-            }
-            else
-            {
-                context.DbContext.Servers_SetConfigurationStatus(
-                    Server_Id: context.ServerId,
-                    ServerConfigurationType_Name: "DSC-" + this.ResourceName,
-                    ServerConfigurationKey_Name: keyName,
-                    ServerConfiguration_Status_Code: Domains.ServerConfigurationStatus.Current
-                );
-            }
+            context.SetConfigurationStatusAsync(
+                "DSC-" + this.ResourceName, 
+                keyName, 
+                results.AreEqual ? Domains.ServerConfigurationStatus.Current : Domains.ServerConfigurationStatus.Drifted
+            );
         }
 
         public string ExtractConfigurationKeyName(DictionaryConfiguration config)
@@ -192,7 +179,7 @@ PSDsc cHdarsResource::cHdars (
 
             return keyName;
         }
-
+        
         public override void Store(PersistedConfiguration config, ConfigurationPersistenceContext context)
         {
             var dic = (DictionaryConfiguration)config;
@@ -205,16 +192,7 @@ PSDsc cHdarsResource::cHdars (
 
             string keyName = this.ExtractConfigurationKeyName(dic);
 
-            context.DbContext.Servers_CreateOrUpdateConfiguration(
-                Server_Id: context.ServerId,
-                ServerConfigurationType_Name: "DSC-" + this.ResourceName,
-                ServerConfigurationKey_Name: keyName,
-                CollectedOn_Execution_Id: context.ExecutionId,
-                CollectedFor_ServerRole_Id: context.ServerRoleId,
-                ServerConfiguration_Status_Code: Domains.ServerConfigurationStatus.Current,
-                ServerConfiguration_Configuration: configXml
-            );
-
+            context.StoreConfigurationValueAsync("DSC-" + this.ResourceName, keyName, configXml);
         }
 
         public override async Task ConfigureAsync(IOperationExecutionContext context)

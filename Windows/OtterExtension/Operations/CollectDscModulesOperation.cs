@@ -53,7 +53,8 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
                         Package_Name: module.Name,
                         Package_Version: module.Version,
                         CollectedOn_Execution_Id: context.ExecutionId,
-                        Url_Text: null
+                        Url_Text: null,
+                        CollectedFor_ServerRole_Id: context.ServerRoleId
                     ).ConfigureAwait(false);
                 }
             }
