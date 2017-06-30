@@ -40,6 +40,12 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [Required]
         public string ApplicationPath { get; set; }
 
+        [DisplayName("Application pool")]
+        [Description("The name of the application pool assigned to the application.")]
+        [ScriptAlias("AppPool")]
+        [Persistent]
+        public string ApplicationPoolName { get; set; }
+
         [DisplayName("Physical path")]
         [Description("Physical path to the content for the application, such as c:\\hdars.")]
         [ScriptAlias("PhysicalPath")]
