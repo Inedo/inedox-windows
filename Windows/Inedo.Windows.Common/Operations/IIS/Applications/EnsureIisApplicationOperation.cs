@@ -119,6 +119,7 @@ IIS::Ensure-Application(
                             }
 
                             this.LogInformation($"Application \"{this.Template.ApplicationPath}\" added.");
+                            site = manager.Sites[this.Template.SiteName];
                             app = site.Applications[this.Template.ApplicationPath];
                         }
 
