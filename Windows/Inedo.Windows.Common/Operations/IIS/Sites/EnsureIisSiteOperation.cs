@@ -15,6 +15,7 @@ using Inedo.BuildMaster.Extensibility.Operations;
 using Inedo.Extensions.Windows.Configurations.IIS;
 using Microsoft.Web.Administration;
 using System.Linq;
+using Inedo.ExecutionEngine.Executer;
 
 namespace Inedo.Extensions.Windows.Operations.IIS.Sites
 {
@@ -104,6 +105,10 @@ IIS::Ensure-Site(
                         this.LogDebug("Does not exist. Creating...");
                         if (!context.Simulation)
                         {
+                            var templateBinding = this.Template.Bindings?.FirstOrDefault();
+                            if (templateBinding == null)
+                                throw new ExecutionFailureException("When creating a new IIS site, at least one binding is required.");
+
                             var binding = BindingInfo.FromMap(this.Template.Bindings.First());
                             site = manager.Sites.Add(this.Template.Name, this.Template.VirtualDirectoryPhysicalPath, int.Parse(binding.Port));
                             manager.CommitChanges();
