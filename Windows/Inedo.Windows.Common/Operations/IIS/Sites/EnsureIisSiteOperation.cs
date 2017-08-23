@@ -95,8 +95,13 @@ IIS::Ensure-Site(
                     {
                         if (manager.ApplicationPools[this.Template.ApplicationPoolName] == null)
                         {
-                            this.LogError($"The specified application pool ({this.Template.ApplicationPoolName}) does not exist.");
-                            return Complete();
+                            this.Log(
+                                context.Simulation ? MessageLevel.Warning : MessageLevel.Error,
+                                $"The specified application pool ({this.Template.ApplicationPoolName}) does not exist."
+                            );
+
+                            if (!context.Simulation)
+                                return Complete();
                         }
                     }
 
@@ -116,7 +121,8 @@ IIS::Ensure-Site(
 
                         this.LogInformation($"Site \"{this.Template.Name}\" added.");
                         this.LogDebug("Reloading configuration...");
-                        site = manager.Sites[this.Template.Name];
+                        if (!context.Simulation)
+                            site = manager.Sites[this.Template.Name];
                     }
 
                     this.LogDebug("Applying configuration...");
