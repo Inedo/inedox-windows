@@ -62,42 +62,53 @@ namespace Inedo.Extensions.Windows.PowerShell
 
         public override async Task<object> ExecuteAsync(CancellationToken cancellationToken)
         {
-            using (var runner = new PowerShellScriptRunner { DebugLogging = this.DebugLogging, VerboseLogging = this.VerboseLogging })
+            var domain = AppDomain.CreateDomain("PowerShell");
+            try
             {
-                var outputData = new List<string>();
-
-                runner.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
-                if (this.LogOutput)
-                    runner.OutputReceived += (s, e) => this.LogInformation(e.Output?.ToString());
-
-                if (this.CollectOutput)
+                using (var runner = (PowerShellScriptRunner)domain.CreateInstanceFromAndUnwrap(typeof(PowerShellScriptRunner).Assembly.Location, typeof(PowerShellScriptRunner).FullName, false, 0, null, null, null, null))
                 {
-                    runner.OutputReceived +=
-                        (s, e) =>
-                        {
-                            var output = e.Output?.ToString();
-                            if (!string.IsNullOrWhiteSpace(output))
+                    runner.DebugLogging = this.DebugLogging;
+                    runner.VerboseLogging = this.VerboseLogging;
+
+                    var outputData = new List<string>();
+
+                    runner.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
+                    if (this.LogOutput)
+                        runner.OutputReceived += (s, e) => this.LogInformation(e.Output?.ToString());
+
+                    if (this.CollectOutput)
+                    {
+                        runner.OutputReceived +=
+                            (s, e) =>
                             {
-                                lock (outputData)
+                                var output = e.Output?.ToString();
+                                if (!string.IsNullOrWhiteSpace(output))
                                 {
-                                    outputData.Add(output);
+                                    lock (outputData)
+                                    {
+                                        outputData.Add(output);
+                                    }
                                 }
-                            }
-                        };
+                            };
+                    }
+
+                    runner.ProgressUpdate += (s, e) => this.NotifyProgressUpdate(e.PercentComplete, e.Activity);
+
+                    var outVariables = this.OutVariables.ToDictionary(v => v, v => (object)null, StringComparer.OrdinalIgnoreCase);
+
+                    int? exitCode = await runner.RunAsync(this.ScriptText, this.Variables, this.Parameters, outVariables, cancellationToken);
+
+                    return new Result
+                    {
+                        ExitCode = exitCode,
+                        Output = outputData,
+                        OutVariables = outVariables
+                    };
                 }
-
-                runner.ProgressUpdate += (s, e) => this.NotifyProgressUpdate(e.PercentComplete, e.Activity);
-
-                var outVariables = this.OutVariables.ToDictionary(v => v, v => (object)null, StringComparer.OrdinalIgnoreCase);
-
-                int? exitCode = await runner.RunAsync(this.ScriptText, this.Variables, this.Parameters, outVariables, cancellationToken);
-
-                return new Result
-                {
-                    ExitCode = exitCode,
-                    Output = outputData,
-                    OutVariables = outVariables
-                };
+            }
+            finally
+            {
+                AppDomain.Unload(domain);
             }
         }
 
