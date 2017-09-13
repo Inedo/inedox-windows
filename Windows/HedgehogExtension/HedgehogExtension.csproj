@@ -7,8 +7,8 @@
     <ProjectGuid>{2AD1B2EC-F181-46CD-ACCA-B4DD1C5AA24E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>HedgehogExtension</RootNamespace>
-    <AssemblyName>HedgehogExtension</AssemblyName>
+    <RootNamespace>Inedo.Extensions.Windows</RootNamespace>
+    <AssemblyName>Windows</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -79,4 +79,7 @@
   </ItemGroup>
   <Import Project="..\Inedo.Windows.Common\Inedo.Windows.Common.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>powershell -Command "if (Test-Path C:\Projects\Hedgehog\Extensions -PathType Container) { Compress-Archive -Path '$(TargetDir)*' -DestinationPath C:\Projects\Hedgehog\Extensions\$(TargetName).zip -Force; Move-Item C:\Projects\Hedgehog\Extensions\$(TargetName).zip -Destination C:\Projects\Hedgehog\Extensions\$(TargetName).hedgehogx -Force }"</PostBuildEvent>
+  </PropertyGroup>
 </Project>
