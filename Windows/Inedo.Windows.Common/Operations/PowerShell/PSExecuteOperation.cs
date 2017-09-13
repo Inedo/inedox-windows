@@ -8,6 +8,10 @@ using Inedo.BuildMaster.Web;
 using Inedo.Otter.Extensibility;
 using Inedo.Otter.Extensibility.Operations;
 using Inedo.Otter.Extensions;
+#elif Hedgehog
+using Inedo.Extensibility;
+using Inedo.Extensibility.Operations;
+using Inedo.Extensibility.Web;
 #endif
 using Inedo.Agents;
 using Inedo.Extensions.Windows.PowerShell;
@@ -63,7 +67,7 @@ psexec >>
         [DisplayName("Capture verbose")]
         [Description("Captures the PowerShell Write-Verbose stream into the Otter debug log. The default is false.")]
         public bool VerboseLogging { get; set; }
-#if BuildMaster
+#if BuildMaster || Hedgehog
         private bool RunOnSimulation => false;
 #elif Otter
         [ScriptAlias("RunOnSimulation")]

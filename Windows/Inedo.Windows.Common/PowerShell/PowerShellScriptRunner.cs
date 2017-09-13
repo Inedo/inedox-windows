@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 using Inedo.BuildMaster.Extensibility.Operations;
 #elif Otter
 using Inedo.Otter.Extensibility.Operations;
+#elif Hedgehog
+using Inedo.Extensibility.Operations;
 #endif
 using Inedo.Diagnostics;
 using Inedo.ExecutionEngine;
@@ -92,6 +94,20 @@ namespace Inedo.Extensions.Windows.PowerShell
             {
                 return null;
             }
+        }
+#elif Hedgehog
+        private static RuntimeValue? TryGetFunctionValue(RuntimeVariableName functionName, IOperationExecutionContext context)
+        {
+            return null;
+#warning uncomment after fixing HH SDK to match Otter
+            //try
+            //{
+            //    return context.TryGetFunctionValue(functionName.ToString());
+            //}
+            //catch
+            //{
+            //    return null;
+            //}
         }
 #endif
 

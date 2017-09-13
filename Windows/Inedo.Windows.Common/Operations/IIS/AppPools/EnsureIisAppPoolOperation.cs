@@ -14,6 +14,9 @@ using Inedo.Otter.Extensibility.Operations;
 using Inedo.BuildMaster.Extensibility;
 using Inedo.BuildMaster.Extensibility.Configurations;
 using Inedo.BuildMaster.Extensibility.Operations;
+#elif Hedgehog
+using Inedo.Extensibility;
+using Inedo.Extensibility.Operations;
 #endif
 using Inedo.Extensions.Windows.Configurations.IIS;
 using Microsoft.Web.Administration;

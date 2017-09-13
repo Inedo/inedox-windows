@@ -10,6 +10,10 @@ using Inedo.BuildMaster.Web;
 using Inedo.Otter.Extensibility;
 using Inedo.Otter.Extensibility.Operations;
 using Inedo.Otter.Web.Controls.Extensions;
+#elif Hedgehog
+using Inedo.Extensibility;
+using Inedo.Extensibility.Operations;
+using Inedo.Extensibility.Web;
 #endif
 using Inedo.Extensions.Windows.PowerShell;
 using Inedo.Diagnostics;

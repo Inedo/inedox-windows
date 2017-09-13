@@ -10,6 +10,9 @@ using Inedo.BuildMaster.Extensibility.VariableFunctions;
 using Inedo.Otter;
 using Inedo.Otter.Extensibility;
 using Inedo.Otter.Extensibility.VariableFunctions;
+#elif Hedgehog
+using Inedo.Extensibility;
+using Inedo.Extensibility.VariableFunctions;
 #endif
 using Inedo.Documentation;
 
@@ -43,6 +46,8 @@ PSCall MyPowerShellScript
         protected override object EvaluateScalar(IGenericBuildMasterContext context)
 #elif Otter
         protected override object EvaluateScalar(IOtterContext context)
+#elif Hedgehog
+        protected override object EvaluateScalar(IVariableFunctionContext context)
 #endif
         {
             return this.Serialize();

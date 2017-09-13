@@ -9,6 +9,9 @@ using Inedo.BuildMaster.Web.Controls.Plans;
 #elif Otter
 using Inedo.Otter.Web.Controls.Plans;
 using Inedo.Otter.Extensibility.RaftRepositories;
+#elif Hedgehog
+using Inedo.Extensibility.RaftRepositories;
+using Inedo.Extensibility.Web.Plans;
 #endif
 using Inedo.Extensions.Windows.PowerShell;
 using Inedo.ExecutionEngine;
@@ -22,11 +25,18 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
     {
         public static readonly IOperationEditorContext Instance = new NullOperationContext();
 
+#if !Hedgehog
         public int? ApplicationId => null;
+#endif
+
         public int? PlanId => null;
         public string PlanName => null;
         public RaftItemType? PlanType => null;
         public int? RaftId => null;
+
+#if Hedgehog
+        public int? ProjectId => null;
+#endif
     }
 
     internal sealed class PSCallOperationEditor : OperationEditor

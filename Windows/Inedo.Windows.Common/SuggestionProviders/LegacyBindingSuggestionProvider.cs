@@ -2,13 +2,15 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Inedo.Extensions.Windows.Configurations.IIS;
-
 #if BuildMaster
 using Inedo.BuildMaster.Extensibility;
 using Inedo.BuildMaster.Web.Controls;
 #elif Otter
 using Inedo.Otter.Extensibility;
 using Inedo.Otter.Web.Controls;
+#elif Hedgehog
+using Inedo.Extensibility;
+using Inedo.Extensibility.Web;
 #endif
 
 namespace Inedo.Extensions.Windows.SuggestionProviders

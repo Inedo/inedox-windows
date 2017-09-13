@@ -144,6 +144,9 @@ namespace Inedo.Extensions.Windows.PowerShell
                     return info;
                 }
             }
+#elif Hedgehog
+#warning IMPLEMENT
+            throw new NotImplementedException();
 #endif
         }
         private static IEnumerable<ParamInfo> ScrapeParameters(IEnumerable<PSToken> tokens)

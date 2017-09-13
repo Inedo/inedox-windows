@@ -12,6 +12,11 @@ using Inedo.Otter.Extensions.Credentials;
 using Inedo.BuildMaster.Extensibility;
 using Inedo.BuildMaster.Extensibility.Configurations;
 using Inedo.BuildMaster.Extensibility.Credentials;
+#elif Hedgehog
+using Inedo.Extensibility;
+using Inedo.Extensibility.Configurations;
+using Inedo.Extensibility.Credentials;
+using ILogger = Inedo.Diagnostics.ILogSink;
 #endif
 using Inedo.Serialization;
 using Microsoft.Web.Administration;

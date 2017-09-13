@@ -11,6 +11,10 @@ using Inedo.Otter;
 using Inedo.Otter.Extensibility;
 using Inedo.Otter.Extensibility.Operations;
 using Inedo.Otter.Extensibility.VariableFunctions;
+#elif Hedgehog
+using Inedo.Extensibility;
+using Inedo.Extensibility.Operations;
+using Inedo.Extensibility.VariableFunctions;
 #endif
 using Inedo.Extensions.Windows.PowerShell;
 using Inedo.Documentation;
@@ -43,6 +47,8 @@ Log-Information $NextYear;
         public override RuntimeValue Evaluate(IGenericBuildMasterContext context)
 #elif Otter
         public override RuntimeValue Evaluate(IOtterContext context)
+#elif Hedgehog
+        public override RuntimeValue Evaluate(IVariableFunctionContext context)
 #endif
         {
             var execContext = context as IOperationExecutionContext;

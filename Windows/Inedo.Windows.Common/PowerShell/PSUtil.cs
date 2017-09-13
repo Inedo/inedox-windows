@@ -12,6 +12,9 @@ using Inedo.Otter.Extensibility.RaftRepositories;
 #elif BuildMaster
 using Inedo.BuildMaster.Data;
 using Inedo.BuildMaster.Extensibility.Operations;
+#elif Hedgehog
+using Inedo.Extensibility.Operations;
+using ILogger = Inedo.Diagnostics.ILogSink;
 #endif
 
 namespace Inedo.Extensions.Windows.PowerShell
@@ -174,6 +177,9 @@ namespace Inedo.Extensions.Windows.PowerShell
             {
                 return reader.ReadToEnd();
             }
+#elif Hedgehog
+#warning IMPLEMENT
+            throw new NotImplementedException();
 #endif
         }
     }

@@ -13,6 +13,10 @@ using Inedo.Otter.Extensions.Credentials;
 using Inedo.BuildMaster.Extensibility;
 using Inedo.BuildMaster.Extensibility.Configurations;
 using Inedo.BuildMaster.Extensibility.Credentials;
+#elif Hedgehog
+using Inedo.Extensibility;
+using Inedo.Extensibility.Configurations;
+using Inedo.Extensibility.Credentials;
 #endif
 using Inedo.Serialization;
 using Inedo.WindowsServices;
