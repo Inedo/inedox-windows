@@ -71,7 +71,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             return results;
         }
 
-#if Otter
+#if Otter || Hedgehog
         private static RuntimeValue? TryGetFunctionValue(RuntimeVariableName functionName, IOperationExecutionContext context)
         {
             try
@@ -94,20 +94,6 @@ namespace Inedo.Extensions.Windows.PowerShell
             {
                 return null;
             }
-        }
-#elif Hedgehog
-        private static RuntimeValue? TryGetFunctionValue(RuntimeVariableName functionName, IOperationExecutionContext context)
-        {
-            return null;
-#warning uncomment after fixing HH SDK to match Otter
-            //try
-            //{
-            //    return context.TryGetFunctionValue(functionName.ToString());
-            //}
-            //catch
-            //{
-            //    return null;
-            //}
         }
 #endif
 
