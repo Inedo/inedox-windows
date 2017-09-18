@@ -176,5 +176,22 @@ namespace Inedo.Extensions.Windows.Configurations.Services
 
             return config;
         }
+#if Otter
+        public override IDictionary<string, string> GetPropertiesForDisplay(bool hideEncrypted)
+        {
+            var props = base.GetPropertiesForDisplay(hideEncrypted);
+
+            if (props.ContainsKey(nameof(this.Dependencies)))
+            {
+                string csv = string.Join(", ", this.Dependencies ?? Enumerable.Empty<string>());
+                if (csv.Length > 0)
+                    props[nameof(this.Dependencies)] = "@(" + csv + ")";
+                else
+                    props[nameof(this.Dependencies)] = "None";
+            }
+
+            return props;
+        }
+#endif
     }
 }
