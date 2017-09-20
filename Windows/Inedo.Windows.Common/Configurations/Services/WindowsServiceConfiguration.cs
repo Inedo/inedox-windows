@@ -80,6 +80,7 @@ namespace Inedo.Extensions.Windows.Configurations.Services
         [ScriptAlias("Password")]
         [MappedCredential(nameof(UsernamePasswordCredentials.Password))]
         [Description("The password for the account that runs the service. If NT AUTHORITY\\LocalSystem is specified, this field must not have a value set.")]
+        [IgnoreConfigurationDrift]
         public string Password { get; set; }
 
         [Category("Recovery")]
