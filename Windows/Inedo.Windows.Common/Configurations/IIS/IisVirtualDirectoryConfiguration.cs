@@ -109,7 +109,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         protected override bool SkipTemplateProperty(IisConfigurationBase template, PropertyInfo templateProperty)
         {
             if (templateProperty.Name == nameof(SiteName))
-                return false;
+                return true;
 
             if (templateProperty.Name == nameof(ApplicationPath))
                 return true;

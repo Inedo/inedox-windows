@@ -100,15 +100,19 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         public static void SetMwaApplication(ILogger logger, IisApplicationConfiguration config, Application app)
         {
             app.Path = config.ApplicationPath;
+            app.ApplicationPoolName = config.ApplicationPoolName;
             config.SetPropertiesOnMwa(logger, app.VirtualDirectories["/"]);
         }
 
         protected override bool SkipTemplateProperty(IisConfigurationBase template, PropertyInfo templateProperty)
         {
             if (templateProperty.Name == nameof(SiteName))
-                return false;
+                return true;
 
             if (templateProperty.Name == nameof(ApplicationPath))
+                return true;
+
+            if (templateProperty.Name == nameof(ApplicationPoolName))
                 return true;
 
             if (!string.IsNullOrEmpty((template as IisApplicationConfiguration)?.CredentialName)
