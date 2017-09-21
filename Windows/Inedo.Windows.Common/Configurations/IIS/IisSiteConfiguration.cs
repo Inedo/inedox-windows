@@ -75,30 +75,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [ScriptAlias("Bindings")]
         [DisplayName("Bindings")]
         [FieldEditMode(FieldEditMode.Multiline)]
-        #region [Description]...
-        [Description(@"Bindings are entered as a list of maps, e.g.:<br />
-<pre>
-@(
-    %(
-        IPAddress: 192.0.2.100, 
-        Port: 80, 
-        HostName: example.com, 
-        Protocol: http
-    ),
-    %(
-        IPAddress: 192.0.2.101, 
-        Port: 443, 
-        HostName: secure.example.com,
-        Protocol: https,
-        CertificateStoreName: WebHosting,
-        CertificateHash: 51599BF2909EA984793481F0DF946C57E4FD5DEA,
-        ServerNameIndication: true,
-        UseCentralizedStore: false
-    )
-)
-</pre>
-")]
-        #endregion
+        [Description(@"Bindings are entered as a list of maps, e.g.:<br/><pre style=""white-space: pre-wrap;"">@(%(IPAddress: 192.0.2.100, Port: 80, HostName: example.com, Protocol: http), %(IPAddress: 192.0.2.101, Port: 443, HostName: secure.example.com, Protocol: https, CertificateStoreName: WebHosting, CertificateHash: 51599BF2909EA984793481F0DF946C57E4FD5DEA, ServerNameIndication: true, UseCentralizedStore: false))</pre>")]
         public IEnumerable<IReadOnlyDictionary<string, RuntimeValue>> Bindings { get; set; }
 
         public static IisSiteConfiguration FromMwaSite(ILogger logger, Site site, IisSiteConfiguration template = null)

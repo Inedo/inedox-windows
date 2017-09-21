@@ -83,7 +83,6 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
         [Category("Impersonation")]
         [DisplayName("Password")]
-        [Description("Physical path to the content for the virtual directory, such as c:\\hdars.")]
         [ScriptAlias("Password")]
         [MappedCredential(nameof(UsernamePasswordCredentials.Password))]
         [Persistent]

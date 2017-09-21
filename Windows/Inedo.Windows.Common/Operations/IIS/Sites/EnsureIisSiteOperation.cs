@@ -36,14 +36,7 @@ IIS::Ensure-Site(
     Name: Otter,
     AppPool: OtterAppPool,
     Path: E:\Websites\Otter,
-    Bindings: @(
-        %(
-            IPAddress: 192.0.2.100, 
-            Port: 80, 
-            HostName: example.com, 
-            Protocol: http
-        )
-    )
+    Bindings: @(%(IPAddress: 192.0.2.100, Port: 80, HostName: example.com, Protocol: http))
 );
 
 # ensures that the Default Web Site is removed from the web server
