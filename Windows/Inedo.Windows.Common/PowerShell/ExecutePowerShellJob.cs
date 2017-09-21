@@ -25,6 +25,7 @@ namespace Inedo.Extensions.Windows.PowerShell
         public Dictionary<string, object> Variables { get; set; }
         public Dictionary<string, object> Parameters { get; set; }
         public string[] OutVariables { get; set; }
+        public bool Isolated { get; set; }
 
         public override void Serialize(Stream stream)
         {
@@ -34,6 +35,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             writer.Write(this.VerboseLogging);
             writer.Write(this.CollectOutput);
             writer.Write(this.LogOutput);
+            writer.Write(this.Isolated);
 
             SlimBinaryFormatter.Serialize(this.Variables, stream);
             SlimBinaryFormatter.Serialize(this.Parameters, stream);
@@ -50,6 +52,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             this.VerboseLogging = reader.ReadBoolean();
             this.CollectOutput = reader.ReadBoolean();
             this.LogOutput = reader.ReadBoolean();
+            this.Isolated = reader.ReadBoolean();
 
             this.Variables = (Dictionary<string, object>)SlimBinaryFormatter.Deserialize(stream) ?? new Dictionary<string, object>();
             this.Parameters = (Dictionary<string, object>)SlimBinaryFormatter.Deserialize(stream) ?? new Dictionary<string, object>();
@@ -62,54 +65,12 @@ namespace Inedo.Extensions.Windows.PowerShell
 
         public override async Task<object> ExecuteAsync(CancellationToken cancellationToken)
         {
-            var domain = AppDomain.CreateDomain("PowerShell");
-            try
-            {
-                using (var runner = (PowerShellScriptRunner)domain.CreateInstanceFromAndUnwrap(typeof(PowerShellScriptRunner).Assembly.Location, typeof(PowerShellScriptRunner).FullName, false, 0, null, null, null, null))
-                {
-                    runner.DebugLogging = this.DebugLogging;
-                    runner.VerboseLogging = this.VerboseLogging;
+            var runner = this.CreateRunner();
+            runner.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
+            if (this.LogOutput)
+                runner.OutputReceived += (s, e) => this.LogInformation(e.Output?.ToString());
 
-                    var outputData = new List<string>();
-
-                    runner.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
-                    if (this.LogOutput)
-                        runner.OutputReceived += (s, e) => this.LogInformation(e.Output?.ToString());
-
-                    if (this.CollectOutput)
-                    {
-                        runner.OutputReceived +=
-                            (s, e) =>
-                            {
-                                var output = e.Output?.ToString();
-                                if (!string.IsNullOrWhiteSpace(output))
-                                {
-                                    lock (outputData)
-                                    {
-                                        outputData.Add(output);
-                                    }
-                                }
-                            };
-                    }
-
-                    runner.ProgressUpdate += (s, e) => this.NotifyProgressUpdate(e.PercentComplete, e.Activity);
-
-                    var outVariables = this.OutVariables.ToDictionary(v => v, v => (object)null, StringComparer.OrdinalIgnoreCase);
-
-                    int? exitCode = await runner.RunAsync(this.ScriptText, this.Variables, this.Parameters, outVariables, cancellationToken);
-
-                    return new Result
-                    {
-                        ExitCode = exitCode,
-                        Output = outputData,
-                        OutVariables = outVariables
-                    };
-                }
-            }
-            finally
-            {
-                AppDomain.Unload(domain);
-            }
+            return await runner.ExecuteAsync(this.ScriptText, this.Variables, this.Parameters, this.OutVariables, cancellationToken);
         }
 
         public override void SerializeResponse(Stream stream, object result)
@@ -247,6 +208,23 @@ namespace Inedo.Extensions.Windows.PowerShell
             this.ProgressUpdate?.Invoke(this, new PSProgressEventArgs(percent, activity));
         }
 
+        private IPowerShellRunner CreateRunner()
+        {
+            IPowerShellRunner r;
+
+            if (this.Isolated)
+                r = new IsolatedPowerShellRunner();
+            else
+                r = new StandardRunner();
+
+            r.LogOutput = this.LogOutput;
+            r.CollectOutput = this.CollectOutput;
+            r.DebugLogging = this.DebugLogging;
+            r.VerboseLogging = this.VerboseLogging;
+
+            return r;
+        }
+
         private void NotifyProgressUpdate(int percent, string activity)
         {
             if (percent != this.currentPercent || activity != this.currentActivity)
@@ -261,11 +239,65 @@ namespace Inedo.Extensions.Windows.PowerShell
             }
         }
 
+        [Serializable]
         public sealed class Result
         {
             public int? ExitCode { get; set; }
             public List<string> Output { get; set; }
             public Dictionary<string, object> OutVariables { get; set; }
+        }
+
+        private sealed class StandardRunner : IPowerShellRunner
+        {
+            public bool LogOutput { get; set; }
+            public bool CollectOutput { get; set; }
+            public bool DebugLogging { get; set; }
+            public bool VerboseLogging { get; set; }
+
+            public event EventHandler<PowerShellOutputEventArgs> OutputReceived;
+            public event EventHandler<LogMessageEventArgs> MessageLogged;
+            public event EventHandler<PSProgressEventArgs> ProgressUpdate;
+
+            public async Task<Result> ExecuteAsync(string script, Dictionary<string, object> variables, Dictionary<string, object> parameters, string[] outVariables, CancellationToken cancellationToken)
+            {
+                using (var runner = new PowerShellScriptRunner { DebugLogging = this.DebugLogging, VerboseLogging = this.VerboseLogging })
+                {
+                    var outputData = new List<string>();
+
+                    runner.MessageLogged += (s, e) => this.MessageLogged?.Invoke(this, e);
+                    if (this.LogOutput)
+                        runner.OutputReceived += (s, e) => this.OutputReceived?.Invoke(this, e);
+
+                    if (this.CollectOutput)
+                    {
+                        runner.OutputReceived +=
+                            (s, e) =>
+                            {
+                                var output = e.Output?.ToString();
+                                if (!string.IsNullOrWhiteSpace(output))
+                                {
+                                    lock (outputData)
+                                    {
+                                        outputData.Add(output);
+                                    }
+                                }
+                            };
+                    }
+
+                    runner.ProgressUpdate += (s, e) => this.ProgressUpdate?.Invoke(this, e);
+
+                    var outVariables2 = outVariables.ToDictionary(v => v, v => (object)null, StringComparer.OrdinalIgnoreCase);
+
+                    int? exitCode = await runner.RunAsync(script, variables, parameters, outVariables2, cancellationToken);
+
+                    return new Result
+                    {
+                        ExitCode = exitCode,
+                        Output = outputData,
+                        OutVariables = outVariables2
+                    };
+                }
+            }
         }
     }
 }
