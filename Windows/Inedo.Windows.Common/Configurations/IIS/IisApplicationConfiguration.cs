@@ -93,6 +93,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             var config = new IisApplicationConfiguration();
             config.SiteName = siteName;
             config.ApplicationPath = app.Path;
+            config.ApplicationPoolName = app.ApplicationPoolName;
             config.SetPropertiesFromMwa(logger, app.VirtualDirectories["/"], template);
             return config;
         }
