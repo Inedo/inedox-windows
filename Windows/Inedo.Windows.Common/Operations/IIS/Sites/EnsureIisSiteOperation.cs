@@ -110,7 +110,10 @@ IIS::Ensure-Site(
                             if (templateBinding == null)
                                 throw new ExecutionFailureException("When creating a new IIS site, at least one binding is required.");
 
-                            var binding = BindingInfo.FromMap(this.Template.Bindings.First());
+                            var binding = BindingInfo.FromMap(templateBinding);
+                            if (binding == null)
+                                throw new ExecutionFailureException("Binding info could not be parsed. At a minimum, 'IPAddress' and 'Port' must be specified.");
+
                             site = manager.Sites.Add(this.Template.Name, this.Template.VirtualDirectoryPhysicalPath, int.Parse(binding.Port));
                             manager.CommitChanges();
                         }
