@@ -8,12 +8,15 @@ using Inedo.Diagnostics;
 using Inedo.Otter.Documentation;
 using Inedo.Otter.Extensibility;
 using Inedo.Otter.Extensibility.Configurations;
+using Inedo.Otter.Extensibility.Credentials;
 #elif BuildMaster
 using Inedo.BuildMaster.Extensibility;
 using Inedo.BuildMaster.Extensibility.Configurations;
+using Inedo.BuildMaster.Extensibility.Credentials;
 #elif Hedgehog
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
+using Inedo.Extensibility.Credentials;
 using ILogger = Inedo.Diagnostics.ILogSink;
 #endif
 using Inedo.Serialization;
@@ -104,6 +107,12 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
         protected virtual bool SkipTemplateProperty(IisConfigurationBase template, PropertyInfo templateProperty)
         {
+            if (templateProperty.Name == nameof(IExistential.Exists))
+                return true;
+
+            if (templateProperty.Name == nameof(IHasCredentials.CredentialName))
+                return true;
+
             if (template == null)
                 return false;
 

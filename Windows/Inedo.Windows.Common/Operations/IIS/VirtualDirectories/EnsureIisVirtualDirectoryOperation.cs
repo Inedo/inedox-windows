@@ -150,6 +150,8 @@ IIS::Ensure-VirtualDirectory(
                             }
 
                             this.LogInformation($"Virtual Directory \"{this.Template.FullPath}\" added.");
+                            site = manager.Sites[this.Template.SiteName];
+                            app = site.Applications[this.Template.ApplicationPath];
                             vdir = app.VirtualDirectories[this.Template.Path];
                         }
 

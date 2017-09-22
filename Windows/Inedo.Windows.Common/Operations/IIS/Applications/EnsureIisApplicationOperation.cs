@@ -39,7 +39,7 @@ IIS::Ensure-Application(
 ")]
     public sealed class EnsureIisApplicationOperation : RemoteEnsureOperation<IisApplicationConfiguration>
     {
-        private readonly static object lockbox = new object();
+        private readonly static object iisManagerLock = new object();
 
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
@@ -67,7 +67,8 @@ IIS::Ensure-Application(
 
             this.LogDebug($"Looking for Application \"{this.Template.ApplicationPath}\"...");
 
-            lock (lockbox)
+            lock (iisManagerLock)
+            {
                 using (var manager = new ServerManager())
                 {
                     var uninclused = new IisApplicationConfiguration
@@ -92,6 +93,7 @@ IIS::Ensure-Application(
 
                     return Complete(IisApplicationConfiguration.FromMwaApplication(this, this.Template.SiteName, app, this.Template));
                 }
+            }
         }
 #endif
 
@@ -100,13 +102,15 @@ IIS::Ensure-Application(
             if (this.Template == null)
                 throw new InvalidOperationException("Template is not set.");
 
-            lock (lockbox)
+            lock (iisManagerLock)
+            {
                 using (var manager = new ServerManager())
                 {
                     var site = manager.Sites[this.Template.SiteName];
                     if (site == null)
                     {
-                        this.LogWarning($"Site \"{this.Template.SiteName}\" does not exist, cannot ensure an application on it.");
+                        if (this.Template.Exists)
+                            this.LogWarning($"Site \"{this.Template.SiteName}\" does not exist, cannot ensure an application on it.");
                         return Complete();
                     }
                     var app = site.Applications[this.Template.ApplicationPath];
@@ -150,6 +154,7 @@ IIS::Ensure-Application(
 
                     this.LogInformation($"Application \"{this.Template.ApplicationPath}\" {(this.Template.Exists ? "configured" : "removed")}.");
                 }
+            }
 
             return Complete();
         }

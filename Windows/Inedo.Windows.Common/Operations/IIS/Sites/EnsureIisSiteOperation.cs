@@ -36,14 +36,7 @@ IIS::Ensure-Site(
     Name: Otter,
     AppPool: OtterAppPool,
     Path: E:\Websites\Otter,
-    Bindings: @(
-        %(
-            IPAddress: 192.0.2.100, 
-            Port: 80, 
-            HostName: example.com, 
-            Protocol: http
-        )
-    )
+    Bindings: @(%(IPAddress: 192.0.2.100, Port: 80, HostName: example.com, Protocol: http))
 );
 
 # ensures that the Default Web Site is removed from the web server
@@ -117,7 +110,10 @@ IIS::Ensure-Site(
                             if (templateBinding == null)
                                 throw new ExecutionFailureException("When creating a new IIS site, at least one binding is required.");
 
-                            var binding = BindingInfo.FromMap(this.Template.Bindings.First());
+                            var binding = BindingInfo.FromMap(templateBinding);
+                            if (binding == null)
+                                throw new ExecutionFailureException("Binding info could not be parsed. At a minimum, 'IPAddress' and 'Port' must be specified.");
+
                             site = manager.Sites.Add(this.Template.Name, this.Template.VirtualDirectoryPhysicalPath, int.Parse(binding.Port));
                             manager.CommitChanges();
                         }

@@ -83,7 +83,6 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
         [Category("Impersonation")]
         [DisplayName("Password")]
-        [Description("Physical path to the content for the virtual directory, such as c:\\hdars.")]
         [ScriptAlias("Password")]
         [MappedCredential(nameof(UsernamePasswordCredentials.Password))]
         [Persistent]
@@ -97,6 +96,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         {
             var config = new IisVirtualDirectoryConfiguration();
             config.SiteName = siteName;
+            config.ApplicationPath = template?.ApplicationPath;
             config.SetPropertiesFromMwa(logger, vdir, template);
             return config;
         }
@@ -109,7 +109,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         protected override bool SkipTemplateProperty(IisConfigurationBase template, PropertyInfo templateProperty)
         {
             if (templateProperty.Name == nameof(SiteName))
-                return false;
+                return true;
 
             if (templateProperty.Name == nameof(ApplicationPath))
                 return true;
