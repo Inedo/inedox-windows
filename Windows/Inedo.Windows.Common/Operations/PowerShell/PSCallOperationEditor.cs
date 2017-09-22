@@ -129,7 +129,11 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
         }
 
 #pragma warning disable CS0672 // Member overrides obsolete member
-        public override ActionStatement CreateActionStatement(object _model)
+        public override ActionStatement CreateActionStatement(
+#if Hedgehog
+            QualifiedName actionName,
+#endif
+            object _model)
 #pragma warning restore CS0672 // Member overrides obsolete member
         {
             var model = (PSCallOperationModel)_model;
