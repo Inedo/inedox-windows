@@ -10,7 +10,7 @@ using Inedo.Otter.Extensibility;
 using Inedo.Otter.Web.Controls;
 #elif Hedgehog
 using Inedo.Extensibility;
-using Inedo.Extensibility.Web;
+using Inedo.Web;
 #endif
 
 namespace Inedo.Extensions.Windows.SuggestionProviders

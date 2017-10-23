@@ -11,7 +11,7 @@ using Inedo.Otter.Web.Controls.Plans;
 using Inedo.Otter.Extensibility.RaftRepositories;
 #elif Hedgehog
 using Inedo.Extensibility.RaftRepositories;
-using Inedo.Extensibility.Web.Plans;
+using Inedo.Web.Plans;
 #endif
 using Inedo.Extensions.Windows.PowerShell;
 using Inedo.ExecutionEngine;

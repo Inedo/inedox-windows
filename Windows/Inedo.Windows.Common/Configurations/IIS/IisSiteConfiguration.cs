@@ -18,8 +18,9 @@ using Inedo.BuildMaster.Web.Controls;
 #elif Hedgehog
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
-using Inedo.Extensibility.Web;
+using Inedo.Web;
 using ILogger = Inedo.Diagnostics.ILogSink;
+using SuggestibleValue = Inedo.Web.SuggestableValueAttribute;
 #endif
 using Inedo.Serialization;
 using Microsoft.Web.Administration;
