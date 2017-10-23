@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildMasterExtension", "Bui
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OtterExtension", "OtterExtension\OtterExtension.csproj", "{DBE39092-6455-40EB-B87D-6736E12E4D96}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HedgehogExtension", "HedgehogExtension\HedgehogExtension.csproj", "{2AD1B2EC-F181-46CD-ACCA-B4DD1C5AA24E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InedoExtension", "InedoExtension\InedoExtension.csproj", "{2AD1B2EC-F181-46CD-ACCA-B4DD1C5AA24E}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
