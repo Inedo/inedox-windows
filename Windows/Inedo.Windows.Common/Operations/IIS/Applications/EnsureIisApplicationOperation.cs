@@ -14,6 +14,7 @@ using Inedo.BuildMaster.Extensibility.Operations;
 #elif Hedgehog
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
+using Inedo.Extensibility.Configurations;
 #endif
 using Inedo.Extensions.Windows.Configurations.IIS;
 using Microsoft.Web.Administration;
@@ -59,7 +60,7 @@ IIS::Ensure-Application(
             return new ExtendedRichDescription(shortDesc, longDesc);
         }
 
-#if Otter
+#if Otter || Hedgehog
         protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationExecutionContext context)
         {
             if (this.Template == null)
