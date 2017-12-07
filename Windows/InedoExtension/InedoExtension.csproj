@@ -33,22 +33,22 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Inedo.Agents.Client, Version=516.0.0.0, Culture=neutral, PublicKeyToken=9de986a2f8db80fc, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.SDK.0.1.0-pre0040\lib\net45\Inedo.Agents.Client.dll</HintPath>
+      <HintPath>..\packages\Inedo.SDK.0.1.0-pre0042\lib\net45\Inedo.Agents.Client.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
     <Reference Include="Inedo.ExecutionEngine, Version=62.6.0.0, Culture=neutral, PublicKeyToken=68703f0e52007e75, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.SDK.0.1.0-pre0040\lib\net45\Inedo.ExecutionEngine.dll</HintPath>
+      <HintPath>..\packages\Inedo.SDK.0.1.0-pre0042\lib\net45\Inedo.ExecutionEngine.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
     <Reference Include="Inedo.SDK, Version=0.1.0.0, Culture=neutral, PublicKeyToken=29fae5dec3001603, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.SDK.0.1.0-pre0040\lib\net45\Inedo.SDK.dll</HintPath>
+      <HintPath>..\packages\Inedo.SDK.0.1.0-pre0042\lib\net45\Inedo.SDK.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
     <Reference Include="InedoLib, Version=516.0.0.0, Culture=neutral, PublicKeyToken=112cfb71329714a6, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.SDK.0.1.0-pre0040\lib\net45\InedoLib.dll</HintPath>
+      <HintPath>..\packages\Inedo.SDK.0.1.0-pre0042\lib\net45\InedoLib.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
