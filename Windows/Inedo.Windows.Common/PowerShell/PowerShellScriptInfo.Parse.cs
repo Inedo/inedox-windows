@@ -5,11 +5,13 @@ using System.Linq;
 using System.IO;
 using System.Management.Automation;
 using System.Text.RegularExpressions;
-using Inedo.ExecutionEngine;
+using System.Threading.Tasks;
 #if BuildMaster
 using Inedo.BuildMaster.Data;
 #elif Otter
 using Inedo.Otter.Extensibility.RaftRepositories;
+#elif Hedgehog
+using Inedo.Extensibility.RaftRepositories;
 #endif
 
 namespace Inedo.Extensions.Windows.PowerShell
@@ -101,10 +103,36 @@ namespace Inedo.Extensions.Windows.PowerShell
                 ))
             );
         }
-        public static PowerShellScriptInfo TryLoad(LooselyQualifiedName scriptName)
+
+#if Hedgehog
+        public static async Task<PowerShellScriptInfo> TryLoadAsync(LooselyQualifiedName scriptName)
+        {
+            using (var raft = RaftRepository.OpenRaft(scriptName.Namespace ?? RaftRepository.DefaultName))
+            {
+                if (raft == null)
+                    return null;
+
+                using (var item = await raft.OpenRaftItemAsync(RaftItemType.Script, scriptName.Name + ".ps1", FileMode.Open, FileAccess.Read).ConfigureAwait(false))
+                {
+                    if (item == null)
+                        return null;
+
+                    using (var reader = new StreamReader(item, InedoLib.UTF8Encoding))
+                    {
+                        if (!TryParse(reader, out var info))
+                            return null;
+
+                        return info;
+                    }
+                }
+            }
+        }
+#endif
+
+#if !Hedgehog
+        public static Task<PowerShellScriptInfo> TryLoadAsync(LooselyQualifiedName scriptName)
         {
 #if BuildMaster
-
             int? applicationId = null;
             if (!string.IsNullOrWhiteSpace(scriptName.Namespace) && !string.Equals(scriptName.Name, "GLOBAL", StringComparison.OrdinalIgnoreCase))
             {
@@ -119,36 +147,34 @@ namespace Inedo.Extensions.Windows.PowerShell
 
             var script = DB.ScriptAssets_GetScriptByName(name, applicationId);
             if (script == null)
-                return null;
+                return Task.FromResult<PowerShellScriptInfo>(null);
 
             using (var stream = new MemoryStream(script.Script_Text, false))
             using (var reader = new StreamReader(stream, InedoLib.UTF8Encoding))
             {
                 PowerShellScriptInfo info;
                 TryParse(reader, out info);
-                return info;
+                return Task.FromResult(info);
             }
 #elif Otter
             using (var raft = RaftRepository.OpenRaft(scriptName.Namespace ?? RaftRepository.DefaultName))
             using (var item = raft?.OpenRaftItem(RaftItemType.Script, scriptName.Name + ".ps1", FileMode.Open, FileAccess.Read))
             {
                 if (item == null)
-                    return null;
+                    return Task.FromResult<PowerShellScriptInfo>(null);
 
                 using (var reader = new StreamReader(item, InedoLib.UTF8Encoding))
                 {
-                    PowerShellScriptInfo info;
-                    if (!TryParse(reader, out info))
-                        return null;
+                    if (!TryParse(reader, out var info))
+                        return Task.FromResult<PowerShellScriptInfo>(null);
 
-                    return info;
+                    return Task.FromResult(info);
                 }
             }
-#elif Hedgehog
-#warning IMPLEMENT
-            throw new NotImplementedException();
 #endif
         }
+#endif
+
         private static IEnumerable<ParamInfo> ScrapeParameters(IEnumerable<PSToken> tokens)
         {
             int groupDepth = 0;

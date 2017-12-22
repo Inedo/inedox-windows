@@ -14,6 +14,7 @@ using Inedo.BuildMaster.Data;
 using Inedo.BuildMaster.Extensibility.Operations;
 #elif Hedgehog
 using Inedo.Extensibility.Operations;
+using Inedo.Extensibility.RaftRepositories;
 using ILogger = Inedo.Diagnostics.ILogSink;
 #endif
 
@@ -23,13 +24,12 @@ namespace Inedo.Extensions.Windows.PowerShell
     {
         public static async Task<ExecutePowerShellJob.Result> ExecuteScriptAsync(ILogger logger, IOperationExecutionContext context, string fullScriptName, IReadOnlyDictionary<string, RuntimeValue> arguments, IDictionary<string, RuntimeValue> outArguments, bool collectOutput, EventHandler<PSProgressEventArgs> progressUpdateHandler)
         {
-            var scriptText = GetScriptText(logger, fullScriptName, context);
+            var scriptText = await GetScriptTextAsync(logger, fullScriptName, context);
 
             var variables = new Dictionary<string, object>();
             var parameters = new Dictionary<string, object>();
 
-            PowerShellScriptInfo scriptInfo;
-            if (PowerShellScriptInfo.TryParse(new StringReader(scriptText), out scriptInfo))
+            if (PowerShellScriptInfo.TryParse(new StringReader(scriptText), out var scriptInfo))
             {
                 foreach (var var in arguments)
                 {
@@ -76,26 +76,19 @@ namespace Inedo.Extensions.Windows.PowerShell
 
         private static RuntimeValue ToRuntimeValue(object value)
         {
-            if (value is System.Collections.IDictionary)
-            {
-                var dict = ((System.Collections.IDictionary)value);
+            if (value is System.Collections.IDictionary dict)
                 return new RuntimeValue(dict.Keys.Cast<object>().ToDictionary(k => k?.ToString(), k => ToRuntimeValue(dict[k])));
-            }
             if (value is string)
-            {
                 return new RuntimeValue(value?.ToString());
-            }
-            if (value is System.Collections.IEnumerable)
-            {
-                var list = ((System.Collections.IEnumerable)value);
+            if (value is System.Collections.IEnumerable list)
                 return new RuntimeValue(list.Cast<object>().Select(ToRuntimeValue));
-            }
+
             return new RuntimeValue(value?.ToString());
         }
 
-        private static string GetScriptText(ILogger logger, string fullScriptName, IOperationExecutionContext context)
+#if Hedgehog
+        private static async Task<string> GetScriptTextAsync(ILogger logger, string fullScriptName, IOperationExecutionContext context)
         {
-#if Otter
             string scriptName;
             string raftName;
             var scriptNameParts = fullScriptName.Split(new[] { "::" }, 2, StringSplitOptions.None);
@@ -118,7 +111,7 @@ namespace Inedo.Extensions.Windows.PowerShell
                     return null;
                 }
 
-                using (var scriptItem = raft.OpenRaftItem(RaftItemType.Script, scriptName + ".ps1", FileMode.Open, FileAccess.Read))
+                using (var scriptItem = await raft.OpenRaftItemAsync(RaftItemType.Script, scriptName + ".ps1", FileMode.Open, FileAccess.Read))
                 {
                     if (scriptItem == null)
                     {
@@ -131,6 +124,51 @@ namespace Inedo.Extensions.Windows.PowerShell
                         var scriptText = new StreamReader(scriptItem, InedoLib.UTF8Encoding).ReadToEnd();
                         logger.LogDebug($"Found script {scriptName}.ps1 in {raftName} raft.");
                         return scriptText;
+                    }
+                }
+            }
+        }
+#endif
+
+#if !Hedgehog
+        private static Task<string> GetScriptTextAsync(ILogger logger, string fullScriptName, IOperationExecutionContext context)
+        {
+#if Otter
+            string scriptName;
+            string raftName;
+            var scriptNameParts = fullScriptName.Split(new[] { "::" }, 2, StringSplitOptions.None);
+            if (scriptNameParts.Length == 2)
+            {
+                raftName = scriptNameParts[0];
+                scriptName = scriptNameParts[1];
+            }
+            else
+            {
+                raftName = RaftRepository.DefaultName;
+                scriptName = scriptNameParts[0];
+            }
+
+            using (var raft = RaftRepository.OpenRaft(raftName))
+            {
+                if (raft == null)
+                {
+                    logger.LogError($"Raft {raftName} not found.");
+                    return Task.FromResult<string>(null);
+                }
+
+                using (var scriptItem = raft.OpenRaftItem(RaftItemType.Script, scriptName + ".ps1", FileMode.Open, FileAccess.Read))
+                {
+                    if (scriptItem == null)
+                    {
+                        logger.LogError($"Script {scriptName}.ps1 not found in {raftName} raft.");
+                        return Task.FromResult<string>(null);
+                    }
+
+                    using (var reader = new StreamReader(scriptItem, InedoLib.UTF8Encoding))
+                    {
+                        var scriptText = new StreamReader(scriptItem, InedoLib.UTF8Encoding).ReadToEnd();
+                        logger.LogDebug($"Found script {scriptName}.ps1 in {raftName} raft.");
+                        return Task.FromResult(scriptText);
                     }
                 }
             }
@@ -150,7 +188,7 @@ namespace Inedo.Extensions.Windows.PowerShell
                     if (applicationId == null)
                     {
                         logger.LogError($"Invalid application name {scriptNameParts[0]}.");
-                        return null;
+                        return Task.FromResult<string>(null);
                     }
                 }
 
@@ -169,18 +207,16 @@ namespace Inedo.Extensions.Windows.PowerShell
             if (script == null)
             {
                 logger.LogError($"Script {scriptName} not found.");
-                return null;
+                return Task.FromResult<string>(null);
             }
 
             using (var stream = new MemoryStream(script.Script_Text, false))
             using (var reader = new StreamReader(stream, InedoLib.UTF8Encoding))
             {
-                return reader.ReadToEnd();
+                return Task.FromResult(reader.ReadToEnd());
             }
-#elif Hedgehog
-#warning IMPLEMENT
-            throw new NotImplementedException();
 #endif
         }
+#endif
     }
 }

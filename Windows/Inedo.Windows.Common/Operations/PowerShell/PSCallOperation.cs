@@ -88,7 +88,7 @@ pscall hdars (
             var scriptName = LooselyQualifiedName.TryParse(defaultArg);
             if (scriptName != null)
             {
-                var info = PowerShellScriptInfo.TryLoad(scriptName);
+                var info = PowerShellScriptInfo.TryLoadAsync(scriptName).GetAwaiter().GetResult();
                 if (!string.IsNullOrEmpty(info?.Description))
                 {
                     longDesc.AppendContent(info.Description);
