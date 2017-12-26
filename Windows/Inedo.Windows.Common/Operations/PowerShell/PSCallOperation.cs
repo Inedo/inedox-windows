@@ -13,6 +13,7 @@ using Inedo.Otter.Web.Controls.Extensions;
 #elif Hedgehog
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
+using Inedo.ExecutionEngine.Mapping;
 using Inedo.Web;
 #endif
 using Inedo.Extensions.Windows.PowerShell;
