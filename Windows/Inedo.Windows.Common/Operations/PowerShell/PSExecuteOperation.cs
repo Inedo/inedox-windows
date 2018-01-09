@@ -75,6 +75,11 @@ psexec >>
         [Description("Indicates whether the script will execute in simulation mode. The default is false.")]
         public bool RunOnSimulation { get; set; }
 #endif
+
+        [ScriptAlias("Isolated")]
+        [Description("When true, the script is run in a temporary AppDomain that is unloaded when the script completes. This is an experimental feature and may decrease performance, but may be useful if a script loads assemblies or other resources that would otherwise be leaked.")]
+        public bool Isolated { get; set; }
+
         public override async Task ExecuteAsync(IOperationExecutionContext context)
         {
             if (context.Simulation && !this.RunOnSimulation)
@@ -92,7 +97,8 @@ psexec >>
                 VerboseLogging = this.VerboseLogging,
                 CollectOutput = false,
                 LogOutput = true,
-                Variables = PowerShellScriptRunner.ExtractVariables(this.ScriptText, context)
+                Variables = PowerShellScriptRunner.ExtractVariables(this.ScriptText, context),
+                Isolated = this.Isolated
             };
 
             job.MessageLogged += (s, e) => this.Log(e.Level, e.Message);

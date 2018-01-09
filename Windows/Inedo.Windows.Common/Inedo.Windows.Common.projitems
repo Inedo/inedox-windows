@@ -45,6 +45,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)PowerShell\InedoPSHost.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PowerShell\InedoPSHostRawUserInterface.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PowerShell\InedoPSHostUserInterface.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PowerShell\IPowerShellRunner.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PowerShell\IsolatedPowerShellRunner.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PowerShell\PowerShellExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PowerShell\PowerShellOutputEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PowerShell\PowerShellParameterInfo.cs" />
