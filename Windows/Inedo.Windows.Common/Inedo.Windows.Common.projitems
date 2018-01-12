@@ -21,6 +21,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Functions\PsEvalVariableFunction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LooselyQualifiedName.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Namespaces.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Operations\DotNet\EnsureAppSettingOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPools\AppPoolJob.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPools\AppPoolOperationBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\IIS\AppPools\EnsureIisAppPoolOperation.cs" />

@@ -7,10 +7,18 @@ using System.Xml.Linq;
 using Inedo.Agents;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
+#if Hedgehog
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
 using Inedo.Extensibility.Operations;
+#elif BuildMaster
+using Inedo.BuildMaster.Extensibility;
+using Inedo.BuildMaster.Extensibility.Configurations;
+using Inedo.BuildMaster.Extensibility.Operations;
+#endif
 
+// Otter has this built in before v2.0
+#if !Otter
 namespace Inedo.Extensions.Windows.Operations.DotNet
 {
     [DisplayName("Ensure AppSetting")]
@@ -19,8 +27,7 @@ namespace Inedo.Extensions.Windows.Operations.DotNet
     [ScriptNamespace("DotNet")]
     [Tag(".net")]
     [Note("The \"appSettings\" section must exist in the file under the \"configuration\" element in order to ensure the key/value pair is present.")]
-    [Example(@"
-# ensures that the application is configured to use test mode for the example third-party API
+    [Example(@"# ensures that the application is configured to use test mode for the example third-party API
 DotNet::Ensure-AppSetting(
 	File: E:\Website\web.config,
 	Key: Accounts.ThirdParty.PaymentApi,
@@ -62,6 +69,7 @@ DotNet::Ensure-AppSetting(
             );
         }
 
+#if !BuildMaster
         public override async Task<PersistedConfiguration> CollectAsync(IOperationCollectionContext context)
         {
             var fileOps = await context.Agent.GetServiceAsync<IFileOperationsExecuter>();
@@ -81,6 +89,7 @@ DotNet::Ensure-AppSetting(
                 return this.GetConfiguration((string)keyElement?.Attribute("value"));
             }
         }
+#endif
 
         public override async Task ConfigureAsync(IOperationExecutionContext context)
         {
@@ -133,6 +142,7 @@ DotNet::Ensure-AppSetting(
             }
         }
 
+#if !BuildMaster
         private KeyValueConfiguration GetConfiguration(string value)
         {
             return new KeyValueConfiguration
@@ -144,5 +154,7 @@ DotNet::Ensure-AppSetting(
         }
 
         public override PersistedConfiguration GetConfigurationTemplate() => this.GetConfiguration(this.ExpectedValue);
+#endif
     }
 }
+#endif
