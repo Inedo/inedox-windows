@@ -102,10 +102,11 @@ DotNet::Ensure-AppSetting(
                 return;
             }
 
-            var fileAccess = context.Simulation ? FileAccess.Read : FileAccess.ReadWrite;
-            using (var file = await fileOps.OpenFileAsync(fileName, FileMode.Open, fileAccess))
+            XDocument doc;
+
+            using (var file = await fileOps.OpenFileAsync(fileName, FileMode.Open, FileAccess.Read))
             {
-                var doc = XDocument.Load(file);
+                doc = XDocument.Load(file);
 
                 var appSettings = doc.Root.Descendants("appSettings").FirstOrDefault();
                 if (appSettings == null)
@@ -130,16 +131,17 @@ DotNet::Ensure-AppSetting(
                     keyElement.SetAttributeValue("value", this.ExpectedValue);
                     this.LogDebug("AppSetting value changed.");
                 }
-
-                if (!context.Simulation)
-                {
-                    file.Position = 0;
-                    doc.Save(file);
-                    file.SetLength(file.Position);
-                }
-
-                this.LogInformation($"AppSetting \"{this.ConfigurationKey}\" set to \"{this.ExpectedValue}\".");
             }
+
+            if (!context.Simulation)
+            {
+                using (var file = await fileOps.OpenFileAsync(fileName, FileMode.Create, FileAccess.Write))
+                {
+                    doc.Save(file);
+                }
+            }
+
+            this.LogInformation($"AppSetting \"{this.ConfigurationKey}\" set to \"{this.ExpectedValue}\".");
         }
 
 #if !BuildMaster
