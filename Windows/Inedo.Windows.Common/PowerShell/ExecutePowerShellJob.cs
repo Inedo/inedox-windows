@@ -12,6 +12,8 @@ namespace Inedo.Extensions.Windows.PowerShell
 {
     internal sealed class ExecutePowerShellJob : RemoteJob
     {
+        internal const string CollectOutputAsDictionary = "{3BB97EBB-FCF5-4BBC-B71C-60DEB4D1BA84}";
+
         private int currentPercent;
         private string currentActivity = string.Empty;
 
@@ -75,12 +77,21 @@ namespace Inedo.Extensions.Windows.PowerShell
                     runner.OutputReceived +=
                         (s, e) =>
                         {
-                            var output = e.Output?.ToString();
-                            if (!string.IsNullOrWhiteSpace(output))
+                            if (this.OutVariables.Contains(CollectOutputAsDictionary))
                             {
-                                lock (outputData)
+                                this.Variables[CollectOutputAsDictionary] = e.Output.Properties
+                                    .Where(p => p.IsGettable && p.IsInstance)
+                                    .ToDictionary(p => p.Name, p => p.Value?.ToString());
+                            }
+                            else
+                            {
+                                var output = e.Output?.ToString();
+                                if (!string.IsNullOrWhiteSpace(output))
                                 {
-                                    outputData.Add(output);
+                                    lock (outputData)
+                                    {
+                                        outputData.Add(output);
+                                    }
                                 }
                             }
                         };

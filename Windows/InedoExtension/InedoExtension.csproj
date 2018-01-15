@@ -73,6 +73,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Operations\CollectDscModulesOperation.cs" />
+    <Compile Include="Operations\PSDscOperation.cs" />
+    <Compile Include="Operations\PSEnsureOperation.cs" />
+    <Compile Include="PowerShell\CollectDscModulesJob.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

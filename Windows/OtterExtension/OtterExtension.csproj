@@ -82,7 +82,6 @@
     <Compile Include="Operations\PSDscOperation.cs" />
     <Compile Include="Operations\PSEnsureOperation.cs" />
     <Compile Include="PowerShell\CollectDscModulesJob.cs" />
-    <Compile Include="PowerShell\ExecutePowerShellDscJob.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

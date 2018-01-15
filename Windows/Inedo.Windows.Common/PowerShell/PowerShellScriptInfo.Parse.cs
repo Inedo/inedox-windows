@@ -6,6 +6,7 @@ using System.IO;
 using System.Management.Automation;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Inedo.ExecutionEngine;
 #if BuildMaster
 using Inedo.BuildMaster.Data;
 #elif Otter
