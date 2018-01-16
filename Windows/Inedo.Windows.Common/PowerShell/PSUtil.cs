@@ -121,7 +121,7 @@ namespace Inedo.Extensions.Windows.PowerShell
 
                     using (var reader = new StreamReader(scriptItem, InedoLib.UTF8Encoding))
                     {
-                        var scriptText = new StreamReader(scriptItem, InedoLib.UTF8Encoding).ReadToEnd();
+                        var scriptText = reader.ReadToEnd();
                         logger.LogDebug($"Found script {scriptName}.ps1 in {raftName} raft.");
                         return scriptText;
                     }

@@ -4,18 +4,16 @@ using System.ComponentModel;
 using System.Linq;
 using System.Management.Automation.Language;
 using System.Management.Automation.Runspaces;
-using System.Text;
 using System.Threading.Tasks;
 using Inedo.Agents;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.ExecutionEngine;
+using Inedo.ExecutionEngine.Mapping;
+using Inedo.Extensibility;
+using Inedo.Extensibility.Configurations;
+using Inedo.Extensibility.Operations;
 using Inedo.Extensions.Windows.PowerShell;
-using Inedo.Otter.Data;
-using Inedo.Otter.Extensibility;
-using Inedo.Otter.Extensibility.Configurations;
-using Inedo.Otter.Extensibility.Operations;
-using Inedo.Otter.Extensions.Configurations;
 using Inedo.Serialization;
 
 namespace Inedo.Extensions.Windows.Operations.PowerShell
@@ -73,7 +71,7 @@ PSDsc cHdarsResource::cHdars (
 
         public new DictionaryConfiguration Template => (DictionaryConfiguration)this.GetConfigurationTemplate();
 
-        public override async Task<PersistedConfiguration> CollectAsync(IOperationExecutionContext context)
+        public override async Task<PersistedConfiguration> CollectAsync(IOperationCollectionContext context)
         {
             var fullScriptName = this.DefaultArgument.AsString();
             if (fullScriptName == null)
@@ -156,7 +154,7 @@ PSDsc cHdarsResource::cHdars (
                 return new ComparisonResult(new[] { new Difference("InDesiredState", true, false) });
         }
 
-        public override void StoreConfigurationStatus(PersistedConfiguration actual, ComparisonResult results, ConfigurationPersistenceContext context)
+        public override async Task StoreConfigurationStatusAsync(PersistedConfiguration actual, ComparisonResult results, ConfigurationPersistenceContext context)
         {
             if (actual == null)
                 throw new ArgumentNullException(nameof(actual));
@@ -174,17 +172,17 @@ PSDsc cHdarsResource::cHdars (
             if (!string.Equals(ensurePropertyValue, bool.FalseString, StringComparison.OrdinalIgnoreCase))
                 configXml = Persistence.SerializeToPersistedObjectXml(config);
 
-            context.SetConfigurationStatusAsync(
+            await context.SetConfigurationStatusAsync(
                 typeName: "DSC-" + this.ResourceName,
                 key: keyName,
-                statusCode: results.AreEqual ? Domains.ServerConfigurationStatus.Current : Domains.ServerConfigurationStatus.Drifted
-            ).WaitAndUnwrapExceptions();
+                status: results.AreEqual ? ConfigurationStatus.Current : ConfigurationStatus.Drifted
+            );
 
-            context.StoreConfigurationValueAsync(
+            await context.StoreConfigurationValueAsync(
                 typeName: "DSC-" + this.ResourceName,
                 key: keyName,
                 value: configXml
-            ).WaitAndUnwrapExceptions();
+            );
         }
 
         public string ExtractConfigurationKeyName(DictionaryConfiguration config)
