@@ -10,12 +10,15 @@ using Inedo.Otter.Documentation;
 using Inedo.Otter.Extensibility;
 using Inedo.Otter.Extensibility.Configurations;
 using Inedo.Otter.Extensibility.Operations;
+using CollectContext = Inedo.Otter.Extensibility.Operations.IRemoteOperationExecutionContext;
 #elif BuildMaster
 using Inedo.BuildMaster.Extensibility;
 using Inedo.BuildMaster.Extensibility.Operations;
 #elif Hedgehog
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
+using Inedo.Extensibility.Configurations;
+using CollectContext = Inedo.Extensibility.Operations.IRemoteOperationCollectionContext;
 #endif
 using Inedo.Extensions.Windows.Configurations.Services;
 using Inedo.WindowsServices;
@@ -75,8 +78,8 @@ Windows::Ensure-Service
             return richDesc;
         }
 
-#if Otter
-        protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationExecutionContext context)
+#if !BuildMaster
+        protected override Task<PersistedConfiguration> RemoteCollectAsync(CollectContext context)
         {
             this.LogDebug($"Looking for service \"{this.Template.Name}\"...");
             return Complete(WindowsServiceConfiguration.FromService(this.Template.Name));

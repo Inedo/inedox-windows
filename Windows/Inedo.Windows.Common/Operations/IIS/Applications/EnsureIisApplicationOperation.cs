@@ -62,7 +62,7 @@ IIS::Ensure-Application(
             return new ExtendedRichDescription(shortDesc, longDesc);
         }
 
-#if Otter || Hedgehog
+#if !BuildMaster
         protected override Task<PersistedConfiguration> RemoteCollectAsync(CollectContext context)
         {
             if (this.Template == null)

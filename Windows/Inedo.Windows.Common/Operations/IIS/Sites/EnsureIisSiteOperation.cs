@@ -7,6 +7,7 @@ using Inedo.Documentation;
 using Inedo.Otter.Extensibility;
 using Inedo.Otter.Extensibility.Configurations;
 using Inedo.Otter.Extensibility.Operations;
+using CollectContext = Inedo.Otter.Extensibility.Operations.IRemoteOperationExecutionContext;
 #elif BuildMaster
 using Inedo.BuildMaster.Extensibility;
 using Inedo.BuildMaster.Extensibility.Configurations;
@@ -14,6 +15,8 @@ using Inedo.BuildMaster.Extensibility.Operations;
 #elif Hedgehog
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
+using Inedo.Extensibility.Configurations;
+using CollectContext = Inedo.Extensibility.Operations.IRemoteOperationCollectionContext;
 #endif
 using Inedo.Extensions.Windows.Configurations.IIS;
 using Microsoft.Web.Administration;
@@ -61,8 +64,8 @@ IIS::Ensure-Site(
                 return new ExtendedRichDescription(shortDesc, new RichDescription("application pool ", new Hilite(appPool), "; virtual directory path: ", new Hilite(vdir)));
         }
 
-#if Otter
-        protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationExecutionContext context)
+#if !BuildMaster
+        protected override Task<PersistedConfiguration> RemoteCollectAsync(CollectContext context)
         {
             this.LogDebug($"Looking for Site \"{this.Template.Name}\"...");
             using (var manager = new ServerManager())

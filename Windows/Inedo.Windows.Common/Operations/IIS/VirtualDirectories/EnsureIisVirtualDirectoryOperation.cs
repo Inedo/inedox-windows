@@ -7,13 +7,16 @@ using Inedo.Documentation;
 using Inedo.Otter.Extensibility;
 using Inedo.Otter.Extensibility.Configurations;
 using Inedo.Otter.Extensibility.Operations;
+using CollectContext = Inedo.Otter.Extensibility.Operations.IRemoteOperationExecutionContext;
 #elif BuildMaster
 using Inedo.BuildMaster.Extensibility;
 using Inedo.BuildMaster.Extensibility.Configurations;
 using Inedo.BuildMaster.Extensibility.Operations;
 #elif Hedgehog
 using Inedo.Extensibility;
+using Inedo.Extensibility.Configurations;
 using Inedo.Extensibility.Operations;
+using CollectContext = Inedo.Extensibility.Operations.IRemoteOperationCollectionContext;
 #endif
 using Inedo.Extensions.Windows.Configurations.IIS;
 using Microsoft.Web.Administration;
@@ -73,8 +76,8 @@ IIS::Ensure-VirtualDirectory(
             return new ExtendedRichDescription(shortDesc, longDesc);
         }
 
-#if Otter
-        protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationExecutionContext context)
+#if !BuildMaster
+        protected override Task<PersistedConfiguration> RemoteCollectAsync(CollectContext context)
         {
             if (this.Template == null)
                 throw new InvalidOperationException("Template is not set.");
