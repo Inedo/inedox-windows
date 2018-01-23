@@ -35,6 +35,8 @@ namespace Inedo.Extensions.Windows.PowerShell
                 {
                     var value = PowerShellScriptRunner.ConvertToPSValue(var.Value);
                     var param = scriptInfo.Parameters.FirstOrDefault(p => string.Equals(p.Name, var.Key, StringComparison.OrdinalIgnoreCase));
+                    if (param != null && param.IsBooleanOrSwitch)
+                        value = Convert.ToBoolean(value);
                     if (param != null)
                         parameters[param.Name] = value;
                     else
