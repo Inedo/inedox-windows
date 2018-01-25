@@ -28,7 +28,7 @@ namespace Inedo.Extensions.Windows.Operations.IIS.AppPools
 {
     [Serializable]
     [DisplayName("Ensure App Pool")]
-    [Description("Ensures the existence of a file on a server.")]
+    [Description("Ensures the existence of an application pool on a server.")]
     [ScriptAlias("Ensure-AppPool")]
     [ScriptNamespace(Namespaces.IIS)]
     [SeeAlso(typeof(Sites.EnsureIisSiteOperation))]
