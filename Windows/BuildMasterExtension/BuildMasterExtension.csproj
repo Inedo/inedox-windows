@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Inedo.Extensions.Windows</RootNamespace>
     <AssemblyName>Windows</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -34,35 +35,31 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BuildMaster.Web.Controls, Version=5.6.0.16, Culture=neutral, PublicKeyToken=112cfb71329714a6, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.BuildMaster.SDK.5.6.0\lib\net45\BuildMaster.Web.Controls.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
+    <Reference Include="BuildMaster.Web.Controls, Version=6.0.0.11, Culture=neutral, PublicKeyToken=112cfb71329714a6, processorArchitecture=MSIL">
+      <HintPath>..\packages\Inedo.BuildMaster.SDK.6.0.0\lib\net452\BuildMaster.Web.Controls.dll</HintPath>
     </Reference>
-    <Reference Include="BuildMasterCore, Version=5.6.0.16, Culture=neutral, PublicKeyToken=112cfb71329714a6, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.BuildMaster.SDK.5.6.0\lib\net45\BuildMasterCore.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
+    <Reference Include="BuildMasterCore, Version=6.0.0.11, Culture=neutral, PublicKeyToken=112cfb71329714a6, processorArchitecture=MSIL">
+      <HintPath>..\packages\Inedo.BuildMaster.SDK.6.0.0\lib\net452\BuildMasterCore.dll</HintPath>
     </Reference>
-    <Reference Include="Inedo.Agents.Client, Version=471.1.0.0, Culture=neutral, PublicKeyToken=9de986a2f8db80fc, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.BuildMaster.SDK.5.6.0\lib\net45\Inedo.Agents.Client.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
+    <Reference Include="Inedo.Agents.Client, Version=1000.0.0.0, Culture=neutral, PublicKeyToken=9de986a2f8db80fc, processorArchitecture=MSIL">
+      <HintPath>..\packages\Inedo.SDK.1.0.4-pre0017\lib\net452\Inedo.Agents.Client.dll</HintPath>
     </Reference>
-    <Reference Include="Inedo.ExecutionEngine, Version=48.1.0.0, Culture=neutral, PublicKeyToken=68703f0e52007e75, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.BuildMaster.SDK.5.6.0\lib\net45\Inedo.ExecutionEngine.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
+    <Reference Include="Inedo.ExecutionEngine, Version=64.0.0.0, Culture=neutral, PublicKeyToken=68703f0e52007e75, processorArchitecture=MSIL">
+      <HintPath>..\packages\Inedo.SDK.1.0.4-pre0017\lib\net452\Inedo.ExecutionEngine.dll</HintPath>
     </Reference>
-    <Reference Include="InedoLib, Version=471.1.0.0, Culture=neutral, PublicKeyToken=112cfb71329714a6, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.BuildMaster.SDK.5.6.0\lib\net45\InedoLib.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
+    <Reference Include="Inedo.SDK, Version=1.0.0.0, Culture=neutral, PublicKeyToken=29fae5dec3001603, processorArchitecture=MSIL">
+      <HintPath>..\packages\Inedo.SDK.1.0.4-pre0017\lib\net452\Inedo.SDK.dll</HintPath>
+    </Reference>
+    <Reference Include="InedoLib, Version=1000.0.0.0, Culture=neutral, PublicKeyToken=112cfb71329714a6, processorArchitecture=MSIL">
+      <HintPath>..\packages\Inedo.SDK.1.0.4-pre0017\lib\net452\InedoLib.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Web.Administration, Version=7.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Web.Administration.7.0.0.0\lib\net20\Microsoft.Web.Administration.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Inedo.SDK.1.0.4-pre0017\lib\net452\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
