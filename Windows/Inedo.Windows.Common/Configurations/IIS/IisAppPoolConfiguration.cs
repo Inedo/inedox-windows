@@ -5,21 +5,9 @@ using System.Linq;
 using System.Reflection;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
-#if Otter
-using Inedo.Otter.Extensibility;
-using Inedo.Otter.Extensibility.Configurations;
-using Inedo.Otter.Extensibility.Credentials;
-using Inedo.Otter.Extensions.Credentials;
-#elif BuildMaster
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Configurations;
-using Inedo.BuildMaster.Extensibility.Credentials;
-#elif Hedgehog
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
 using Inedo.Extensibility.Credentials;
-using ILogger = Inedo.Diagnostics.ILogSink;
-#endif
 using Inedo.Serialization;
 using Microsoft.Web.Administration;
 
@@ -330,7 +318,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         public long? Recycling_PeriodicRestart_Memory { get; set; }
 #endregion
 
-        public static IisAppPoolConfiguration FromMwaApplicationPool(ILogger logger, ApplicationPool pool, IisAppPoolConfiguration template = null)
+        public static IisAppPoolConfiguration FromMwaApplicationPool(ILogSink logger, ApplicationPool pool, IisAppPoolConfiguration template = null)
         {
             if (logger == null)
                 throw new ArgumentNullException(nameof(logger));
@@ -376,7 +364,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             return true;
         }
 
-        public static void SetMwaApplicationPool(ILogger logger, IisAppPoolConfiguration config, ApplicationPool pool)
+        public static void SetMwaApplicationPool(ILogSink logger, IisAppPoolConfiguration config, ApplicationPool pool)
         {
             if (logger == null)
                 throw new ArgumentNullException(nameof(logger));

@@ -1,27 +1,15 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Threading.Tasks;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
-#if Otter
-using Inedo.Otter.Extensibility;
-using Inedo.Otter.Extensibility.Configurations;
-using Inedo.Otter.Extensibility.Operations;
-using CollectContext = Inedo.Otter.Extensibility.Operations.IRemoteOperationExecutionContext;
-#elif BuildMaster
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Configurations;
-using Inedo.BuildMaster.Extensibility.Operations;
-#elif Hedgehog
+using Inedo.ExecutionEngine.Executer;
 using Inedo.Extensibility;
-using Inedo.Extensibility.Operations;
 using Inedo.Extensibility.Configurations;
-using CollectContext = Inedo.Extensibility.Operations.IRemoteOperationCollectionContext;
-#endif
+using Inedo.Extensibility.Operations;
 using Inedo.Extensions.Windows.Configurations.IIS;
 using Microsoft.Web.Administration;
-using System.Linq;
-using Inedo.ExecutionEngine.Executer;
 
 namespace Inedo.Extensions.Windows.Operations.IIS.Sites
 {
@@ -64,8 +52,7 @@ IIS::Ensure-Site(
                 return new ExtendedRichDescription(shortDesc, new RichDescription("application pool ", new Hilite(appPool), "; virtual directory path: ", new Hilite(vdir)));
         }
 
-#if !BuildMaster
-        protected override Task<PersistedConfiguration> RemoteCollectAsync(CollectContext context)
+        protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationCollectionContext context)
         {
             this.LogDebug($"Looking for Site \"{this.Template.Name}\"...");
             using (var manager = new ServerManager())
@@ -80,7 +67,6 @@ IIS::Ensure-Site(
                 return Task.FromResult<PersistedConfiguration>(IisSiteConfiguration.FromMwaSite(this, site, this.Template));
             }
         }
-#endif
 
         protected override Task RemoteConfigureAsync(IRemoteOperationExecutionContext context)
         {

@@ -7,11 +7,11 @@ using Inedo.BuildMaster.Extensibility;
 using Inedo.BuildMaster.Extensibility.Actions;
 using Inedo.BuildMaster.Extensibility.Actions.Scripting;
 using Inedo.BuildMaster.Extensibility.Variables;
-using Inedo.BuildMaster.Web;
 using Inedo.BuildMasterExtensions.Windows.ActionImporters;
 using Inedo.BuildMasterExtensions.Windows.Scripting.PowerShell;
 using Inedo.Documentation;
 using Inedo.Serialization;
+using Inedo.Web;
 
 namespace Inedo.BuildMasterExtensions.Windows.Shell
 {

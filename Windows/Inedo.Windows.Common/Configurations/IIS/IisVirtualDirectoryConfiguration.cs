@@ -3,21 +3,9 @@ using System.ComponentModel;
 using System.Reflection;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
-#if Otter
-using Inedo.Otter.Extensibility;
-using Inedo.Otter.Extensibility.Configurations;
-using Inedo.Otter.Extensibility.Credentials;
-using Inedo.Otter.Extensions.Credentials;
-#elif BuildMaster
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Configurations;
-using Inedo.BuildMaster.Extensibility.Credentials;
-#elif Hedgehog
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
 using Inedo.Extensibility.Credentials;
-using ILogger = Inedo.Diagnostics.ILogSink;
-#endif
 using Inedo.Serialization;
 using Microsoft.Web.Administration;
 
@@ -89,10 +77,8 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         public string Password { get; set; }
 
         public string FullPath => this.ApplicationPath?.TrimEnd('/') + "/" + this.Path?.TrimStart('/');
-#if Otter
-        public override string ConfigurationKey => this.SiteName + this.FullPath;
-#endif
-        public static IisVirtualDirectoryConfiguration FromMwaVirtualDirectory(ILogger logger, string siteName, VirtualDirectory vdir, IisVirtualDirectoryConfiguration template = null)
+
+        public static IisVirtualDirectoryConfiguration FromMwaVirtualDirectory(ILogSink logger, string siteName, VirtualDirectory vdir, IisVirtualDirectoryConfiguration template = null)
         {
             var config = new IisVirtualDirectoryConfiguration();
             config.SiteName = siteName;
@@ -101,7 +87,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             return config;
         }
 
-        public static void SetMwaVirtualDirectory(ILogger logger, IisVirtualDirectoryConfiguration config, VirtualDirectory vdir)
+        public static void SetMwaVirtualDirectory(ILogSink logger, IisVirtualDirectoryConfiguration config, VirtualDirectory vdir)
         {
             config.SetPropertiesOnMwa(logger, vdir);
         }

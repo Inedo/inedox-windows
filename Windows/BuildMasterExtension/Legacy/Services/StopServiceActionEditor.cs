@@ -1,4 +1,4 @@
-using System.Web.UI.WebControls;
+﻿using System.Web.UI.WebControls;
 using Inedo.BuildMaster.Extensibility.Actions;
 using Inedo.BuildMaster.Web.Controls.Extensions;
 using Inedo.Web.Controls;

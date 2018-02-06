@@ -1,7 +1,7 @@
 ﻿using Inedo.BuildMaster.Extensibility.Actions.Scripting;
 using Inedo.BuildMaster.Extensibility.Operations;
-using Inedo.Extensions.Windows.Operations;
 using Inedo.BuildMasterExtensions.Windows.Shell;
+using Inedo.Extensions.Windows.Operations;
 
 namespace Inedo.BuildMasterExtensions.Windows.ActionImporters
 {

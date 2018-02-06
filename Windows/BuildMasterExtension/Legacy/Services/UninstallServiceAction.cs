@@ -2,9 +2,9 @@
 using System.ComponentModel;
 using System.ServiceProcess;
 using Inedo.BuildMaster.Extensibility.Actions;
-using Inedo.BuildMaster.Web;
 using Inedo.Documentation;
 using Inedo.Serialization;
+using Inedo.Web;
 using Inedo.WindowsServices;
 
 namespace Inedo.BuildMasterExtensions.Windows.Services

@@ -1,30 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.ExecutionEngine;
-#if Otter
-using Inedo.Otter.Extensibility;
-using Inedo.Otter.Extensibility.Configurations;
-using Inedo.Otter.Extensions;
-using Inedo.Otter.Web.Controls;
-#elif BuildMaster
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Configurations;
-using Inedo.BuildMaster.Web;
-using Inedo.BuildMaster.Web.Controls;
-#elif Hedgehog
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
-using Inedo.Web;
-using ILogger = Inedo.Diagnostics.ILogSink;
-using SuggestibleValue = Inedo.Web.SuggestableValueAttribute;
-#endif
-using Inedo.Serialization;
-using Microsoft.Web.Administration;
 using Inedo.Extensions.Windows.SuggestionProviders;
+using Inedo.Serialization;
+using Inedo.Web;
+using Microsoft.Web.Administration;
 
 namespace Inedo.Extensions.Windows.Configurations.IIS
 {
@@ -58,28 +45,24 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [Persistent]
         [ScriptAlias("Binding")]
         [DisplayName("Binding")]
-#if Otter
         [IgnoreConfigurationDrift]
-#endif
         public string BindingInformation { get; set; }
         [EditorBrowsable(EditorBrowsableState.Never)]
         [Persistent]
         [ScriptAlias("Protocol")]
         [DisplayName("Protocol")]
-#if Otter
         [IgnoreConfigurationDrift]
-#endif
         public string BindingProtocol { get; set; }
 
         [Persistent]
-        [SuggestibleValue(typeof(LegacyBindingSuggestionProvider))]
+        [SuggestableValue(typeof(LegacyBindingSuggestionProvider))]
         [ScriptAlias("Bindings")]
         [DisplayName("Bindings")]
         [FieldEditMode(FieldEditMode.Multiline)]
         [Description(@"Bindings are entered as a list of maps, e.g.:<br/><pre style=""white-space: pre-wrap;"">@(%(IPAddress: 192.0.2.100, Port: 80, HostName: example.com, Protocol: http), %(IPAddress: 192.0.2.101, Port: 443, HostName: secure.example.com, Protocol: https, CertificateStoreName: WebHosting, CertificateHash: 51599BF2909EA984793481F0DF946C57E4FD5DEA, ServerNameIndication: true, UseCentralizedStore: false))</pre>")]
         public IEnumerable<IReadOnlyDictionary<string, RuntimeValue>> Bindings { get; set; }
 
-        public static IisSiteConfiguration FromMwaSite(ILogger logger, Site site, IisSiteConfiguration template = null)
+        public static IisSiteConfiguration FromMwaSite(ILogSink logger, Site site, IisSiteConfiguration template = null)
         {
             if (logger == null)
                 throw new ArgumentNullException(nameof(logger));
@@ -136,7 +119,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             return config;
         }
 
-        public static void SetMwaSite(ILogger logger, IisSiteConfiguration config, Site site)
+        public static void SetMwaSite(ILogSink logger, IisSiteConfiguration config, Site site)
         {
             if (logger == null)
                 throw new ArgumentNullException(nameof(logger));
@@ -186,15 +169,17 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             }
         }
 
-#if Otter
-        public override IDictionary<string, string> GetPropertiesForDisplay(bool hideEncrypted)
+        public override IReadOnlyDictionary<string, string> GetPropertiesForDisplay(bool hideEncrypted)
         {
+            var dic = new Dictionary<string, string>();
             var props = base.GetPropertiesForDisplay(hideEncrypted);
+            foreach (var prop in props)
+                dic[prop.Key] = prop.Value;
 
             if (this.Bindings != null)
-                props[nameof(this.Bindings)] = string.Join(Environment.NewLine, this.Bindings.Select(b => BindingInfo.FromMap(b)));
+                dic[nameof(this.Bindings)] = string.Join(Environment.NewLine, this.Bindings.Select(b => BindingInfo.FromMap(b)));
 
-            return props;
+            return new ReadOnlyDictionary<string,string>(dic);
         }
 
         public override ComparisonResult Compare(PersistedConfiguration other)
@@ -227,7 +212,6 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
             return new ComparisonResult(differences);
         }
-#endif
 
         private static BindingInfo[] GetTemplateBindings(IisSiteConfiguration config)
         {

@@ -1,15 +1,7 @@
 ﻿using System.ComponentModel;
 using Inedo.Documentation;
-#if BuildMaster
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Operations;
-#elif Otter
-using Inedo.Otter.Extensibility;
-using Inedo.Otter.Extensibility.Operations;
-#elif Hedgehog
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
-#endif
 
 namespace Inedo.Extensions.Windows.Operations.IIS.AppPools
 {

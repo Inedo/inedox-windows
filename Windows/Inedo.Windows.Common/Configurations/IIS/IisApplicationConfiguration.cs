@@ -3,21 +3,9 @@ using System.ComponentModel;
 using System.Reflection;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
-#if Otter
-using Inedo.Otter.Extensibility;
-using Inedo.Otter.Extensibility.Configurations;
-using Inedo.Otter.Extensibility.Credentials;
-using Inedo.Otter.Extensions.Credentials;
-#elif BuildMaster
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Configurations;
-using Inedo.BuildMaster.Extensibility.Credentials;
-#elif Hedgehog
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
 using Inedo.Extensibility.Credentials;
-using ILogger = Inedo.Diagnostics.ILogSink;
-#endif
 using Inedo.Serialization;
 using Microsoft.Web.Administration;
 
@@ -85,10 +73,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [Persistent]
         public string Password { get; set; }
 
-#if Otter
-        public override string ConfigurationKey => this.SiteName + "/" + this.ApplicationPath?.TrimStart('/');
-#endif
-        public static IisApplicationConfiguration FromMwaApplication(ILogger logger, string siteName, Application app, IisApplicationConfiguration template = null)
+        public static IisApplicationConfiguration FromMwaApplication(ILogSink logger, string siteName, Application app, IisApplicationConfiguration template = null)
         {
             var config = new IisApplicationConfiguration();
             config.SiteName = siteName;
@@ -98,7 +83,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             return config;
         }
 
-        public static void SetMwaApplication(ILogger logger, IisApplicationConfiguration config, Application app)
+        public static void SetMwaApplication(ILogSink logger, IisApplicationConfiguration config, Application app)
         {
             app.Path = config.ApplicationPath;
             app.ApplicationPoolName = config.ApplicationPoolName;

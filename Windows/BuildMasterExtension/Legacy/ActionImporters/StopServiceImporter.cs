@@ -1,6 +1,6 @@
 ﻿using Inedo.BuildMaster.Extensibility.Operations;
-using Inedo.Extensions.Windows.Operations.Services;
 using Inedo.BuildMasterExtensions.Windows.Services;
+using Inedo.Extensions.Windows.Operations.Services;
 
 namespace Inedo.BuildMasterExtensions.Windows.ActionImporters
 {

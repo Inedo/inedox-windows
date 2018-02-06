@@ -1,19 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.IO;
+using System.Linq;
 using System.Management.Automation;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Inedo.ExecutionEngine;
-#if BuildMaster
-using Inedo.BuildMaster.Data;
-#elif Otter
-using Inedo.Otter.Extensibility.RaftRepositories;
-#elif Hedgehog
 using Inedo.Extensibility.RaftRepositories;
-#endif
 
 namespace Inedo.Extensions.Windows.PowerShell
 {
@@ -128,16 +121,13 @@ namespace Inedo.Extensions.Windows.PowerShell
                 }
             }
         }
-#endif
-
-#if !Hedgehog
+#elif BuildMaster
         public static Task<PowerShellScriptInfo> TryLoadAsync(LooselyQualifiedName scriptName)
         {
-#if BuildMaster
             int? applicationId = null;
             if (!string.IsNullOrWhiteSpace(scriptName.Namespace) && !string.Equals(scriptName.Name, "GLOBAL", StringComparison.OrdinalIgnoreCase))
             {
-                applicationId = DB.Applications_GetApplications(null, true)
+                applicationId = Inedo.BuildMaster.Data.DB.Applications_GetApplications(null, true)
                     .FirstOrDefault(a => string.Equals(a.Application_Name, scriptName.Namespace, StringComparison.OrdinalIgnoreCase))
                     ?.Application_Id;
             }
@@ -146,7 +136,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             if (!name.EndsWith(".ps1", StringComparison.OrdinalIgnoreCase))
                 name += ".ps1";
 
-            var script = DB.ScriptAssets_GetScriptByName(name, applicationId);
+            var script = Inedo.BuildMaster.Data.DB.ScriptAssets_GetScriptByName(name, applicationId);
             if (script == null)
                 return Task.FromResult<PowerShellScriptInfo>(null);
 
@@ -157,22 +147,6 @@ namespace Inedo.Extensions.Windows.PowerShell
                 TryParse(reader, out info);
                 return Task.FromResult(info);
             }
-#elif Otter
-            using (var raft = RaftRepository.OpenRaft(scriptName.Namespace ?? RaftRepository.DefaultName))
-            using (var item = raft?.OpenRaftItem(RaftItemType.Script, scriptName.Name + ".ps1", FileMode.Open, FileAccess.Read))
-            {
-                if (item == null)
-                    return Task.FromResult<PowerShellScriptInfo>(null);
-
-                using (var reader = new StreamReader(item, InedoLib.UTF8Encoding))
-                {
-                    if (!TryParse(reader, out var info))
-                        return Task.FromResult<PowerShellScriptInfo>(null);
-
-                    return Task.FromResult(info);
-                }
-            }
-#endif
         }
 #endif
 

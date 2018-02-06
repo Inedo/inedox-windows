@@ -1,23 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-#if BuildMaster
-using Inedo.BuildMaster.Data;
-using Inedo.BuildMaster.Extensibility.RaftRepositories;
-using Inedo.BuildMaster.Web.Controls.Plans;
-#elif Otter
-using Inedo.Otter.Web.Controls.Plans;
-using Inedo.Otter.Extensibility.RaftRepositories;
-#elif Hedgehog
-using Inedo.Extensibility.RaftRepositories;
-using Inedo.Web.Plans;
-#endif
-using Inedo.Extensions.Windows.PowerShell;
 using Inedo.ExecutionEngine;
+using Inedo.Extensibility.RaftRepositories;
+using Inedo.Extensions.Windows.PowerShell;
 using Inedo.Web.Controls;
-using Inedo.Web.DP;
 using Inedo.Web.Controls.SimpleHtml;
+using Inedo.Web.DP;
+using Inedo.Web.Plans;
 
 namespace Inedo.Extensions.Windows.Operations.PowerShell
 {
@@ -25,18 +15,11 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
     {
         public static readonly IOperationEditorContext Instance = new NullOperationContext();
 
-#if !Hedgehog
-        public int? ApplicationId => null;
-#endif
-
         public int? PlanId => null;
         public string PlanName => null;
         public RaftItemType? PlanType => null;
         public int? RaftId => null;
-
-#if Hedgehog
         public int? ProjectId => null;
-#endif
     }
 
     internal sealed class PSCallOperationEditor : OperationEditor
@@ -130,9 +113,7 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
 
 #pragma warning disable CS0672 // Member overrides obsolete member
         public override ActionStatement CreateActionStatement(
-#if Hedgehog
             QualifiedName actionName,
-#endif
             object _model)
 #pragma warning restore CS0672 // Member overrides obsolete member
         {

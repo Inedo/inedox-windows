@@ -1,23 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.ServiceProcess;
 using Inedo.Documentation;
-#if Otter
-using Inedo.Otter.Extensibility;
-using Inedo.Otter.Extensibility.Configurations;
-using Inedo.Otter.Extensibility.Credentials;
-using Inedo.Otter.Extensions.Credentials;
-#elif BuildMaster
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Configurations;
-using Inedo.BuildMaster.Extensibility.Credentials;
-#elif Hedgehog
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
 using Inedo.Extensibility.Credentials;
-#endif
 using Inedo.Serialization;
 using Inedo.WindowsServices;
 
@@ -80,9 +70,7 @@ namespace Inedo.Extensions.Windows.Configurations.Services
         [ScriptAlias("Password")]
         [MappedCredential(nameof(UsernamePasswordCredentials.Password))]
         [Description("The password for the account that runs the service. If NT AUTHORITY\\LocalSystem is specified, this field must not have a value set.")]
-#if Otter
         [IgnoreConfigurationDrift]
-#endif
         public string Password { get; set; }
 
         [Category("Recovery")]
@@ -127,9 +115,7 @@ namespace Inedo.Extensions.Windows.Configurations.Services
         [DisplayName("Status change timeout")]
         [DefaultValue(30)]
         [Description("The number of seconds to wait for a server to change between two statuses (e.g. stopped to starting) before raising an error.")]
-#if Otter
         [IgnoreConfigurationDrift]
-#endif
         public TimeSpan StatusChangeTimeout { get; set; } = TimeSpan.FromSeconds(30);
 
         public static WindowsServiceConfiguration FromService(string serviceName)
@@ -179,22 +165,25 @@ namespace Inedo.Extensions.Windows.Configurations.Services
 
             return config;
         }
-#if Otter
-        public override IDictionary<string, string> GetPropertiesForDisplay(bool hideEncrypted)
-        {
-            var props = base.GetPropertiesForDisplay(hideEncrypted);
 
-            if (props.ContainsKey(nameof(this.Dependencies)))
+        public override IReadOnlyDictionary<string, string> GetPropertiesForDisplay(bool hideEncrypted)
+        {
+            var dic = new Dictionary<string, string>();
+            var props = base.GetPropertiesForDisplay(hideEncrypted);
+            foreach (var prop in props)
+                dic[prop.Key] = prop.Value;
+
+            if (dic.ContainsKey(nameof(this.Dependencies)))
             {
                 string csv = string.Join(", ", this.Dependencies ?? Enumerable.Empty<string>());
                 if (csv.Length > 0)
-                    props[nameof(this.Dependencies)] = "@(" + csv + ")";
+                    dic[nameof(this.Dependencies)] = "@(" + csv + ")";
                 else
-                    props[nameof(this.Dependencies)] = "None";
+                    dic[nameof(this.Dependencies)] = "None";
             }
 
-            return props;
+            return new ReadOnlyDictionary<string, string>(dic);
         }
-#endif
+
     }
 }

@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.ServiceProcess;
 using Inedo.BuildMaster.Extensibility.Actions;
-using Inedo.BuildMaster.Web;
 using Inedo.BuildMasterExtensions.Windows.ActionImporters;
 using Inedo.Documentation;
 using Inedo.Serialization;
+using Inedo.Web;
 
 namespace Inedo.BuildMasterExtensions.Windows.Services
 {

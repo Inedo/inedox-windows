@@ -1,20 +1,11 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Security;
 using System.Management.Automation;
 using System.Runtime.InteropServices;
-#if BuildMaster
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.VariableFunctions;
-#elif Otter
-using Inedo.Otter;
-using Inedo.Otter.Extensibility;
-using Inedo.Otter.Extensibility.VariableFunctions;
-#elif Hedgehog
+using System.Security;
+using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.VariableFunctions;
-#endif
-using Inedo.Documentation;
 
 namespace Inedo.Extensions.Windows.Functions
 {
@@ -42,13 +33,7 @@ PSCall MyPowerShellScript
         [Description("The password of the PSCredential object.")]
         public SecureString Password { get; set; }
 
-#if BuildMaster
-        protected override object EvaluateScalar(IGenericBuildMasterContext context)
-#elif Otter
-        protected override object EvaluateScalar(IOtterContext context)
-#elif Hedgehog
         protected override object EvaluateScalar(IVariableFunctionContext context)
-#endif
         {
             return this.Serialize();
         }

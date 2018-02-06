@@ -3,9 +3,9 @@ using System.IO;
 using Inedo.BuildMaster;
 using Inedo.BuildMaster.Data;
 using Inedo.BuildMaster.Extensibility.Actions;
-using Inedo.BuildMaster.Web;
 using Inedo.Documentation;
 using Inedo.Serialization;
+using Inedo.Web;
 using Inedo.WindowsServices;
 
 namespace Inedo.BuildMasterExtensions.Windows.Services

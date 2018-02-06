@@ -4,21 +4,9 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using Inedo.Diagnostics;
-#if Otter
-using Inedo.Otter.Documentation;
-using Inedo.Otter.Extensibility;
-using Inedo.Otter.Extensibility.Configurations;
-using Inedo.Otter.Extensibility.Credentials;
-#elif BuildMaster
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Configurations;
-using Inedo.BuildMaster.Extensibility.Credentials;
-#elif Hedgehog
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
 using Inedo.Extensibility.Credentials;
-using ILogger = Inedo.Diagnostics.ILogSink;
-#endif
 using Inedo.Serialization;
 using Microsoft.Web.Administration;
 
@@ -36,7 +24,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [DefaultValue(true)]
         public bool Exists { get; set; } = true;
 
-        protected void SetPropertiesFromMwa(ILogger logger, ConfigurationElement mwaConfig, IisConfigurationBase template = null)
+        protected void SetPropertiesFromMwa(ILogSink logger, ConfigurationElement mwaConfig, IisConfigurationBase template = null)
         {
             if (logger == null)
                 throw new ArgumentNullException(nameof(logger));
@@ -78,7 +66,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             }
         }
 
-        protected void SetPropertiesOnMwa(ILogger logger, ConfigurationElement pool)
+        protected void SetPropertiesOnMwa(ILogSink logger, ConfigurationElement pool)
         {
             if (logger == null)
                 throw new ArgumentNullException(nameof(logger));

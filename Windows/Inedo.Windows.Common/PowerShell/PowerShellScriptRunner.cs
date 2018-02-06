@@ -8,15 +8,9 @@ using System.Management.Automation.Runspaces;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-#if BuildMaster
-using Inedo.BuildMaster.Extensibility.Operations;
-#elif Otter
-using Inedo.Otter.Extensibility.Operations;
-#elif Hedgehog
-using Inedo.Extensibility.Operations;
-#endif
 using Inedo.Diagnostics;
 using Inedo.ExecutionEngine;
+using Inedo.Extensibility.Operations;
 
 namespace Inedo.Extensions.Windows.PowerShell
 {
@@ -71,7 +65,6 @@ namespace Inedo.Extensions.Windows.PowerShell
             return results;
         }
 
-#if Otter || Hedgehog
         private static RuntimeValue? TryGetFunctionValue(RuntimeVariableName functionName, IOperationExecutionContext context)
         {
             try
@@ -83,19 +76,6 @@ namespace Inedo.Extensions.Windows.PowerShell
                 return null;
             }
         }
-#elif BuildMaster
-        private static RuntimeValue? TryGetFunctionValue(RuntimeVariableName functionName, IOperationExecutionContext context)
-        {
-            try
-            {
-                return context.TryEvaluateFunction(functionName, new RuntimeValue[0]);
-            }
-            catch
-            {
-                return null;
-            }
-        }
-#endif
 
         public Task<int?> RunAsync(string script, CancellationToken cancellationToken)
         {

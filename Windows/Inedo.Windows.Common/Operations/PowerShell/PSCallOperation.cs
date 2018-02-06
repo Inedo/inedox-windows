@@ -2,24 +2,14 @@
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
-#if BuildMaster
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Operations;
-using Inedo.BuildMaster.Web;
-#elif Otter
-using Inedo.Otter.Extensibility;
-using Inedo.Otter.Extensibility.Operations;
-using Inedo.Otter.Web.Controls.Extensions;
-#elif Hedgehog
-using Inedo.Extensibility;
-using Inedo.Extensibility.Operations;
-using Inedo.ExecutionEngine.Mapping;
-using Inedo.Web;
-#endif
-using Inedo.Extensions.Windows.PowerShell;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.ExecutionEngine;
+using Inedo.ExecutionEngine.Mapping;
+using Inedo.Extensibility;
+using Inedo.Extensibility.Operations;
+using Inedo.Extensions.Windows.PowerShell;
+using Inedo.Web;
 
 namespace Inedo.Extensions.Windows.Operations.PowerShell
 {

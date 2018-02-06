@@ -1,19 +1,13 @@
 ﻿using System.ComponentModel;
+using System.Threading;
 using System.Threading.Tasks;
-#if BuildMaster
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Operations;
-using Inedo.BuildMaster.Web;
-#elif Hedgehog
-using Inedo.Extensibility;
-using Inedo.Extensibility.Operations;
-using Inedo.Web;
-#endif
 using Inedo.Agents;
-using Inedo.Extensions.Windows.PowerShell;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
-using System.Threading;
+using Inedo.Extensibility;
+using Inedo.Extensibility.Operations;
+using Inedo.Extensions.Windows.PowerShell;
+using Inedo.Web;
 
 namespace Inedo.Extensions.Windows.Operations
 {
@@ -28,9 +22,7 @@ namespace Inedo.Extensions.Windows.Operations
     [Note("If you are attempting to write the results of a Format-* call to the  log, you may see "
         + "messages similar to \"Microsoft.PowerShell.Commands.Internal.Format.FormatEntryData\". To convert this to text, "
         + "use the Out-String commandlet at the end of your command chain.")]
-#if !BuildMaster
     [Note("This script will execute in simulation mode; you set the RunOnSimulation parameter to false to prevent this behavior, or you can use the $IsSimulation variable function within the script.")]
-#endif
     [Example(@"
 # writes the list of services running on the computer to the Otter log
 psexec >>
@@ -64,7 +56,7 @@ psexec >>
         [Description("Captures the PowerShell Write-Verbose stream into the Otter debug log. The default is false.")]
         public bool VerboseLogging { get; set; }
 
-#if BuildMaster
+#if !Hedgehog
         private bool RunOnSimulation => false;
 #else
         [ScriptAlias("RunOnSimulation")]

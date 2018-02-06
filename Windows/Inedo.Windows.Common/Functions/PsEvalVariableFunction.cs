@@ -2,23 +2,12 @@
 using System.ComponentModel;
 using System.Linq;
 using Inedo.Agents;
-#if BuildMaster
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Operations;
-using Inedo.BuildMaster.Extensibility.VariableFunctions;
-#elif Otter
-using Inedo.Otter;
-using Inedo.Otter.Extensibility;
-using Inedo.Otter.Extensibility.Operations;
-using Inedo.Otter.Extensibility.VariableFunctions;
-#elif Hedgehog
+using Inedo.Documentation;
+using Inedo.ExecutionEngine;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
 using Inedo.Extensibility.VariableFunctions;
-#endif
 using Inedo.Extensions.Windows.PowerShell;
-using Inedo.Documentation;
-using Inedo.ExecutionEngine;
 
 namespace Inedo.Extensions.Windows.Functions
 {
@@ -43,13 +32,7 @@ Log-Information $NextYear;
         [Description("The PowerShell script to execute. This should be an expression.")]
         public string ScriptText { get; set; }
 
-#if BuildMaster
-        public override RuntimeValue Evaluate(IGenericBuildMasterContext context)
-#elif Otter
-        public override RuntimeValue Evaluate(IOtterContext context)
-#elif Hedgehog
         public override RuntimeValue Evaluate(IVariableFunctionContext context)
-#endif
         {
             var execContext = context as IOperationExecutionContext;
             if (execContext == null)

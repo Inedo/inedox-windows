@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.DirectoryServices;
-using Microsoft.Web.Administration;
 
 namespace Inedo.BuildMasterExtensions.Windows.Iis
 {

@@ -3,21 +3,9 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
-#if Otter
-using Inedo.Otter.Extensibility;
-using Inedo.Otter.Extensibility.Configurations;
-using Inedo.Otter.Extensibility.Operations;
-using CollectContext = Inedo.Otter.Extensibility.Operations.IRemoteOperationExecutionContext;
-#elif BuildMaster
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Configurations;
-using Inedo.BuildMaster.Extensibility.Operations;
-#elif Hedgehog
 using Inedo.Extensibility;
-using Inedo.Extensibility.Operations;
 using Inedo.Extensibility.Configurations;
-using CollectContext = Inedo.Extensibility.Operations.IRemoteOperationCollectionContext;
-#endif
+using Inedo.Extensibility.Operations;
 using Inedo.Extensions.Windows.Configurations.IIS;
 using Microsoft.Web.Administration;
 
@@ -62,8 +50,7 @@ IIS::Ensure-Application(
             return new ExtendedRichDescription(shortDesc, longDesc);
         }
 
-#if !BuildMaster
-        protected override Task<PersistedConfiguration> RemoteCollectAsync(CollectContext context)
+        protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationCollectionContext context)
         {
             if (this.Template == null)
                 throw new InvalidOperationException("Template is not set.");
@@ -98,7 +85,6 @@ IIS::Ensure-Application(
                 }
             }
         }
-#endif
 
         protected override Task RemoteConfigureAsync(IRemoteOperationExecutionContext context)
         {

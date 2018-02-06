@@ -6,23 +6,14 @@ using System.Threading.Tasks;
 using Inedo.Agents;
 using Inedo.Diagnostics;
 using Inedo.ExecutionEngine;
-#if Otter
-using Inedo.Otter.Extensibility.Operations;
-using Inedo.Otter.Extensibility.RaftRepositories;
-#elif BuildMaster
-using Inedo.BuildMaster.Data;
-using Inedo.BuildMaster.Extensibility.Operations;
-#elif Hedgehog
 using Inedo.Extensibility.Operations;
 using Inedo.Extensibility.RaftRepositories;
-using ILogger = Inedo.Diagnostics.ILogSink;
-#endif
 
 namespace Inedo.Extensions.Windows.PowerShell
 {
     internal static class PSUtil
     {
-        public static async Task<ExecutePowerShellJob.Result> ExecuteScriptAsync(ILogger logger, IOperationExecutionContext context, string fullScriptName, IReadOnlyDictionary<string, RuntimeValue> arguments, IDictionary<string, RuntimeValue> outArguments, bool collectOutput, EventHandler<PSProgressEventArgs> progressUpdateHandler)
+        public static async Task<ExecutePowerShellJob.Result> ExecuteScriptAsync(ILogSink logger, IOperationExecutionContext context, string fullScriptName, IReadOnlyDictionary<string, RuntimeValue> arguments, IDictionary<string, RuntimeValue> outArguments, bool collectOutput, EventHandler<PSProgressEventArgs> progressUpdateHandler)
         {
             var scriptText = await GetScriptTextAsync(logger, fullScriptName, context);
 
@@ -89,7 +80,7 @@ namespace Inedo.Extensions.Windows.PowerShell
         }
 
 #if Hedgehog
-        private static async Task<string> GetScriptTextAsync(ILogger logger, string fullScriptName, IOperationExecutionContext context)
+        private static async Task<string> GetScriptTextAsync(ILogSink logger, string fullScriptName, IOperationExecutionContext context)
         {
             string scriptName;
             string raftName;
@@ -130,51 +121,9 @@ namespace Inedo.Extensions.Windows.PowerShell
                 }
             }
         }
-#endif
-
-#if !Hedgehog
-        private static Task<string> GetScriptTextAsync(ILogger logger, string fullScriptName, IOperationExecutionContext context)
-        {
-#if Otter
-            string scriptName;
-            string raftName;
-            var scriptNameParts = fullScriptName.Split(new[] { "::" }, 2, StringSplitOptions.None);
-            if (scriptNameParts.Length == 2)
-            {
-                raftName = scriptNameParts[0];
-                scriptName = scriptNameParts[1];
-            }
-            else
-            {
-                raftName = RaftRepository.DefaultName;
-                scriptName = scriptNameParts[0];
-            }
-
-            using (var raft = RaftRepository.OpenRaft(raftName))
-            {
-                if (raft == null)
-                {
-                    logger.LogError($"Raft {raftName} not found.");
-                    return Task.FromResult<string>(null);
-                }
-
-                using (var scriptItem = raft.OpenRaftItem(RaftItemType.Script, scriptName + ".ps1", FileMode.Open, FileAccess.Read))
-                {
-                    if (scriptItem == null)
-                    {
-                        logger.LogError($"Script {scriptName}.ps1 not found in {raftName} raft.");
-                        return Task.FromResult<string>(null);
-                    }
-
-                    using (var reader = new StreamReader(scriptItem, InedoLib.UTF8Encoding))
-                    {
-                        var scriptText = new StreamReader(scriptItem, InedoLib.UTF8Encoding).ReadToEnd();
-                        logger.LogDebug($"Found script {scriptName}.ps1 in {raftName} raft.");
-                        return Task.FromResult(scriptText);
-                    }
-                }
-            }
 #elif BuildMaster
+        private static Task<string> GetScriptTextAsync(ILogSink logger, string fullScriptName, IOperationExecutionContext context)
+        {
             string scriptName;
             int? applicationId;
             var scriptNameParts = fullScriptName.Split(new[] { "::" }, 2, StringSplitOptions.None);
@@ -186,7 +135,7 @@ namespace Inedo.Extensions.Windows.PowerShell
                 }
                 else
                 {
-                    applicationId = DB.Applications_GetApplications(null, true).FirstOrDefault(a => string.Equals(a.Application_Name, scriptNameParts[0], StringComparison.OrdinalIgnoreCase))?.Application_Id;
+                    applicationId = Inedo.BuildMaster.Data.DB.Applications_GetApplications(null, true).FirstOrDefault(a => string.Equals(a.Application_Name, scriptNameParts[0], StringComparison.OrdinalIgnoreCase))?.Application_Id;
                     if (applicationId == null)
                     {
                         logger.LogError($"Invalid application name {scriptNameParts[0]}.");
@@ -198,14 +147,14 @@ namespace Inedo.Extensions.Windows.PowerShell
             }
             else
             {
-                applicationId = context.ApplicationId;
+                applicationId = (context as BuildMaster.Extensibility.IGenericBuildMasterContext)?.ApplicationId;
                 scriptName = scriptNameParts[0];
             }
 
             if (!scriptName.EndsWith(".ps1", StringComparison.OrdinalIgnoreCase))
                 scriptName += ".ps1";
 
-            var script = DB.ScriptAssets_GetScriptByName(scriptName, applicationId);
+            var script = Inedo.BuildMaster.Data.DB.ScriptAssets_GetScriptByName(scriptName, applicationId);
             if (script == null)
             {
                 logger.LogError($"Script {scriptName} not found.");
@@ -217,7 +166,6 @@ namespace Inedo.Extensions.Windows.PowerShell
             {
                 return Task.FromResult(reader.ReadToEnd());
             }
-#endif
         }
 #endif
     }
