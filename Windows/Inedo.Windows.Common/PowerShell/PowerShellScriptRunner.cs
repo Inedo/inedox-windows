@@ -133,7 +133,8 @@ namespace Inedo.Extensions.Windows.PowerShell
                     await Task.Factory.FromAsync(powerShell.BeginInvoke((PSDataCollection<PSObject>)null, output), powerShell.EndInvoke);
 
                     foreach (var var in outVariables.Keys.ToList())
-                        outVariables[var] = UnwrapReference(powerShell.Runspace.SessionStateProxy.GetVariable(var));
+                        if (var != ExecutePowerShellJob.CollectOutputAsDictionary)
+                            outVariables[var] = UnwrapReference(powerShell.Runspace.SessionStateProxy.GetVariable(var));
                 }
                 finally
                 {

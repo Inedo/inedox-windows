@@ -103,14 +103,16 @@ namespace Inedo.Extensions.Windows.PowerShell
                     if (this.LogOutput)
                         runner.OutputReceived += (s, e) => this.MessageLogged(MessageLevel.Information, e.Output?.ToString());
 
+                    var outVariables = this.OutVariables.ToDictionary(v => v, v => (object)null, StringComparer.OrdinalIgnoreCase);
+
                     if (this.CollectOutput)
                     {
                         runner.OutputReceived +=
                             (s, e) =>
                             {
-                                if (this.OutVariables.Contains(ExecutePowerShellJob.CollectOutputAsDictionary))
+                                if (outVariables.ContainsKey(ExecutePowerShellJob.CollectOutputAsDictionary))
                                 {
-                                    this.Variables[ExecutePowerShellJob.CollectOutputAsDictionary] = e.Output.Properties
+                                    outVariables[ExecutePowerShellJob.CollectOutputAsDictionary] = e.Output.Properties
                                         .Where(p => p.IsGettable && p.IsInstance)
                                         .ToDictionary(p => p.Name, p => p.Value?.ToString());
                                 }
@@ -129,8 +131,6 @@ namespace Inedo.Extensions.Windows.PowerShell
                     }
 
                     runner.ProgressUpdate += (s, e) => this.ProgressUpdate(e.PercentComplete, e.Activity);
-
-                    var outVariables = this.OutVariables.ToDictionary(v => v, v => (object)null, StringComparer.OrdinalIgnoreCase);
 
                     int? exitCode = runner.RunAsync(this.ScriptText, this.Variables, this.Parameters, outVariables, default).GetAwaiter().GetResult();
 
