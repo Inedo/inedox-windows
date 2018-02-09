@@ -270,14 +270,16 @@ namespace Inedo.Extensions.Windows.PowerShell
                     if (this.LogOutput)
                         runner.OutputReceived += (s, e) => this.OutputReceived?.Invoke(this, e);
 
+                    var outVariables2 = outVariables.ToDictionary(v => v, v => (object)null, StringComparer.OrdinalIgnoreCase);
+
                     if (this.CollectOutput)
                     {
                         runner.OutputReceived +=
                             (s, e) =>
                             {
-                                if (outVariables.Contains(CollectOutputAsDictionary))
+                                if (outVariables2.ContainsKey(CollectOutputAsDictionary))
                                 {
-                                    variables[CollectOutputAsDictionary] = e.Output.Properties
+                                    outVariables2[CollectOutputAsDictionary] = e.Output.Properties
                                         .Where(p => p.IsGettable && p.IsInstance)
                                         .ToDictionary(p => p.Name, p => p.Value?.ToString());
                                 }
@@ -296,8 +298,6 @@ namespace Inedo.Extensions.Windows.PowerShell
                     }
 
                     runner.ProgressUpdate += (s, e) => this.ProgressUpdate?.Invoke(this, e);
-
-                    var outVariables2 = outVariables.ToDictionary(v => v, v => (object)null, StringComparer.OrdinalIgnoreCase);
 
                     int? exitCode = await runner.RunAsync(script, variables, parameters, outVariables2, cancellationToken);
 
