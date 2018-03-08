@@ -75,16 +75,65 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configurations\IIS\BindingInfo.cs" />
+    <Compile Include="Configurations\IIS\IisApplicationConfiguration.cs" />
+    <Compile Include="Configurations\IIS\IisAppPoolConfiguration.cs" />
+    <Compile Include="Configurations\IIS\IisConfigurationBase.cs" />
+    <Compile Include="Configurations\IIS\IisObjectState.cs" />
+    <Compile Include="Configurations\IIS\IisSiteConfiguration.cs" />
+    <Compile Include="Configurations\IIS\IisVirtualDirectoryConfiguration.cs" />
+    <Compile Include="Configurations\Services\WindowsServiceConfiguration.cs" />
+    <Compile Include="Functions\PsCredentialVariableFunction.cs" />
+    <Compile Include="Functions\PsEvalVariableFunction.cs" />
+    <Compile Include="LooselyQualifiedName.cs" />
+    <Compile Include="Namespaces.cs" />
     <Compile Include="Operations\CollectDscModulesOperation.cs" />
+    <Compile Include="Operations\DotNet\EnsureAppSettingOperation.cs" />
+    <Compile Include="Operations\IIS\Applications\EnsureIisApplicationOperation.cs" />
+    <Compile Include="Operations\IIS\AppPools\AppPoolJob.cs" />
+    <Compile Include="Operations\IIS\AppPools\AppPoolOperationBase.cs" />
+    <Compile Include="Operations\IIS\AppPools\EnsureIisAppPoolOperation.cs" />
+    <Compile Include="Operations\IIS\AppPools\RecycleAppPoolOperation.cs" />
+    <Compile Include="Operations\IIS\AppPools\StartAppPoolOperation.cs" />
+    <Compile Include="Operations\IIS\AppPools\StopAppPoolOperation.cs" />
+    <Compile Include="Operations\IIS\Sites\EnsureIisSiteOperation.cs" />
+    <Compile Include="Operations\IIS\Sites\SiteJob.cs" />
+    <Compile Include="Operations\IIS\Sites\SiteOperationBase.cs" />
+    <Compile Include="Operations\IIS\Sites\StartSiteOperation.cs" />
+    <Compile Include="Operations\IIS\Sites\StopSiteOperation.cs" />
+    <Compile Include="Operations\IIS\VirtualDirectories\EnsureIisVirtualDirectoryOperation.cs" />
+    <Compile Include="Operations\PowerShell\PSCallOperation.cs" />
+    <Compile Include="Operations\PowerShell\PSCallOperationEditor.cs" />
+    <Compile Include="Operations\PowerShell\PSExecuteOperation.cs" />
     <Compile Include="Operations\PSDscOperation.cs" />
     <Compile Include="Operations\PSEnsureOperation.cs" />
+    <Compile Include="Operations\Services\ControlServiceJob.cs" />
+    <Compile Include="Operations\Services\EnsureServiceOperation.cs" />
+    <Compile Include="Operations\Services\StartServiceOperation.cs" />
+    <Compile Include="Operations\Services\StopServiceOperation.cs" />
     <Compile Include="PowerShell\CollectDscModulesJob.cs" />
+    <Compile Include="PowerShell\ExecutePowerShellJob.cs" />
+    <Compile Include="PowerShell\InedoPSHost.cs" />
+    <Compile Include="PowerShell\InedoPSHostRawUserInterface.cs" />
+    <Compile Include="PowerShell\InedoPSHostUserInterface.cs" />
+    <Compile Include="PowerShell\IPowerShellRunner.cs" />
+    <Compile Include="PowerShell\IsolatedPowerShellRunner.cs" />
+    <Compile Include="PowerShell\PowerShellExtensions.cs" />
+    <Compile Include="PowerShell\PowerShellOutputEventArgs.cs" />
+    <Compile Include="PowerShell\PowerShellParameterInfo.cs" />
+    <Compile Include="PowerShell\PowerShellScriptInfo.cs" />
+    <Compile Include="PowerShell\PowerShellScriptInfo.Parse.cs" />
+    <Compile Include="PowerShell\PowerShellScriptRunner.cs" />
+    <Compile Include="PowerShell\PSProgressEventArgs.cs" />
+    <Compile Include="PowerShell\PSUtil.cs" />
+    <Compile Include="PowerShell\ShouldExitEventArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SuggestionProviders\LegacyBindingSuggestionProvider.cs" />
+    <Compile Include="Tags.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <Import Project="..\Inedo.Windows.Common\Inedo.Windows.Common.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>powershell -Command "if (Test-Path C:\Projects\Hedgehog\Extensions -PathType Container) { Compress-Archive -Path '$(TargetDir)*' -DestinationPath C:\Projects\Hedgehog\Extensions\$(TargetName).zip -Force; Move-Item C:\Projects\Hedgehog\Extensions\$(TargetName).zip -Destination C:\Projects\Hedgehog\Extensions\$(TargetName).inedox -Force }"
