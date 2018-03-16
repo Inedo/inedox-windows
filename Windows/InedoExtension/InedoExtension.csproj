@@ -89,6 +89,7 @@
     <Compile Include="Configurations\Services\WindowsServiceConfiguration.cs" />
     <Compile Include="Functions\PsCredentialVariableFunction.cs" />
     <Compile Include="Functions\PsEvalVariableFunction.cs" />
+    <Compile Include="Functions\SpecialWindowsPathVariableFunction.cs" />
     <Compile Include="LooselyQualifiedName.cs" />
     <Compile Include="Namespaces.cs" />
     <Compile Include="Operations\CollectDscModulesOperation.cs" />
