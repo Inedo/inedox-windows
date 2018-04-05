@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using System.Xml.XPath;
 using Inedo.Agents;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
@@ -18,7 +20,7 @@ namespace Inedo.Extensions.Windows.Operations.DotNet
     [ScriptAlias("Ensure-AppSetting")]
     [ScriptNamespace("DotNet")]
     [Tag(".net")]
-    [Note("The \"appSettings\" section must exist in the file under the \"configuration\" element in order to ensure the key/value pair is present.")]
+    [Note("By default, the \"appSettings\" section must exist in the file under the \"configuration\" element in order to ensure the key/value pair is present. Use the AppSettingsXPath argument to select a different element instead.")]
     [Example(@"# ensures that the application is configured to use test mode for the example third-party API
 DotNet::Ensure-AppSetting(
 	File: E:\Website\web.config,
@@ -44,6 +46,12 @@ DotNet::Ensure-AppSetting(
         [ScriptAlias("Value")]
         [DisplayName("AppSetting value")]
         public string ExpectedValue { get; set; }
+
+        [Category("Advanced")]
+        [PlaceholderText("default")]
+        [ScriptAlias("AppSettingsXPath")]
+        [DisplayName("XPath for appSettings")]
+        public string AppSettingsElementXPath { get; set; }
 
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
@@ -72,8 +80,7 @@ DotNet::Ensure-AppSetting(
             using (var file = await fileOps.OpenFileAsync(fileName, FileMode.Open, FileAccess.Read))
             {
                 var doc = XDocument.Load(file);
-                var keyElement = doc.Root
-                    .Descendants("appSettings")
+                var keyElement = this.GetAppSettingsElements(doc)
                     .Elements("add")
                     .FirstOrDefault(e => string.Equals((string)e.Attribute("key"), this.ConfigurationKey, StringComparison.OrdinalIgnoreCase));
 
@@ -98,7 +105,7 @@ DotNet::Ensure-AppSetting(
             {
                 doc = XDocument.Load(file);
 
-                var appSettings = doc.Root.Descendants("appSettings").FirstOrDefault();
+                var appSettings = this.GetAppSettingsElements(doc).FirstOrDefault();
                 if (appSettings == null)
                 {
                     this.LogError("The appSettings element does not exist in " + fileName);
@@ -142,6 +149,13 @@ DotNet::Ensure-AppSetting(
                 Key = this.FileName + "::" + this.ConfigurationKey,
                 Value = value
             };
+        }
+        private IEnumerable<XElement> GetAppSettingsElements(XDocument doc)
+        {
+            if (string.IsNullOrWhiteSpace(this.AppSettingsElementXPath))
+                return doc.Root.Descendants("appSettings");
+            else
+                return doc.XPathSelectElements(this.AppSettingsElementXPath);
         }
 
         public override PersistedConfiguration GetConfigurationTemplate() => this.GetConfiguration(this.ExpectedValue);
