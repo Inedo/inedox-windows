@@ -12,6 +12,7 @@ using Microsoft.Win32;
 
 namespace Inedo.Extensions.Windows.Operations.Registry
 {
+    [Serializable]
     [ScriptAlias("Get-RegistryValue")]
     [Description("Reads a value from the Windows registry and stores it in a variable.")]
     public sealed class GetRegistryValueOperation : RemoteExecuteOperation

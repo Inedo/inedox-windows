@@ -11,6 +11,7 @@ using Microsoft.Win32;
 
 namespace Inedo.Extensions.Windows.Operations.Registry
 {
+    [Serializable]
     [ScriptAlias("Ensure-RegistryKey")]
     [Description("Ensures that a registry key exists or does not exist.")]
     public sealed class EnsureRegistryKeyOperation : RemoteEnsureOperation<RegistryKeyConfiguration>
