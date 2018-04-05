@@ -1,10 +1,12 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.ServiceProcess;
 using System.Threading;
 using System.Threading.Tasks;
 using Inedo.Agents;
 using Inedo.Diagnostics;
+using Inedo.ExecutionEngine.Executer;
 
 namespace Inedo.Extensions.Windows.Operations.Services
 {
@@ -13,11 +15,22 @@ namespace Inedo.Extensions.Windows.Operations.Services
         public string ServiceName { get; set; }
         public ServiceControllerStatus TargetStatus { get; set; }
         public bool WaitForTargetStatus { get; set; }
+        public bool FailIfServiceDoesNotExist { get; set; }
 
         public override async Task<object> ExecuteAsync(CancellationToken cancellationToken)
         {
-            using (var service = new ServiceController(this.ServiceName))
+            using (var service = this.GetService())
             {
+                if (service == null)
+                {
+                    if (this.FailIfServiceDoesNotExist)
+                        throw new ExecutionFailureException($"Service {this.ServiceName} does not exist.");
+                    else
+                        this.LogInformation($"Service {this.ServiceName} does not exist.");
+
+                    return null;
+                }
+
                 if (this.TargetStatus == ServiceControllerStatus.Running)
                 {
                     if (service.Status == ServiceControllerStatus.Running)
@@ -50,6 +63,8 @@ namespace Inedo.Extensions.Windows.Operations.Services
 
             return null;
         }
+
+        private ServiceController GetService() => ServiceController.GetServices().FirstOrDefault(s => string.Equals(s.ServiceName, this.ServiceName, StringComparison.OrdinalIgnoreCase));
 
         private async Task WaitForStartAsync(ServiceController service, CancellationToken cancellationToken)
         {
@@ -99,6 +114,7 @@ namespace Inedo.Extensions.Windows.Operations.Services
             writer.Write(this.ServiceName);
             writer.Write((int)this.TargetStatus);
             writer.Write(this.WaitForTargetStatus);
+            writer.Write(this.FailIfServiceDoesNotExist);
         }
         public override void Deserialize(Stream stream)
         {
@@ -106,14 +122,12 @@ namespace Inedo.Extensions.Windows.Operations.Services
             this.ServiceName = reader.ReadString();
             this.TargetStatus = (ServiceControllerStatus)reader.ReadInt32();
             this.WaitForTargetStatus = reader.ReadBoolean();
+            this.FailIfServiceDoesNotExist = reader.ReadBoolean();
         }
 
         public override void SerializeResponse(Stream stream, object result)
         {
         }
-        public override object DeserializeResponse(Stream stream)
-        {
-            return null;
-        }
+        public override object DeserializeResponse(Stream stream) => null;
     }
 }
