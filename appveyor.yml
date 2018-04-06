@@ -27,7 +27,7 @@ after_build:
       "?name=$($env:EXTENSION_NAME)" + `
       "&version=$($env:APPVEYOR_BUILD_VERSION)" + `
       "&title=$($env:EXTENSION_TITLE)" + `
-      "&description = [Uri]::EscapeDataString('$($env:EXTENSION_DESCRIPTION)')" `
+      "&description=" + [Uri]::EscapeDataString('$($env:EXTENSION_DESCRIPTION)') `
     );
 
     Invoke-RestMethod -Method Put `
