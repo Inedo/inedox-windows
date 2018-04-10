@@ -307,8 +307,13 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [ScriptAlias("PeriodicRestartRequests")]
         [Persistent]
         public long? Recycling_PeriodicRestart_Requests { get; set; }
-        
-        //public ScheduleCollection Recycling_PeriodicRestart_Schedule { get; }
+
+        [Category("Recycling")]
+        [DisplayName("Schedule")]
+        [Description("Specific times of day to recycle the application pool. For example, @(3:30:00, 10:00:00, 23:59:59)")]
+        [ScriptAlias("PeriodicRestartSchedule")]
+        [Persistent]
+        public IEnumerable<string> Recycling_PeriodicRestart_Schedule { get; }
 
         [Category("Recycling")]
         [DisplayName("Virtual memory limit (KB)")]
@@ -425,11 +430,27 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
             public void SetValue(object value)
             {
+                if (this.MwaAppPoolProperty.PropertyType == typeof(ScheduleCollection))
+                {
+                    var collection = (ScheduleCollection)this.MwaAppPoolProperty.GetValue(this.Instance);
+                    collection.Clear();
+                    foreach (var time in (IEnumerable<string>)value)
+                    {
+                        collection.Add(TimeSpan.Parse(time));
+                    }
+                    return;
+                }
+
                 this.MwaAppPoolProperty.SetValue(this.Instance, value);
             }
 
             public object GetValue()
             {
+                if (this.MwaAppPoolProperty.PropertyType == typeof(ScheduleCollection))
+                {
+                    return ((ScheduleCollection)this.MwaAppPoolProperty.GetValue(this.Instance))?.Select(s => s.Time.ToString()).ToArray();
+                }
+
                 return this.MwaAppPoolProperty.GetValue(this.Instance);
             }
         }
