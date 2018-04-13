@@ -50,6 +50,7 @@ PSEnsure(
     Verbose: true
 );
 ")]
+    [Note("The Key is a unique string per server, and having multiple operations attempt to use the same key will yield in unpredictable behavior.")]
     public sealed class PSEnsureOperation : EnsureOperation
     {
         private PSProgressEventArgs currentProgress;
