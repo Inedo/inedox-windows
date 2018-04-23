@@ -19,7 +19,7 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
     {
         public async override Task<DictionaryConfiguration> CollectConfigAsync(IOperationCollectionContext context)
         {
-            var job = new CollectDscModulesJob()
+            var job = new CollectDscModulesJob
             {
                 DebugLogging = true
             };
@@ -29,21 +29,22 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
             var jobExecuter = await context.Agent.GetServiceAsync<IRemoteJobExecuter>().ConfigureAwait(false);
             var result = (CollectDscModulesJob.Result)await jobExecuter.ExecuteJobAsync(job, context.CancellationToken).ConfigureAwait(false);
 
-            var serverContext = context.GetServerCollectionContext();
-
-            await serverContext.ClearAllPackagesAsync("DSC Module").ConfigureAwait(false);
-
-            foreach (var module in result.Modules)
+            using (var serverContext = context.GetServerCollectionContext())
             {
-                await serverContext.CreateOrUpdatePackageAsync(
-                    packageType: "DSC Module",
-                    packageName: module.Name,
-                    packageVersion: module.Version,
-                    packageUrl: null
-                ).ConfigureAwait(false);
-            }
+                await serverContext.ClearAllPackagesAsync("DSC Module").ConfigureAwait(false);
 
-            return null;
+                foreach (var module in result.Modules)
+                {
+                    await serverContext.CreateOrUpdatePackageAsync(
+                        packageType: "DSC Module",
+                        packageName: module.Name,
+                        packageVersion: module.Version,
+                        packageUrl: null
+                    ).ConfigureAwait(false);
+                }
+
+                return null;
+            }
         }
 
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
