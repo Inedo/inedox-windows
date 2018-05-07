@@ -90,7 +90,7 @@ PSDsc cHdarsResource::cHdars (
                 Variables = new Dictionary<string, object>
                 {
                     { "Name", this.ResourceName.Name },
-                    { "$Property", GetHashTable(this.Template.Items) },
+                    { "Property", GetHashTable(this.Template.Items) },
                     { "ModuleName", this.ResourceName.Namespace ?? "PSDesiredStateConfiguration" }
                 },
                 ScriptText = "Invoke-DscResource -Name $Name -Method Get -Property $Property -ModuleName $ModuleName"
@@ -108,7 +108,7 @@ PSDsc cHdarsResource::cHdars (
                 Variables = new Dictionary<string, object>
                 {
                     { "Name", this.ResourceName.Name },
-                    { "$Property", GetHashTable(this.Template.Items) },
+                    { "Property", GetHashTable(this.Template.Items) },
                     { "ModuleName", this.ResourceName.Namespace ?? "PSDesiredStateConfiguration" }
                 },
                 ScriptText = "Invoke-DscResource -Name $Name -Method Test -Property $Property -ModuleName $ModuleName"
@@ -221,9 +221,9 @@ PSDsc cHdarsResource::cHdars (
                 DebugLogging = true,
                 Variables = new Dictionary<string, object>
                 {
-                    { "$Name", this.ResourceName.Name },
-                    { "$Property", GetHashTable(this.Template.Items) },
-                    { "$ModuleName", this.ResourceName.Namespace ?? "PSDesiredStateConfiguration" }
+                    { "Name", this.ResourceName.Name },
+                    { "Property", GetHashTable(this.Template.Items) },
+                    { "ModuleName", this.ResourceName.Namespace ?? "PSDesiredStateConfiguration" }
                 },
                 ScriptText = "Invoke-DscResource -Name $Name -Method Set -Property $Property -ModuleName $ModuleName"
             };
