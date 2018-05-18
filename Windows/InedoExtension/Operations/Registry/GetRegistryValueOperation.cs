@@ -13,8 +13,17 @@ using Microsoft.Win32;
 namespace Inedo.Extensions.Windows.Operations.Registry
 {
     [Serializable]
+    [DisplayName("Get Registry Value")]
     [ScriptAlias("Get-RegistryValue")]
     [Description("Reads a value from the Windows registry and stores it in a variable.")]
+    [Tag(Tags.Registry)]
+    [Example(@"Windows::Get-RegistryValue
+(
+    Hive: LocalMachine,
+    Key: SOFTWARE\7-Zip,
+    Name: Path,
+    Value => $PathTo7Zip
+);")]
     public sealed class GetRegistryValueOperation : RemoteExecuteOperation
     {
         [Required]
