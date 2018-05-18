@@ -15,8 +15,17 @@ using Microsoft.Win32;
 namespace Inedo.Extensions.Windows.Operations.Registry
 {
     [Serializable]
+    [DisplayName("Ensure Registry Value")]
     [ScriptAlias("Ensure-RegistryValue")]
     [Description("Ensures that a registry value exists or does not exist on a specified key.")]
+    [Example(@"Windows::Ensure-RegistryValue
+(
+    Name: ServicePath,
+    Value: C:\BuildMaster\Service,
+    Hive: LocalMachine,
+    Key: SOFTWARE\Inedo\BuildMaster
+);")]
+    [Tag(Tags.Registry)]
     public sealed class EnsureRegistryValueOperation : RemoteEnsureOperation<RegistryValueConfiguration>
     {
         protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationCollectionContext context)

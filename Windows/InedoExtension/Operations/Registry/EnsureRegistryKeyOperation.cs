@@ -12,8 +12,15 @@ using Microsoft.Win32;
 namespace Inedo.Extensions.Windows.Operations.Registry
 {
     [Serializable]
+    [DisplayName("Ensure Registry Key")]
     [ScriptAlias("Ensure-RegistryKey")]
     [Description("Ensures that a registry key exists or does not exist.")]
+    [Example(@"Windows::Ensure-RegistryKey
+(
+    Hive: LocalMachine,
+    Key: SOFTWARE\Inedo\BuildMaster
+);")]
+    [Tag(Tags.Registry)]
     public sealed class EnsureRegistryKeyOperation : RemoteEnsureOperation<RegistryKeyConfiguration>
     {
         protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationCollectionContext context)
