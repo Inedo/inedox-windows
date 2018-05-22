@@ -75,6 +75,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configurations\DSC\DscConfiguration.cs" />
     <Compile Include="Configurations\IIS\BindingInfo.cs" />
     <Compile Include="Configurations\IIS\IisApplicationConfiguration.cs" />
     <Compile Include="Configurations\IIS\IisAppPoolConfiguration.cs" />
