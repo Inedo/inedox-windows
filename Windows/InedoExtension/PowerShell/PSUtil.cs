@@ -79,7 +79,6 @@ namespace Inedo.Extensions.Windows.PowerShell
             return new RuntimeValue(value?.ToString());
         }
 
-#if Hedgehog
         private static async Task<string> GetScriptTextAsync(ILogSink logger, string fullScriptName, IOperationExecutionContext context)
         {
             string scriptName;
@@ -121,52 +120,5 @@ namespace Inedo.Extensions.Windows.PowerShell
                 }
             }
         }
-#elif BuildMaster
-        private static Task<string> GetScriptTextAsync(ILogSink logger, string fullScriptName, IOperationExecutionContext context)
-        {
-            string scriptName;
-            int? applicationId;
-            var scriptNameParts = fullScriptName.Split(new[] { "::" }, 2, StringSplitOptions.None);
-            if (scriptNameParts.Length == 2)
-            {
-                if (string.Equals(scriptNameParts[0], "GLOBAL", StringComparison.OrdinalIgnoreCase))
-                {
-                    applicationId = null;
-                }
-                else
-                {
-                    applicationId = Inedo.BuildMaster.Data.DB.Applications_GetApplications(null, true).FirstOrDefault(a => string.Equals(a.Application_Name, scriptNameParts[0], StringComparison.OrdinalIgnoreCase))?.Application_Id;
-                    if (applicationId == null)
-                    {
-                        logger.LogError($"Invalid application name {scriptNameParts[0]}.");
-                        return Task.FromResult<string>(null);
-                    }
-                }
-
-                scriptName = scriptNameParts[1];
-            }
-            else
-            {
-                applicationId = (context as BuildMaster.Extensibility.IGenericBuildMasterContext)?.ApplicationId;
-                scriptName = scriptNameParts[0];
-            }
-
-            if (!scriptName.EndsWith(".ps1", StringComparison.OrdinalIgnoreCase))
-                scriptName += ".ps1";
-
-            var script = Inedo.BuildMaster.Data.DB.ScriptAssets_GetScriptByName(scriptName, applicationId);
-            if (script == null)
-            {
-                logger.LogError($"Script {scriptName} not found.");
-                return Task.FromResult<string>(null);
-            }
-
-            using (var stream = new MemoryStream(script.Script_Text, false))
-            using (var reader = new StreamReader(stream, InedoLib.UTF8Encoding))
-            {
-                return Task.FromResult(reader.ReadToEnd());
-            }
-        }
-#endif
     }
 }

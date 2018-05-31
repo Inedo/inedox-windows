@@ -93,7 +93,6 @@
     <Compile Include="Functions\SpecialWindowsPathVariableFunction.cs" />
     <Compile Include="LooselyQualifiedName.cs" />
     <Compile Include="Namespaces.cs" />
-    <Compile Include="Operations\CollectDscModulesOperation.cs" />
     <Compile Include="Operations\DotNet\EnsureAppSettingOperation.cs" />
     <Compile Include="Operations\IIS\Applications\EnsureIisApplicationOperation.cs" />
     <Compile Include="Operations\IIS\AppPools\AppPoolJob.cs" />
@@ -108,11 +107,12 @@
     <Compile Include="Operations\IIS\Sites\StartSiteOperation.cs" />
     <Compile Include="Operations\IIS\Sites\StopSiteOperation.cs" />
     <Compile Include="Operations\IIS\VirtualDirectories\EnsureIisVirtualDirectoryOperation.cs" />
+    <Compile Include="Operations\PowerShell\CollectDscModulesOperation.cs" />
     <Compile Include="Operations\PowerShell\PSCallOperation.cs" />
     <Compile Include="Operations\PowerShell\PSCallOperationEditor.cs" />
+    <Compile Include="Operations\PowerShell\PSDscOperation.cs" />
+    <Compile Include="Operations\PowerShell\PSEnsureOperation.cs" />
     <Compile Include="Operations\PowerShell\PSExecuteOperation.cs" />
-    <Compile Include="Operations\PSDscOperation.cs" />
-    <Compile Include="Operations\PSEnsureOperation.cs" />
     <Compile Include="Operations\Registry\EnsureRegistryKeyOperation.cs" />
     <Compile Include="Operations\Registry\EnsureRegistryValueOperation.cs" />
     <Compile Include="Operations\Registry\GetRegistryValueOperation.cs" />

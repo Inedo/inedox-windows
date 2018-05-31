@@ -12,8 +12,8 @@ namespace Inedo.Extensions.Windows.PowerShell
 {
     partial class PowerShellScriptInfo
     {
-        private static readonly LazyRegex DocumentationRegex = new LazyRegex(@"\s*\.(?<1>\S+)[ \t]*(?<2>[^\r\n]+)?\s*\n(?<3>(.(?!\n\.))+)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Singleline | RegexOptions.ExplicitCapture);
-        private static readonly LazyRegex SpaceCollapseRegex = new LazyRegex(@"\s*\n\s*", RegexOptions.Singleline);
+        private static readonly LazyRegex DocumentationRegex = new LazyRegex(@"\s*\.(?<1>\S+)[ \t]*(?<2>[^\r\n]+)?\s*\n(?<3>(.(?!\n\.))+)", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Singleline | RegexOptions.ExplicitCapture);
+        private static readonly LazyRegex SpaceCollapseRegex = new LazyRegex(@"\s*\n\s*", RegexOptions.Compiled | RegexOptions.Singleline);
         private static readonly LazyRegex ParameterTypeRegex = new LazyRegex(@"^\[?(?<1>[^\]]+)\]?$", RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.ExplicitCapture);
 
         public static bool TryParse(TextReader scriptText, out PowerShellScriptInfo info)
@@ -98,7 +98,6 @@ namespace Inedo.Extensions.Windows.PowerShell
             );
         }
 
-#if Hedgehog
         public static async Task<PowerShellScriptInfo> TryLoadAsync(LooselyQualifiedName scriptName)
         {
             using (var raft = RaftRepository.OpenRaft(scriptName.Namespace ?? RaftRepository.DefaultName))
@@ -121,34 +120,6 @@ namespace Inedo.Extensions.Windows.PowerShell
                 }
             }
         }
-#elif BuildMaster
-        public static Task<PowerShellScriptInfo> TryLoadAsync(LooselyQualifiedName scriptName)
-        {
-            int? applicationId = null;
-            if (!string.IsNullOrWhiteSpace(scriptName.Namespace) && !string.Equals(scriptName.Name, "GLOBAL", StringComparison.OrdinalIgnoreCase))
-            {
-                applicationId = Inedo.BuildMaster.Data.DB.Applications_GetApplications(null, true)
-                    .FirstOrDefault(a => string.Equals(a.Application_Name, scriptName.Namespace, StringComparison.OrdinalIgnoreCase))
-                    ?.Application_Id;
-            }
-
-            var name = scriptName.Name;
-            if (!name.EndsWith(".ps1", StringComparison.OrdinalIgnoreCase))
-                name += ".ps1";
-
-            var script = Inedo.BuildMaster.Data.DB.ScriptAssets_GetScriptByName(name, applicationId);
-            if (script == null)
-                return Task.FromResult<PowerShellScriptInfo>(null);
-
-            using (var stream = new MemoryStream(script.Script_Text, false))
-            using (var reader = new StreamReader(stream, InedoLib.UTF8Encoding))
-            {
-                PowerShellScriptInfo info;
-                TryParse(reader, out info);
-                return Task.FromResult(info);
-            }
-        }
-#endif
 
         private static IEnumerable<ParamInfo> ScrapeParameters(IEnumerable<PSToken> tokens)
         {

@@ -46,36 +46,20 @@ PSDsc cHdarsResource::cHdars (
 );")]
     public sealed class PSDscOperation : EnsureOperation<DscConfiguration>, ICustomArgumentMapper
     {
+        private readonly Lazy<DscConfiguration> lazyTemplate;
+
+        public PSDscOperation() => this.lazyTemplate = new Lazy<DscConfiguration>(this.CreateTemplate);
+
         public RuntimeValue DefaultArgument { get; set; }
         public IReadOnlyDictionary<string, RuntimeValue> NamedArguments { get; set; }
         public IDictionary<string, RuntimeValue> OutArguments { get; set; }
-        public new DscConfiguration Template => (DscConfiguration)this.GetConfigurationTemplate();
+        public new DscConfiguration Template => this.lazyTemplate.Value;
 
         private QualifiedName ResourceName => QualifiedName.Parse(this.DefaultArgument.AsString());
 
-        public override PersistedConfiguration GetConfigurationTemplate()
-        {
-            string keyName = null;
-            var desiredValues = new Dictionary<string, string>();
-            foreach (var arg in this.NamedArguments)
-            {
-                if (string.Equals(arg.Key, DscConfiguration.ConfigurationKeyPropertyName, StringComparison.OrdinalIgnoreCase))
-                    keyName = arg.Value.AsString();
-                else
-                    desiredValues[arg.Key] = arg.Value.AsString() ?? string.Empty;
-            }
-
-            return new DscConfiguration(desiredValues)
-            {
-                ResourceName = this.ResourceName.Name,
-                ConfigurationKeyName = keyName,
-                InDesiredState = true
-            };
-        }
+        public override PersistedConfiguration GetConfigurationTemplate() => this.lazyTemplate.Value;
         public override async Task<PersistedConfiguration> CollectAsync(IOperationCollectionContext context)
         {
-            var template = this.Template;
-
             var fullScriptName = this.DefaultArgument.AsString();
             if (fullScriptName == null)
             {
@@ -85,19 +69,7 @@ PSDsc cHdarsResource::cHdars (
 
             var jobRunner = await context.Agent.GetServiceAsync<IRemoteJobExecuter>();
 
-            var collectJob = new ExecutePowerShellJob
-            {
-                CollectOutput = true,
-                OutVariables = new[] { ExecutePowerShellJob.CollectOutputAsDictionary },
-                DebugLogging = true,
-                ScriptText = "Invoke-DscResource -Name $Name -Method Get -Property $Property -ModuleName $ModuleName",
-                Variables = new Dictionary<string, object>
-                {
-                    ["Name"] = this.ResourceName.Name,
-                    ["Property"] = template.GetHashTable(),
-                    ["ModuleName"] = this.ResourceName.Namespace ?? "PSDesiredStateConfiguration"
-                }
-            };
+            var collectJob = this.CreateJob("Get", true);
 
             this.LogDebug(collectJob.ScriptText);
             collectJob.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
@@ -108,18 +80,7 @@ PSDsc cHdarsResource::cHdars (
                 .Where(p => !string.IsNullOrEmpty(p.Value?.ToString()))
                 .ToDictionary(k => k.Key, k => k.Value?.ToString(), StringComparer.OrdinalIgnoreCase);
 
-            var testJob = new ExecutePowerShellJob
-            {
-                CollectOutput = true,
-                DebugLogging = true,
-                ScriptText = "Invoke-DscResource -Name $Name -Method Test -Property $Property -ModuleName $ModuleName",
-                Variables = new Dictionary<string, object>
-                {
-                    ["Name"] = this.ResourceName.Name,
-                    ["Property"] = template.GetHashTable(),
-                    ["ModuleName"] = this.ResourceName.Namespace ?? "PSDesiredStateConfiguration"
-                }
-            };
+            var testJob = this.CreateJob("Test");
 
             this.LogDebug(testJob.ScriptText);
             testJob.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
@@ -160,10 +121,22 @@ PSDsc cHdarsResource::cHdars (
 
             var jobRunner = await context.Agent.GetServiceAsync<IRemoteJobExecuter>();
 
+            var job = this.CreateJob("Set");
+            this.LogDebug(job.ScriptText);
+            job.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
+
+            await jobRunner.ExecuteJobAsync(job, context.CancellationToken);
+        }
+
+        protected override ExtendedRichDescription GetDescription(IOperationConfiguration config) => new ExtendedRichDescription(new RichDescription("PSDsc"));
+
+        private ExecutePowerShellJob CreateJob(string method, bool outputAsDictionary = false)
+        {
             var job = new ExecutePowerShellJob
             {
+                CollectOutput = true,
                 DebugLogging = true,
-                ScriptText = "Invoke-DscResource -Name $Name -Method Set -Property $Property -ModuleName $ModuleName",
+                ScriptText = $"Invoke-DscResource -Name $Name -Method {method} -Property $Property -ModuleName $ModuleName",
                 Variables = new Dictionary<string, object>
                 {
                     ["Name"] = this.ResourceName.Name,
@@ -172,12 +145,29 @@ PSDsc cHdarsResource::cHdars (
                 }
             };
 
-            this.LogDebug(job.ScriptText);
-            job.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
+            if (outputAsDictionary)
+                job.OutVariables = new[] { ExecutePowerShellJob.CollectOutputAsDictionary };
 
-            await jobRunner.ExecuteJobAsync(job, context.CancellationToken);
+            return job;
         }
+        private DscConfiguration CreateTemplate()
+        {
+            string keyName = null;
+            var desiredValues = new Dictionary<string, string>();
+            foreach (var arg in this.NamedArguments)
+            {
+                if (string.Equals(arg.Key, DscConfiguration.ConfigurationKeyPropertyName, StringComparison.OrdinalIgnoreCase))
+                    keyName = arg.Value.AsString();
+                else
+                    desiredValues[arg.Key] = arg.Value.AsString() ?? string.Empty;
+            }
 
-        protected override ExtendedRichDescription GetDescription(IOperationConfiguration config) => new ExtendedRichDescription(new RichDescription("PSDsc"));
+            return new DscConfiguration(desiredValues)
+            {
+                ResourceName = this.ResourceName.Name,
+                ConfigurationKeyName = keyName,
+                InDesiredState = true
+            };
+        }
     }
 }

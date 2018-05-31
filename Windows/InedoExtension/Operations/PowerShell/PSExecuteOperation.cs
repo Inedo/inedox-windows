@@ -56,14 +56,10 @@ psexec >>
         [Description("Captures the PowerShell Write-Verbose stream into the Otter debug log. The default is false.")]
         public bool VerboseLogging { get; set; }
 
-#if !Hedgehog
-        private bool RunOnSimulation => false;
-#else
         [ScriptAlias("RunOnSimulation")]
         [DisplayName("Run on simulation")]
         [Description("Indicates whether the script will execute in simulation mode. The default is false.")]
         public bool RunOnSimulation { get; set; }
-#endif
 
         [ScriptAlias("Isolated")]
         [Description("When true, the script is run in a temporary AppDomain that is unloaded when the script completes. This is an experimental feature and may decrease performance, but may be useful if a script loads assemblies or other resources that would otherwise be leaked.")]
