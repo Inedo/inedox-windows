@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Inedo.Diagnostics;
+using Inedo.ExecutionEngine;
 
 namespace Inedo.Extensions.Windows.PowerShell
 {
@@ -17,6 +18,6 @@ namespace Inedo.Extensions.Windows.PowerShell
         bool DebugLogging { get; set; }
         bool VerboseLogging { get; set; }
 
-        Task<ExecutePowerShellJob.Result> ExecuteAsync(string script, Dictionary<string, object> variables, Dictionary<string, object> parameters, string[] outVariables, CancellationToken cancellationToken);
+        Task<ExecutePowerShellJob.Result> ExecuteAsync(string script, Dictionary<string, RuntimeValue> variables, Dictionary<string, RuntimeValue> parameters, string[] outVariables, CancellationToken cancellationToken);
     }
 }

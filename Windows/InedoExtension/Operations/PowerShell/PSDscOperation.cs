@@ -76,9 +76,9 @@ PSDsc cHdarsResource::cHdars (
 
             var result = (ExecutePowerShellJob.Result)await jobRunner.ExecuteJobAsync(collectJob, context.CancellationToken);
 
-            var collectValues = ((Dictionary<string, object>)result.OutVariables[ExecutePowerShellJob.CollectOutputAsDictionary])
-                .Where(p => !string.IsNullOrEmpty(p.Value?.ToString()))
-                .ToDictionary(k => k.Key, k => k.Value?.ToString(), StringComparer.OrdinalIgnoreCase);
+            var collectValues = result.OutVariables[ExecutePowerShellJob.CollectOutputAsDictionary].AsDictionary()
+                .Where(p => p.Value.ValueType != RuntimeValueType.Scalar || !string.IsNullOrEmpty(p.Value.AsString()))
+                .ToDictionary(k => k.Key, k => k.Value, StringComparer.OrdinalIgnoreCase);
 
             var testJob = this.CreateJob("Test");
 
@@ -137,10 +137,10 @@ PSDsc cHdarsResource::cHdars (
                 CollectOutput = true,
                 DebugLogging = true,
                 ScriptText = $"Invoke-DscResource -Name $Name -Method {method} -Property $Property -ModuleName $ModuleName",
-                Variables = new Dictionary<string, object>
+                Variables = new Dictionary<string, RuntimeValue>(StringComparer.OrdinalIgnoreCase)
                 {
                     ["Name"] = this.ResourceName.Name,
-                    ["Property"] = this.Template.GetHashTable(),
+                    ["Property"] = new RuntimeValue(this.Template.ToPowerShellDictionary()),
                     ["ModuleName"] = this.ResourceName.Namespace ?? "PSDesiredStateConfiguration"
                 }
             };
@@ -153,7 +153,7 @@ PSDsc cHdarsResource::cHdars (
         private DscConfiguration CreateTemplate()
         {
             string keyName = null;
-            var desiredValues = new Dictionary<string, string>();
+            var desiredValues = new Dictionary<string, RuntimeValue>(StringComparer.OrdinalIgnoreCase);
             foreach (var arg in this.NamedArguments)
             {
                 if (string.Equals(arg.Key, DscConfiguration.ConfigurationKeyPropertyName, StringComparison.OrdinalIgnoreCase))

@@ -42,7 +42,7 @@ namespace Inedo.Extensions.Windows.PowerShell
 
                 var output = new Dictionary<string, object> { { "results", null } };
 
-                int? exitCode = await runner.RunAsync("$results = Get-DscResource", new Dictionary<string, object>(), new Dictionary<string, object>(), output, cancellationToken);
+                int? exitCode = await runner.RunAsync("$results = Get-DscResource", cancellationToken: cancellationToken);
 
                 var infos = ((object[])output["results"]).OfType<PSObject>();
 

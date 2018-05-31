@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Inedo.Agents;
 using Inedo.Diagnostics;
+using Inedo.ExecutionEngine;
 using Inedo.Serialization;
 
 namespace Inedo.Extensions.Windows.PowerShell
@@ -24,10 +25,20 @@ namespace Inedo.Extensions.Windows.PowerShell
         public bool VerboseLogging { get; set; }
         public bool CollectOutput { get; set; }
         public bool LogOutput { get; set; }
-        public Dictionary<string, object> Variables { get; set; }
-        public Dictionary<string, object> Parameters { get; set; }
+        public Dictionary<string, RuntimeValue> Variables { get; set; }
+        public Dictionary<string, RuntimeValue> Parameters { get; set; }
         public string[] OutVariables { get; set; }
         public bool Isolated { get; set; }
+
+        public override async Task<object> ExecuteAsync(CancellationToken cancellationToken)
+        {
+            var runner = this.CreateRunner();
+            runner.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
+            if (this.LogOutput)
+                runner.OutputReceived += (s, e) => this.LogInformation(e.Output?.ToString());
+
+            return await runner.ExecuteAsync(this.ScriptText, this.Variables, this.Parameters, this.OutVariables, cancellationToken);
+        }
 
         public override void Serialize(Stream stream)
         {
@@ -39,10 +50,10 @@ namespace Inedo.Extensions.Windows.PowerShell
             writer.Write(this.LogOutput);
             writer.Write(this.Isolated);
 
-            SlimBinaryFormatter.Serialize(this.Variables, stream);
-            SlimBinaryFormatter.Serialize(this.Parameters, stream);
+            WriteDictionary(writer, this.Variables);
+            WriteDictionary(writer, this.Parameters);
 
-            SlimBinaryFormatter.WriteLength(stream, this.OutVariables?.Length ?? 0);
+            SlimBinaryFormatter.WriteLength(writer, this.OutVariables?.Length ?? 0);
             foreach (var var in this.OutVariables ?? new string[0])
                 writer.Write(var);
         }
@@ -56,23 +67,13 @@ namespace Inedo.Extensions.Windows.PowerShell
             this.LogOutput = reader.ReadBoolean();
             this.Isolated = reader.ReadBoolean();
 
-            this.Variables = (Dictionary<string, object>)SlimBinaryFormatter.Deserialize(stream) ?? new Dictionary<string, object>();
-            this.Parameters = (Dictionary<string, object>)SlimBinaryFormatter.Deserialize(stream) ?? new Dictionary<string, object>();
+            this.Variables = ReadDictionary(reader);
+            this.Parameters = ReadDictionary(reader);
 
             int count = SlimBinaryFormatter.ReadLength(stream);
             this.OutVariables = new string[count];
             for (int i = 0; i < count; i++)
                 this.OutVariables[i] = reader.ReadString();
-        }
-
-        public override async Task<object> ExecuteAsync(CancellationToken cancellationToken)
-        {
-            var runner = this.CreateRunner();
-            runner.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
-            if (this.LogOutput)
-                runner.OutputReceived += (s, e) => this.LogInformation(e.Output?.ToString());
-
-            return await runner.ExecuteAsync(this.ScriptText, this.Variables, this.Parameters, this.OutVariables, cancellationToken);
         }
 
         public override void SerializeResponse(Stream stream, object result)
@@ -101,42 +102,6 @@ namespace Inedo.Extensions.Windows.PowerShell
                 WriteRuntimeValue(writer, v.Value);
             }
         }
-
-        private static void WriteRuntimeValue(BinaryWriter writer, object value)
-        {
-            var dict = value as System.Collections.IDictionary;
-            if (dict != null)
-            {
-                writer.Write((byte)'%');
-                SlimBinaryFormatter.WriteLength(writer, dict.Count);
-                foreach (var key in dict.Keys)
-                {
-                    writer.Write(key?.ToString() ?? string.Empty);
-                    WriteRuntimeValue(writer, dict[key]);
-                }
-            }
-            else if (value is string)
-            {
-                writer.Write((byte)'$');
-                writer.Write(value?.ToString() ?? string.Empty);
-            }
-            else if (value is System.Collections.IEnumerable)
-            {
-                var list = ((System.Collections.IEnumerable)value).Cast<object>().ToList();
-                writer.Write((byte)'@');
-                SlimBinaryFormatter.WriteLength(writer, list.Count);
-                foreach (var element in list)
-                {
-                    WriteRuntimeValue(writer, element);
-                }
-            }
-            else
-            {
-                writer.Write((byte)'$');
-                writer.Write(value?.ToString() ?? string.Empty);
-            }
-        }
-
         public override object DeserializeResponse(Stream stream)
         {
             var reader = new BinaryReader(stream, InedoLib.UTF8Encoding);
@@ -152,14 +117,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             for (int i = 0; i < count; i++)
                 output.Add(reader.ReadString());
 
-            count = SlimBinaryFormatter.ReadLength(stream);
-            var vars = new Dictionary<string, object>(count, StringComparer.OrdinalIgnoreCase);
-            for (int i = 0; i < count; i++)
-            {
-                var key = reader.ReadString();
-                var value = ReadRuntimeValue(reader);
-                vars[key] = value;
-            }
+            var vars = ReadDictionary(reader);
 
             return new Result
             {
@@ -169,37 +127,80 @@ namespace Inedo.Extensions.Windows.PowerShell
             };
         }
 
-        private static object ReadRuntimeValue(BinaryReader reader)
+        private static RuntimeValue ReadRuntimeValue(BinaryReader reader)
         {
-            byte type = reader.ReadByte();
-            switch (type)
+            var type = (RuntimeValueType)reader.ReadByte();
+            if (type == RuntimeValueType.Scalar)
             {
-                case (byte)'%':
-                    {
-                        var count = SlimBinaryFormatter.ReadLength(reader);
-                        var dict = new Dictionary<string, object>(count, StringComparer.OrdinalIgnoreCase);
-                        for (int i = 0; i < count; i++)
-                        {
-                            var key = reader.ReadString();
-                            var value = ReadRuntimeValue(reader);
-                            dict[key] = value;
-                        }
-                        return dict;
-                    }
-                case (byte)'@':
-                    {
-                        var count = SlimBinaryFormatter.ReadLength(reader);
-                        var list = new List<object>(count);
-                        for (int i = 0; i < count; i++)
-                        {
-                            list.Add(ReadRuntimeValue(reader));
-                        }
-                        return list;
-                    }
-                case (byte)'$':
-                    return reader.ReadString();
-                default:
-                    throw new InvalidDataException($"Invalid runtime variable type specifier '{type}'");
+                return reader.ReadString();
+            }
+            else if (type == RuntimeValueType.Vector)
+            {
+                int length = SlimBinaryFormatter.ReadLength(reader);
+                var list = new List<RuntimeValue>(length);
+                for (int i = 0; i < length; i++)
+                    list.Add(ReadRuntimeValue(reader));
+
+                return new RuntimeValue(list);
+            }
+            else if (type == RuntimeValueType.Map)
+            {
+                return new RuntimeValue(ReadDictionary(reader));
+            }
+            else
+            {
+                throw new InvalidDataException("Unknown value type: " + type);
+            }
+        }
+        private static void WriteRuntimeValue(BinaryWriter writer, RuntimeValue value)
+        {
+            var type = value.ValueType;
+
+            writer.Write((byte)type);
+
+            if (type == RuntimeValueType.Scalar)
+            {
+                writer.Write(value.AsString() ?? string.Empty);
+            }
+            else if (type == RuntimeValueType.Vector)
+            {
+                var list = value.AsEnumerable().ToList();
+                SlimBinaryFormatter.WriteLength(writer, list.Count);
+                foreach (var i in list)
+                    WriteRuntimeValue(writer, i);
+            }
+            else if (type == RuntimeValueType.Map)
+            {
+                WriteDictionary(writer, value.AsDictionary());
+            }
+            else
+            {
+                throw new ArgumentException("Unknown value type: " + type);
+            }
+        }
+        private static Dictionary<string, RuntimeValue> ReadDictionary(BinaryReader reader)
+        {
+            var d = new Dictionary<string, RuntimeValue>(StringComparer.OrdinalIgnoreCase);
+            int length = SlimBinaryFormatter.ReadLength(reader);
+            for (int i = 0; i < length; i++)
+            {
+                var key = reader.ReadString();
+                var value = ReadRuntimeValue(reader);
+                d[key] = value;
+            }
+
+            return d;
+        }
+        private static void WriteDictionary(BinaryWriter writer, IDictionary<string, RuntimeValue> d)
+        {
+            SlimBinaryFormatter.WriteLength(writer, d?.Count ?? 0);
+            if (d != null)
+            {
+                foreach (var p in d)
+                {
+                    writer.Write(p.Key);
+                    WriteRuntimeValue(writer, p.Value);
+                }
             }
         }
 
@@ -226,7 +227,6 @@ namespace Inedo.Extensions.Windows.PowerShell
 
             return r;
         }
-
         private void NotifyProgressUpdate(int percent, string activity)
         {
             if (percent != this.currentPercent || activity != this.currentActivity)
@@ -246,7 +246,7 @@ namespace Inedo.Extensions.Windows.PowerShell
         {
             public int? ExitCode { get; set; }
             public List<string> Output { get; set; }
-            public Dictionary<string, object> OutVariables { get; set; }
+            public Dictionary<string, RuntimeValue> OutVariables { get; set; }
         }
 
         private sealed class StandardRunner : IPowerShellRunner
@@ -260,7 +260,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             public event EventHandler<LogMessageEventArgs> MessageLogged;
             public event EventHandler<PSProgressEventArgs> ProgressUpdate;
 
-            public async Task<Result> ExecuteAsync(string script, Dictionary<string, object> variables, Dictionary<string, object> parameters, string[] outVariables, CancellationToken cancellationToken)
+            public async Task<Result> ExecuteAsync(string script, Dictionary<string, RuntimeValue> variables, Dictionary<string, RuntimeValue> parameters, string[] outVariables, CancellationToken cancellationToken)
             {
                 using (var runner = new PowerShellScriptRunner { DebugLogging = this.DebugLogging, VerboseLogging = this.VerboseLogging })
                 {
@@ -270,7 +270,7 @@ namespace Inedo.Extensions.Windows.PowerShell
                     if (this.LogOutput)
                         runner.OutputReceived += (s, e) => this.OutputReceived?.Invoke(this, e);
 
-                    var outVariables2 = outVariables.ToDictionary(v => v, v => (object)null, StringComparer.OrdinalIgnoreCase);
+                    var outVariables2 = outVariables.ToDictionary(v => v, v => new RuntimeValue(string.Empty), StringComparer.OrdinalIgnoreCase);
 
                     if (this.CollectOutput)
                     {
@@ -279,9 +279,11 @@ namespace Inedo.Extensions.Windows.PowerShell
                             {
                                 if (outVariables2.ContainsKey(CollectOutputAsDictionary))
                                 {
-                                    outVariables2[CollectOutputAsDictionary] = e.Output.Properties
-                                        .Where(p => p.IsGettable && p.IsInstance)
-                                        .ToDictionary(p => p.Name, p => p.Value?.ToString());
+                                    outVariables2[CollectOutputAsDictionary] = new RuntimeValue(
+                                        e.Output.Properties
+                                            .Where(p => p.IsGettable && p.IsInstance)
+                                            .ToDictionary(p => p.Name, p => PSUtil.ToRuntimeValue(p.Value))
+                                    );
                                 }
                                 else
                                 {

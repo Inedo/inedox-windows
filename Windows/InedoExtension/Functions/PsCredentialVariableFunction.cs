@@ -33,10 +33,7 @@ PSCall MyPowerShellScript
         [Description("The password of the PSCredential object.")]
         public SecureString Password { get; set; }
 
-        protected override object EvaluateScalar(IVariableFunctionContext context)
-        {
-            return this.Serialize();
-        }
+        protected override object EvaluateScalar(IVariableFunctionContext context) => this.Serialize();
 
         internal static PSCredential Deserialize(string s)
         {
@@ -108,7 +105,7 @@ PSCall MyPowerShellScript
             }
             finally
             {
-                if (password != default(IntPtr))
+                if (password != default)
                     Marshal.ZeroFreeBSTR(password);
             }
         }

@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Inedo.Diagnostics;
+using Inedo.ExecutionEngine;
 
 namespace Inedo.Extensions.Windows.PowerShell
 {
@@ -20,7 +21,7 @@ namespace Inedo.Extensions.Windows.PowerShell
         public bool DebugLogging { get; set; }
         public bool VerboseLogging { get; set; }
 
-        public Task<ExecutePowerShellJob.Result> ExecuteAsync(string script, Dictionary<string, object> variables, Dictionary<string, object> parameters, string[] outVariables, CancellationToken cancellationToken)
+        public Task<ExecutePowerShellJob.Result> ExecuteAsync(string script, Dictionary<string, RuntimeValue> variables, Dictionary<string, RuntimeValue> parameters, string[] outVariables, CancellationToken cancellationToken)
         {
             var domainLock = new object();
             var domain = AppDomain.CreateDomain("InedoPSScript", null, new AppDomainSetup { ApplicationBase = Path.GetDirectoryName(typeof(IsolatedPowerShellRunner).Assembly.Location) });
@@ -83,8 +84,8 @@ namespace Inedo.Extensions.Windows.PowerShell
             public bool CollectOutput { get; set; }
             public bool DebugLogging { get; set; }
             public bool VerboseLogging { get; set; }
-            public Dictionary<string, object> Variables { get; set; }
-            public Dictionary<string, object> Parameters { get; set; }
+            public Dictionary<string, RuntimeValue> Variables { get; set; }
+            public Dictionary<string, RuntimeValue> Parameters { get; set; }
             public string[] OutVariables { get; set; }
             public Action<string> OutputReceived { get; set; }
             public Action<MessageLevel, string> MessageLogged { get; set; }
@@ -103,7 +104,7 @@ namespace Inedo.Extensions.Windows.PowerShell
                     if (this.LogOutput)
                         runner.OutputReceived += (s, e) => this.MessageLogged(MessageLevel.Information, e.Output?.ToString());
 
-                    var outVariables = this.OutVariables.ToDictionary(v => v, v => (object)null, StringComparer.OrdinalIgnoreCase);
+                    var outVariables = this.OutVariables.ToDictionary(v => v, v => new RuntimeValue(string.Empty), StringComparer.OrdinalIgnoreCase);
 
                     if (this.CollectOutput)
                     {
@@ -112,9 +113,11 @@ namespace Inedo.Extensions.Windows.PowerShell
                             {
                                 if (outVariables.ContainsKey(ExecutePowerShellJob.CollectOutputAsDictionary))
                                 {
-                                    outVariables[ExecutePowerShellJob.CollectOutputAsDictionary] = e.Output.Properties
-                                        .Where(p => p.IsGettable && p.IsInstance)
-                                        .ToDictionary(p => p.Name, p => p.Value?.ToString());
+                                    outVariables[ExecutePowerShellJob.CollectOutputAsDictionary] = new RuntimeValue(
+                                        e.Output.Properties
+                                            .Where(p => p.IsGettable && p.IsInstance)
+                                            .ToDictionary(p => p.Name, p => PSUtil.ToRuntimeValue(p.Value))
+                                    );
                                 }
                                 else
                                 {

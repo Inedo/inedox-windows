@@ -17,17 +17,17 @@ namespace Inedo.Extensions.Windows.PowerShell
         {
             var scriptText = await GetScriptTextAsync(logger, fullScriptName, context);
 
-            var variables = new Dictionary<string, object>();
-            var parameters = new Dictionary<string, object>();
+            var variables = new Dictionary<string, RuntimeValue>();
+            var parameters = new Dictionary<string, RuntimeValue>();
 
             if (PowerShellScriptInfo.TryParse(new StringReader(scriptText), out var scriptInfo))
             {
                 foreach (var var in arguments)
                 {
-                    var value = PowerShellScriptRunner.ConvertToPSValue(var.Value);
+                    var value = var.Value;
                     var param = scriptInfo.Parameters.FirstOrDefault(p => string.Equals(p.Name, var.Key, StringComparison.OrdinalIgnoreCase));
                     if (param != null && param.IsBooleanOrSwitch)
-                        value = Convert.ToBoolean(value);
+                        value = value.AsBoolean() ?? false;
                     if (param != null)
                         parameters[param.Name] = value;
                     else
@@ -36,7 +36,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             }
             else
             {
-                variables = PowerShellScriptRunner.ConvertToPSArgs(arguments);
+                variables = arguments.ToDictionary(a => a.Key, a => a.Value);
             }
 
             var jobRunner = context.Agent.GetService<IRemoteJobExecuter>();
@@ -67,7 +67,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             return result;
         }
 
-        private static RuntimeValue ToRuntimeValue(object value)
+        public static RuntimeValue ToRuntimeValue(object value)
         {
             if (value is System.Collections.IDictionary dict)
                 return new RuntimeValue(dict.Keys.Cast<object>().ToDictionary(k => k?.ToString(), k => ToRuntimeValue(dict[k])));
