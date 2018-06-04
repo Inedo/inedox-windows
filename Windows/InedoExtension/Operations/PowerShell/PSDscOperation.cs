@@ -24,11 +24,10 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
     [EditorBrowsable(EditorBrowsableState.Never)]
     [Note(@"The default argument for this operation is the DSC Resource Name and should follow the format: ""ModuleName::ResourceName"". "
         + @"If ""ModuleName::"" is omitted, the PSDesiredStateConfiguration module will be used.", Heading = "Default Argument: ResourceName")]
-    [Note(@"By default, Otter will use the Name property of the DSC Resource as the configuration key. If there is no Name "
+    [Note(@"Otter Specific: By default, Otter will use the Name property of the DSC Resource as the configuration key. If there is no Name "
             + @"property or you would like to override the default configuration key name, specify a property named """
             + DscConfiguration.ConfigurationKeyPropertyName + @""" with the value containing a string (or list of strings) "
             + @"indicating the name of the property (or properties) to be used as the unique configuration key.", Heading = "Configuration Key")]
-    [Note(@"All properties will be treated as strings, unless they can be parsed as a decimal, or appear to be a boolean (true, $true, false, $false), array literal (@(...)), or hash literal (@{...}).", Heading = "Strings and Values")]
     [Example(@"
 # ensures the existence of a file on the server
 PSDsc File (
@@ -41,7 +40,7 @@ PSDsc File (
 PSDsc cHdarsResource::cHdars (
   " + DscConfiguration.ConfigurationKeyPropertyName + @": LocalServer,
   MaximumSessionLength: 1000,
-  PortsToListen: ""`@(3322,4431,1123)"",
+  PortsToListen: @(3322,4431,1123),
   Enabled: true
 );")]
     public sealed class PSDscOperation : EnsureOperation<DscConfiguration>, ICustomArgumentMapper
