@@ -28,6 +28,7 @@ namespace Inedo.Extensions.Windows.Configurations.Registry
         [DefaultValue(RegistryValueKind.String)]
         public RegistryValueKind ValueKind { get; set; } = RegistryValueKind.String;
 
+        [Persistent]
         public override bool Exists { get; set; }
     }
 }
