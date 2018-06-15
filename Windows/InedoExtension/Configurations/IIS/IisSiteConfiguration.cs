@@ -152,20 +152,22 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
                 vdir.PhysicalPath = config.VirtualDirectoryPhysicalPath;
 
             var templateBindings = GetTemplateBindings(config);
-
-            logger.LogDebug("Clearing bindings...");
-            site.Bindings.Clear();
-            logger.LogDebug("Setting bindings...");
-            foreach (var binding in templateBindings)
+            if (templateBindings != null)
             {
-                Binding iisBinding;
-                
-                if (binding.CertificateHash.Length > 0)
-                    iisBinding = site.Bindings.Add(binding.BindingInformation, binding.CertificateHash, binding.CertificateStoreName);
-                else
-                    iisBinding = site.Bindings.Add(binding.BindingInformation, binding.Protocol);
-                
-                iisBinding.SetAttributeValue("sslFlags", (int)binding.SslFlags);
+                logger.LogDebug("Clearing bindings...");
+                site.Bindings.Clear();
+                logger.LogDebug("Setting bindings...");
+                foreach (var binding in templateBindings)
+                {
+                    Binding iisBinding;
+
+                    if (binding.CertificateHash.Length > 0)
+                        iisBinding = site.Bindings.Add(binding.BindingInformation, binding.CertificateHash, binding.CertificateStoreName);
+                    else
+                        iisBinding = site.Bindings.Add(binding.BindingInformation, binding.Protocol);
+
+                    iisBinding.SetAttributeValue("sslFlags", (int)binding.SslFlags);
+                }
             }
         }
 
@@ -223,8 +225,11 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             }
             else
             {
+                if (config.Bindings == null)
+                    return null;
+
                 var templateBindings =
-                        (from b in config.Bindings ?? Enumerable.Empty<IReadOnlyDictionary<string, RuntimeValue>>()
+                        (from b in config.Bindings
                          let info = BindingInfo.FromMap(b)
                          where info != null
                          select info)
