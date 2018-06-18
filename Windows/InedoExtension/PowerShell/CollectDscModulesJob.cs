@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Management.Automation;
 using System.Threading;
 using System.Threading.Tasks;
 using Inedo.Agents;
 using Inedo.Diagnostics;
+using Inedo.ExecutionEngine;
 using Inedo.Serialization;
 
 namespace Inedo.Extensions.Windows.PowerShell
@@ -40,32 +40,39 @@ namespace Inedo.Extensions.Windows.PowerShell
                 if (this.LogOutput)
                     runner.OutputReceived += (s, e) => this.LogInformation(e.Output?.ToString());
 
-                var output = new Dictionary<string, object> { { "results", null } };
+                var output = new Dictionary<string, RuntimeValue>
+                {
+                    ["results"] = default
+                };
 
-                int? exitCode = await runner.RunAsync("$results = Get-DscResource", cancellationToken: cancellationToken);
+                int? exitCode = await runner.RunAsync("$results = Get-DscResource", outVariables: output, cancellationToken: cancellationToken);
 
-                var infos = ((object[])output["results"]).OfType<PSObject>();
-
-                var modules = from m in infos
-                              select ParseModuleInfo(m);
+                var infos = output["results"].AsEnumerable() ?? Enumerable.Empty<RuntimeValue>();
 
                 return new Result
                 {
                     ExitCode = exitCode,
-                    Modules = modules.ToList()
+                    Modules = infos.Select(parseModuleInfo).ToList()
                 };
             }
-        }
 
-        private static ModuleInfo ParseModuleInfo(PSObject obj)
-        {
-            var info = new ModuleInfo
+            ModuleInfo parseModuleInfo(RuntimeValue value)
             {
-                Name = obj.Properties["Name"].Value.ToString(),
-                Version = obj.Properties["Version"]?.Value?.ToString() ?? string.Empty
-            };
+                var d = value.AsDictionary();
+                if (d == null)
+                    return null;
 
-            return info;
+                if (!d.TryGetValue("Name", out var name) || string.IsNullOrWhiteSpace(name.AsString()))
+                    return null;
+
+                d.TryGetValue("Version", out var version);
+
+                return new ModuleInfo
+                {
+                    Name = name.AsString(),
+                    Version = version.AsString() ?? string.Empty
+                };
+            }
         }
 
         public override void SerializeResponse(Stream stream, object result)

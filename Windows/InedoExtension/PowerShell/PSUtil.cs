@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Management.Automation;
 using System.Threading.Tasks;
 using Inedo.Agents;
 using Inedo.Diagnostics;
@@ -71,10 +72,27 @@ namespace Inedo.Extensions.Windows.PowerShell
         {
             if (value is System.Collections.IDictionary dict)
                 return new RuntimeValue(dict.Keys.Cast<object>().ToDictionary(k => k?.ToString(), k => ToRuntimeValue(dict[k])));
+
+            if (value is PSObject psObject)
+            {
+                var d = new Dictionary<string, RuntimeValue>(StringComparer.OrdinalIgnoreCase);
+                foreach (var p in psObject.Properties)
+                    d[p.Name] = ToRuntimeValue(p.Value);
+
+                return new RuntimeValue(d);
+            }
+
             if (value is string)
                 return new RuntimeValue(value?.ToString());
-            if (value is System.Collections.IEnumerable list)
-                return new RuntimeValue(list.Cast<object>().Select(ToRuntimeValue));
+
+            if (value is System.Collections.IEnumerable e)
+            {
+                var list = new List<RuntimeValue>();
+                foreach (var item in e)
+                    list.Add(ToRuntimeValue(item));
+
+                return new RuntimeValue(list);
+            }
 
             return new RuntimeValue(value?.ToString());
         }
