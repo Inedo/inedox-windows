@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Linq;
 using Inedo.Agents;
 using Inedo.Documentation;
 using Inedo.ExecutionEngine;
@@ -34,8 +33,7 @@ Log-Information $NextYear;
 
         public override RuntimeValue Evaluate(IVariableFunctionContext context)
         {
-            var execContext = context as IOperationExecutionContext;
-            if (execContext == null)
+            if (!(context is IOperationExecutionContext execContext))
                 throw new NotSupportedException("This function can currently only be used within an execution.");
 
             var job = new ExecutePowerShellJob
@@ -51,7 +49,7 @@ Log-Information $NextYear;
             if (result.Output.Count == 1)
                 return result.Output[0];
             else
-                return new RuntimeValue(result.Output.Select(o => new RuntimeValue(o)));
+                return new RuntimeValue(result.Output);
         }
     }
 }

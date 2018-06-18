@@ -13,8 +13,6 @@ namespace Inedo.Extensions.Windows.PowerShell
 {
     internal sealed class ExecutePowerShellJob : RemoteJob
     {
-        internal const string CollectOutputAsDictionary = "{3BB97EBB-FCF5-4BBC-B71C-60DEB4D1BA84}";
-
         private int currentPercent;
         private string currentActivity = string.Empty;
 
@@ -93,7 +91,7 @@ namespace Inedo.Extensions.Windows.PowerShell
 
             SlimBinaryFormatter.WriteLength(stream, data.Output.Count);
             foreach (var s in data.Output)
-                writer.Write(s ?? string.Empty);
+                WriteRuntimeValue(writer, s);
 
             SlimBinaryFormatter.WriteLength(stream, data.OutVariables.Count);
             foreach (var v in data.OutVariables)
@@ -113,9 +111,9 @@ namespace Inedo.Extensions.Windows.PowerShell
                 exitCode = reader.ReadInt32();
 
             int count = SlimBinaryFormatter.ReadLength(stream);
-            var output = new List<string>(count);
+            var output = new List<RuntimeValue>(count);
             for (int i = 0; i < count; i++)
-                output.Add(reader.ReadString());
+                output.Add(ReadRuntimeValue(reader));
 
             var vars = ReadDictionary(reader);
 
@@ -245,7 +243,7 @@ namespace Inedo.Extensions.Windows.PowerShell
         public sealed class Result
         {
             public int? ExitCode { get; set; }
-            public List<string> Output { get; set; }
+            public List<RuntimeValue> Output { get; set; }
             public Dictionary<string, RuntimeValue> OutVariables { get; set; }
         }
 
@@ -264,7 +262,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             {
                 using (var runner = new PowerShellScriptRunner { DebugLogging = this.DebugLogging, VerboseLogging = this.VerboseLogging })
                 {
-                    var outputData = new List<string>();
+                    var outputData = new List<RuntimeValue>();
 
                     runner.MessageLogged += (s, e) => this.MessageLogged?.Invoke(this, e);
                     if (this.LogOutput)
@@ -277,24 +275,10 @@ namespace Inedo.Extensions.Windows.PowerShell
                         runner.OutputReceived +=
                             (s, e) =>
                             {
-                                if (outVariables2.ContainsKey(CollectOutputAsDictionary))
+                                var output = PSUtil.ToRuntimeValue(e.Output);
+                                lock (outputData)
                                 {
-                                    outVariables2[CollectOutputAsDictionary] = new RuntimeValue(
-                                        e.Output.Properties
-                                            .Where(p => p.IsGettable && p.IsInstance)
-                                            .ToDictionary(p => p.Name, p => PSUtil.ToRuntimeValue(p.Value))
-                                    );
-                                }
-                                else
-                                {
-                                    var output = e.Output?.ToString();
-                                    if (!string.IsNullOrWhiteSpace(output))
-                                    {
-                                        lock (outputData)
-                                        {
-                                            outputData.Add(output);
-                                        }
-                                    }
+                                    outputData.Add(output);
                                 }
                             };
                     }

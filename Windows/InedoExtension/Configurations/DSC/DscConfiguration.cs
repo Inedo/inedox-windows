@@ -102,13 +102,28 @@ namespace Inedo.Extensions.Windows.Configurations.DSC
             return inDesiredState ? ComparisonResult.Identical : new ComparisonResult(new[] { new Difference(nameof(InDesiredState), true, false) });
         }
 
-        internal Dictionary<string, RuntimeValue> ToPowerShellDictionary()
+        internal Dictionary<string, RuntimeValue> ToPowerShellDictionary(Dictionary<string, RuntimeValueType> propertyTypes = null)
         {
             if (this.dictionary == null)
                 return new Dictionary<string, RuntimeValue>(StringComparer.OrdinalIgnoreCase);
 
             var d = new Dictionary<string, RuntimeValue>(this.dictionary, StringComparer.OrdinalIgnoreCase);
             d.Remove(ConfigurationKeyPropertyName);
+
+            if (propertyTypes != null)
+            {
+                var propertiesToExpand = new List<string>();
+
+                foreach (var v in d)
+                {
+                    if (v.Value.ValueType == RuntimeValueType.Scalar && propertyTypes.GetValueOrDefault(v.Key) == RuntimeValueType.Vector)
+                        propertiesToExpand.Add(v.Key);
+                }
+
+                foreach (var p in propertiesToExpand)
+                    d[p] = new RuntimeValue(new[] { d[p] });
+            }
+
             return d;
         }
 

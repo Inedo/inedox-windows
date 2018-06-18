@@ -16,8 +16,8 @@ namespace Inedo.Extensions.Windows.PowerShell
     internal class PowerShellScriptRunner : ILogger, IDisposable
     {
         private static readonly LazyRegex VariableRegex = new LazyRegex(@"(?>\$(?<1>[a-zA-Z0-9_]+)|\${(?<2>[^}]+)})", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
-        private InedoPSHost pshost = new InedoPSHost();
-        private Lazy<Runspace> runspaceFactory;
+        private readonly InedoPSHost pshost = new InedoPSHost();
+        private readonly Lazy<Runspace> runspaceFactory;
         private bool disposed;
 
         public PowerShellScriptRunner()
@@ -136,8 +136,7 @@ namespace Inedo.Extensions.Windows.PowerShell
                     await Task.Factory.FromAsync(powerShell.BeginInvoke((PSDataCollection<PSObject>)null, output), powerShell.EndInvoke);
 
                     foreach (var var in outVariables.Keys.ToList())
-                        if (var != ExecutePowerShellJob.CollectOutputAsDictionary)
-                            outVariables[var] = PSUtil.ToRuntimeValue(unwrapReference(powerShell.Runspace.SessionStateProxy.GetVariable(var)));
+                        outVariables[var] = PSUtil.ToRuntimeValue(unwrapReference(powerShell.Runspace.SessionStateProxy.GetVariable(var)));
                 }
                 finally
                 {

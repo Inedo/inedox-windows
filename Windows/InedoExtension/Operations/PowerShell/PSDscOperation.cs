@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Inedo.Agents;
 using Inedo.Diagnostics;
@@ -46,6 +47,7 @@ PSDsc cHdarsResource::cHdars (
     public sealed class PSDscOperation : EnsureOperation<DscConfiguration>, ICustomArgumentMapper
     {
         private readonly Lazy<DscConfiguration> lazyTemplate;
+        private static readonly LazyRegex IsArrayPropertyRegex = new LazyRegex(@"^\[[^\[\]]+\[\]\]$", RegexOptions.Compiled);
 
         public PSDscOperation() => this.lazyTemplate = new Lazy<DscConfiguration>(this.CreateTemplate);
 
@@ -68,18 +70,21 @@ PSDsc cHdarsResource::cHdars (
 
             var jobRunner = await context.Agent.GetServiceAsync<IRemoteJobExecuter>();
 
-            var collectJob = this.CreateJob("Get", true);
+            var propertyTypes = await GetPropertyTypesAsync(context, jobRunner);
+
+            var collectJob = this.CreateJob("Get", propertyTypes);
 
             this.LogDebug(collectJob.ScriptText);
             collectJob.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
 
             var result = (ExecutePowerShellJob.Result)await jobRunner.ExecuteJobAsync(collectJob, context.CancellationToken);
 
-            var collectValues = result.OutVariables[ExecutePowerShellJob.CollectOutputAsDictionary].AsDictionary()
-                .Where(p => p.Value.ValueType != RuntimeValueType.Scalar || !string.IsNullOrEmpty(p.Value.AsString()))
-                .ToDictionary(k => k.Key, k => k.Value, StringComparer.OrdinalIgnoreCase);
+            var collectValues = result.Output?.FirstOrDefault().AsDictionary() ?? new Dictionary<string, RuntimeValue>(StringComparer.OrdinalIgnoreCase);
+            var removeKeys = collectValues.Where(p => p.Value.ValueType == RuntimeValueType.Scalar && string.IsNullOrEmpty(p.Value.AsString())).Select(p => p.Key).ToList();
+            foreach (var k in removeKeys)
+                collectValues.Remove(k);
 
-            var testJob = this.CreateJob("Test");
+            var testJob = this.CreateJob("Test", propertyTypes);
 
             this.LogDebug(testJob.ScriptText);
             testJob.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
@@ -93,21 +98,20 @@ PSDsc cHdarsResource::cHdars (
                 return null;
             }
 
-            bool? inDesiredState = output
-                .Select(s => bool.TryParse(s, out bool b) ? (bool?)b : null)
-                .LastOrDefault(o => o != null);
-
-            if (inDesiredState == null)
+            var testResult = output.FirstOrDefault().AsDictionary();
+            if (testResult == null || !testResult.ContainsKey("InDesiredState"))
             {
-                this.LogError("Invoke-DscResource did not return a boolean value.");
+                this.LogError("Invoke-DscResource did not return an object with an InDesiredState property.");
                 return null;
             }
+
+            bool.TryParse(testResult["InDesiredState"].AsString(), out bool inDesiredState);
 
             return new DscConfiguration(collectValues)
             {
                 ResourceName = this.Template.ResourceName,
                 ConfigurationKeyName = this.Template.ConfigurationKeyName,
-                InDesiredState = inDesiredState.Value
+                InDesiredState = inDesiredState
             };
         }
         public override async Task ConfigureAsync(IOperationExecutionContext context)
@@ -120,8 +124,9 @@ PSDsc cHdarsResource::cHdars (
 
             var jobRunner = await context.Agent.GetServiceAsync<IRemoteJobExecuter>();
 
-            var job = this.CreateJob("Set");
-            this.LogDebug(job.ScriptText);
+            var propertyTypes = await GetPropertyTypesAsync(context, jobRunner);
+
+            var job = this.CreateJob("Set", propertyTypes);
             job.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
 
             await jobRunner.ExecuteJobAsync(job, context.CancellationToken);
@@ -129,23 +134,55 @@ PSDsc cHdarsResource::cHdars (
 
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config) => new ExtendedRichDescription(new RichDescription("PSDsc"));
 
-        private ExecutePowerShellJob CreateJob(string method, bool outputAsDictionary = false)
+        private async Task<Dictionary<string, RuntimeValueType>> GetPropertyTypesAsync(IOperationExecutionContext context, IRemoteJobExecuter jobRunner)
         {
             var job = new ExecutePowerShellJob
             {
                 CollectOutput = true,
-                DebugLogging = true,
-                ScriptText = $"Invoke-DscResource -Name $Name -Method {method} -Property $Property -ModuleName $ModuleName",
+                ScriptText = @"$h = @{}
+foreach($p in (Get-DscResource -Name $Name -Module $ModuleName).Properties) {
+    $h[$p.Name] = $p.PropertyType
+}
+Write-Output $h",
                 Variables = new Dictionary<string, RuntimeValue>(StringComparer.OrdinalIgnoreCase)
                 {
                     ["Name"] = this.ResourceName.Name,
-                    ["Property"] = new RuntimeValue(this.Template.ToPowerShellDictionary()),
                     ["ModuleName"] = this.ResourceName.Namespace ?? "PSDesiredStateConfiguration"
                 }
             };
 
-            if (outputAsDictionary)
-                job.OutVariables = new[] { ExecutePowerShellJob.CollectOutputAsDictionary };
+            job.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
+
+            var result = (ExecutePowerShellJob.Result)await jobRunner.ExecuteJobAsync(job, context.CancellationToken);
+
+            var properties = result.Output.FirstOrDefault().AsDictionary();
+
+            var types = new Dictionary<string, RuntimeValueType>(StringComparer.OrdinalIgnoreCase);
+            if (properties != null)
+            {
+                foreach (var p in properties)
+                {
+                    var value = p.Value.AsString();
+                    types[p.Key] = (!string.IsNullOrWhiteSpace(value) && IsArrayPropertyRegex.IsMatch(value)) ? RuntimeValueType.Vector : RuntimeValueType.Scalar;
+                }
+            }
+
+            return types;
+        }
+
+        private ExecutePowerShellJob CreateJob(string method, Dictionary<string, RuntimeValueType> propertyTypes)
+        {
+            var job = new ExecutePowerShellJob
+            {
+                CollectOutput = true,
+                ScriptText = $"Invoke-DscResource -Name $Name -Method {method} -Property $Property -ModuleName $ModuleName",
+                Variables = new Dictionary<string, RuntimeValue>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["Name"] = this.ResourceName.Name,
+                    ["Property"] = new RuntimeValue(this.Template.ToPowerShellDictionary(propertyTypes)),
+                    ["ModuleName"] = this.ResourceName.Namespace ?? "PSDesiredStateConfiguration"
+                }
+            };
 
             return job;
         }
@@ -158,7 +195,7 @@ PSDsc cHdarsResource::cHdars (
                 if (string.Equals(arg.Key, DscConfiguration.ConfigurationKeyPropertyName, StringComparison.OrdinalIgnoreCase))
                     keyName = arg.Value.AsString();
                 else
-                    desiredValues[arg.Key] = arg.Value.AsString() ?? string.Empty;
+                    desiredValues[arg.Key] = arg.Value;
             }
 
             return new DscConfiguration(desiredValues)

@@ -98,7 +98,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             {
                 using (var runner = new PowerShellScriptRunner { DebugLogging = this.DebugLogging, VerboseLogging = this.VerboseLogging })
                 {
-                    var outputData = new List<string>();
+                    var outputData = new List<RuntimeValue>();
 
                     runner.MessageLogged += (s, e) => this.MessageLogged(e.Level, e.Message);
                     if (this.LogOutput)
@@ -111,24 +111,10 @@ namespace Inedo.Extensions.Windows.PowerShell
                         runner.OutputReceived +=
                             (s, e) =>
                             {
-                                if (outVariables.ContainsKey(ExecutePowerShellJob.CollectOutputAsDictionary))
+                                var output = PSUtil.ToRuntimeValue(e.Output);
+                                lock (outputData)
                                 {
-                                    outVariables[ExecutePowerShellJob.CollectOutputAsDictionary] = new RuntimeValue(
-                                        e.Output.Properties
-                                            .Where(p => p.IsGettable && p.IsInstance)
-                                            .ToDictionary(p => p.Name, p => PSUtil.ToRuntimeValue(p.Value))
-                                    );
-                                }
-                                else
-                                {
-                                    var output = e.Output?.ToString();
-                                    if (!string.IsNullOrWhiteSpace(output))
-                                    {
-                                        lock (outputData)
-                                        {
-                                            outputData.Add(output);
-                                        }
-                                    }
+                                    outputData.Add(output);
                                 }
                             };
                     }

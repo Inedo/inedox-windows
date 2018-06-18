@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -70,22 +71,28 @@ namespace Inedo.Extensions.Windows.PowerShell
 
         public static RuntimeValue ToRuntimeValue(object value)
         {
-            if (value is System.Collections.IDictionary dict)
-                return new RuntimeValue(dict.Keys.Cast<object>().ToDictionary(k => k?.ToString(), k => ToRuntimeValue(dict[k])));
-
             if (value is PSObject psObject)
             {
+                if (psObject.BaseObject is IDictionary dictionary)
+                    return new RuntimeValue(dictionary.Keys.Cast<object>().ToDictionary(k => k?.ToString(), k => ToRuntimeValue(dictionary[k])));
+
                 var d = new Dictionary<string, RuntimeValue>(StringComparer.OrdinalIgnoreCase);
                 foreach (var p in psObject.Properties)
-                    d[p.Name] = ToRuntimeValue(p.Value);
+                {
+                    if (p.IsGettable && p.IsInstance)
+                        d[p.Name] = ToRuntimeValue(p.Value);
+                }
 
                 return new RuntimeValue(d);
             }
 
+            if (value is IDictionary dict)
+                return new RuntimeValue(dict.Keys.Cast<object>().ToDictionary(k => k?.ToString(), k => ToRuntimeValue(dict[k])));
+
             if (value is string)
                 return new RuntimeValue(value?.ToString());
 
-            if (value is System.Collections.IEnumerable e)
+            if (value is IEnumerable e)
             {
                 var list = new List<RuntimeValue>();
                 foreach (var item in e)
