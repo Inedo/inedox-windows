@@ -98,20 +98,29 @@ PSDsc cHdarsResource::cHdars (
                 return null;
             }
 
-            var testResult = output.FirstOrDefault().AsDictionary();
-            if (testResult == null || !testResult.ContainsKey("InDesiredState"))
+            var testResult = output.FirstOrDefault();
+            bool? inDesiredState = null;
+            if (testResult.ValueType == RuntimeValueType.Map && testResult.AsDictionary().ContainsKey("InDesiredState"))
             {
-                this.LogError("Invoke-DscResource did not return an object with an InDesiredState property.");
-                return null;
+                if (bool.TryParse(testResult.AsDictionary()["InDesiredState"].AsString(), out bool d))
+                    inDesiredState = d;
+            }
+            else
+            {
+                inDesiredState = testResult.AsBoolean();
             }
 
-            bool.TryParse(testResult["InDesiredState"].AsString(), out bool inDesiredState);
+            if (inDesiredState == null)
+            {
+                this.LogError("Invoke-DscResource did not return a boolean value or an object with an InDesiredState property.");
+                return null;
+            }
 
             return new DscConfiguration(collectValues)
             {
                 ResourceName = this.Template.ResourceName,
                 ConfigurationKeyName = this.Template.ConfigurationKeyName,
-                InDesiredState = inDesiredState
+                InDesiredState = inDesiredState.Value
             };
         }
         public override async Task ConfigureAsync(IOperationExecutionContext context)
