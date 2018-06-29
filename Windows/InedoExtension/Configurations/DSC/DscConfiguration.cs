@@ -134,10 +134,19 @@ namespace Inedo.Extensions.Windows.Configurations.DSC
             if (this.dictionary.TryGetValue(keyName, out var value) && !string.IsNullOrWhiteSpace(value.AsString()))
                 return value.AsString();
 
-            throw new InvalidOperationException("The Name property of the DSC resource was not found and the operation is missing "
-                + $"a \"{ConfigurationKeyPropertyName}\" property whose value is the name of the DSC resource property (or properties) to "
-                + "uniquely identify this configuration."
-            );
+            if (keyName == "Name")
+            {
+                throw new InvalidOperationException("The Name property of the DSC resource was not found and the operation is missing "
+                    + $"a \"{ConfigurationKeyPropertyName}\" property whose value is the name of the DSC resource property (or properties) to "
+                    + "uniquely identify this configuration."
+                );
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    $"The \"{keyName}\" configuration key specified with the \"{ConfigurationKeyPropertyName}\" property was not found in the returned DSC resournce."
+                );
+            }
         }
 
         private static DscEntry CreateEntry(string key, RuntimeValue value)
