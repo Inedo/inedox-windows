@@ -76,6 +76,9 @@ namespace Inedo.Extensions.Windows.PowerShell
                 if (psObject.BaseObject is IDictionary dictionary)
                     return new RuntimeValue(dictionary.Keys.Cast<object>().ToDictionary(k => k?.ToString(), k => ToRuntimeValue(dictionary[k])));
 
+                if (psObject.BaseObject is IConvertible)
+                    return new RuntimeValue(psObject.BaseObject.ToString());
+
                 var d = new Dictionary<string, RuntimeValue>(StringComparer.OrdinalIgnoreCase);
                 foreach (var p in psObject.Properties)
                 {
@@ -89,7 +92,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             if (value is IDictionary dict)
                 return new RuntimeValue(dict.Keys.Cast<object>().ToDictionary(k => k?.ToString(), k => ToRuntimeValue(dict[k])));
 
-            if (value is string)
+            if (value is IConvertible)
                 return new RuntimeValue(value?.ToString());
 
             if (value is IEnumerable e)
