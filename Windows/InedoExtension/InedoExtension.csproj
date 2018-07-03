@@ -109,6 +109,8 @@
     <Compile Include="Operations\IIS\Sites\StopSiteOperation.cs" />
     <Compile Include="Operations\IIS\VirtualDirectories\EnsureIisVirtualDirectoryOperation.cs" />
     <Compile Include="Operations\PowerShell\CollectDscModulesOperation.cs" />
+    <Compile Include="Operations\PowerShell\Dsc.cs" />
+    <Compile Include="Operations\PowerShell\EnsureDscResourceOperation.cs" />
     <Compile Include="Operations\PowerShell\PSCallOperation.cs" />
     <Compile Include="Operations\PowerShell\PSCallOperationEditor.cs" />
     <Compile Include="Operations\PowerShell\PSDscOperation.cs" />

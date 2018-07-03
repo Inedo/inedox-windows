@@ -2,9 +2,14 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using Inedo.Documentation;
 using Inedo.ExecutionEngine;
+using Inedo.ExecutionEngine.Variables;
+using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
+using Inedo.Extensibility.Operations;
 using Inedo.Serialization;
+using Inedo.Web;
 
 namespace Inedo.Extensions.Windows.Configurations.DSC
 {
@@ -13,11 +18,6 @@ namespace Inedo.Extensions.Windows.Configurations.DSC
     [Description("A configuration that stores state collected by PowerShell DSC.")]
     public sealed class DscConfiguration : PersistedConfiguration
     {
-        /// <summary>
-        /// Key name used to manually specify the Otter Configuration Key.
-        /// </summary>
-        public const string ConfigurationKeyPropertyName = "Otter_ConfigurationKey";
-
         private Dictionary<string, RuntimeValue> dictionary;
 
         public DscConfiguration()
@@ -34,9 +34,41 @@ namespace Inedo.Extensions.Windows.Configurations.DSC
         public override bool HasEncryptedProperties => false;
 
         [Persistent]
+        [DefaultValue("Name")]
+        [ScriptAlias("ConfigurationKey")]
+        [DisplayName("Otter configuration key")]
+        [Description("The name of the DSC property which will be used as the Otter configuration key for the server. If this is not specified, the \"Name\" property is used.")]
         public string ConfigurationKeyName { get; set; }
+        [Required]
         [Persistent]
+        [ScriptAlias("Name")]
+        [DisplayName("Resource")]
+        [PlaceholderText("ex: File")]
         public string ResourceName { get; set; }
+        [Persistent]
+        [ScriptAlias("Module")]
+        [DisplayName("Module")]
+        [DefaultValue("PSDesiredStateConfiguration")]
+        public string ModuleName { get; set; }
+
+        [ScriptAlias("Properties")]
+        [ScriptAlias("Property")]
+        [DisplayName("Properties")]
+        [FieldEditMode(FieldEditMode.Multiline)]
+        [Description(@"DSC property hashtable as an OtterScript map. Example: %(DestinationPath: C:\hdars\1000.txt, Contents: test file ensured)")]
+        [PlaceholderText("%(...)")]
+        public IDictionary<string, RuntimeValue> Properties
+        {
+            get => new Dictionary<string, RuntimeValue>(this.dictionary ?? new Dictionary<string, RuntimeValue>(), StringComparer.OrdinalIgnoreCase);
+            set
+            {
+                if (value == null || value.Count == 0)
+                    this.dictionary = null;
+                else
+                    this.dictionary = new Dictionary<string, RuntimeValue>(value, StringComparer.OrdinalIgnoreCase);
+            }
+        }
+
         [Persistent]
         public bool InDesiredState { get; set; }
         [Persistent]
@@ -82,6 +114,54 @@ namespace Inedo.Extensions.Windows.Configurations.DSC
             }
         }
 
+        public static ExtendedRichDescription GetDescription(IOperationConfiguration config)
+        {
+            string module = config[nameof(ModuleName)];
+            string name = config[nameof(ResourceName)];
+            if (!string.IsNullOrEmpty(module) && !string.Equals(module, "PSDesiredStateConfiguration", StringComparison.OrdinalIgnoreCase))
+                name = module + "::" + name;
+
+            var keyName = AH.CoalesceString((string)config[nameof(ConfigurationKeyName)], "Name");
+
+            string properties = (string)config[nameof(Properties)] ?? string.Empty;
+            if (properties.StartsWith("%("))
+            {
+                try
+                {
+                    var ps = ProcessedString.Parse(properties);
+                    if (ps.Value is MapTextValue m && m.Map.TryGetValue(keyName, out var mapValue))
+                    {
+                        return new ExtendedRichDescription(
+                            new RichDescription(
+                                "Ensure DSC ",
+                                new Hilite(name),
+                                " Resource"
+                            ),
+                            new RichDescription(
+                                "with " + keyName + " = ",
+                                new Hilite(mapValue.ToString())
+                            )
+                        );
+                    }
+                }
+                catch
+                {
+                }
+            }
+
+            return new ExtendedRichDescription(
+                new RichDescription(
+                    "Ensure DSC ",
+                    new Hilite(name),
+                    " Resource"
+                ),
+                new RichDescription(
+                    "with properties = ",
+                    new Hilite(properties)
+                )
+            );
+        }
+
         public override IReadOnlyDictionary<string, string> GetPropertiesForDisplay(bool hideEncrypted)
         {
             var d = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -108,7 +188,6 @@ namespace Inedo.Extensions.Windows.Configurations.DSC
                 return new Dictionary<string, RuntimeValue>(StringComparer.OrdinalIgnoreCase);
 
             var d = new Dictionary<string, RuntimeValue>(this.dictionary, StringComparer.OrdinalIgnoreCase);
-            d.Remove(ConfigurationKeyPropertyName);
 
             if (propertyTypes != null)
             {
@@ -129,24 +208,12 @@ namespace Inedo.Extensions.Windows.Configurations.DSC
 
         private string ExtractConfigurationKey()
         {
-            var keyName = this.ConfigurationKeyName ?? "Name";
+            var keyName = AH.CoalesceString(this.ConfigurationKeyName, "Name");
 
             if (this.dictionary.TryGetValue(keyName, out var value) && !string.IsNullOrWhiteSpace(value.AsString()))
                 return value.AsString();
 
-            if (keyName == "Name")
-            {
-                throw new InvalidOperationException("The Name property of the DSC resource was not found and the operation is missing "
-                    + $"a \"{ConfigurationKeyPropertyName}\" property whose value is the name of the DSC resource property (or properties) to "
-                    + "uniquely identify this configuration."
-                );
-            }
-            else
-            {
-                throw new InvalidOperationException(
-                    $"The \"{keyName}\" configuration key specified with the \"{ConfigurationKeyPropertyName}\" property was not found in the returned DSC resournce."
-                );
-            }
+            throw new InvalidOperationException($"The \"{keyName}\" property of the DSC resource was not found. Use the \"ConfigurationKey\" argument for Ensure-DscResource or the \"{Operations.PowerShell.PSDscOperation.ConfigurationKeyPropertyName}\" argument for PSDsc to specify the property which uniquely identifies this resource on the server.");
         }
 
         private static DscEntry CreateEntry(string key, RuntimeValue value)
