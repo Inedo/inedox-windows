@@ -64,7 +64,7 @@ namespace Inedo.Extensions.Windows.PowerShell
                 logger.LogDebug("Script exit code: " + result.ExitCode);
 
             foreach (var var in result.OutVariables)
-                outArguments[var.Key] = ToRuntimeValue(var.Value);
+                outArguments[var.Key] = var.Value;
 
             return result;
         }
