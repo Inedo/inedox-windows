@@ -8,8 +8,8 @@ using Inedo.Extensibility;
 [assembly: AssemblyCompany("Inedo, LLC")]
 [assembly: AssemblyProduct("any")]
 [assembly: AssemblyCopyright("Copyright © Inedo 2018")]
-[assembly: AssemblyVersion("1.0.7")]
-[assembly: AssemblyFileVersion("1.0.7")]
+[assembly: AssemblyVersion("1.0.8")]
+[assembly: AssemblyFileVersion("1.0.8")]
 [assembly: CLSCompliant(false)]
 [assembly: ComVisible(false)]
 
