@@ -13,6 +13,11 @@ namespace Inedo.Extensions.Windows.Operations.IIS.Sites
     {
         internal override SiteOperationType OperationType => SiteOperationType.Stop;
 
+        [ScriptAlias("WaitForStoppedStatus")]
+        [DisplayName("Wait for stopped status")]
+        [DefaultValue(true)]
+        public override bool WaitForTargetStatus { get; set; } = true;
+
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
             return new ExtendedRichDescription(

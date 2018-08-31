@@ -11,8 +11,9 @@ namespace Inedo.Extensions.Windows.Operations.IIS.AppPools
     {
         public AppPoolOperationType OperationType { get; set; }
         public string AppPoolName { get; set; }
+        public bool WaitForTargetStatus { get; set; }
 
-        public override Task<object> ExecuteAsync(CancellationToken cancellationToken)
+        public override async Task<object> ExecuteAsync(CancellationToken cancellationToken)
         {
             using (var server = new ServerManager())
             {
@@ -24,7 +25,7 @@ namespace Inedo.Extensions.Windows.Operations.IIS.AppPools
                         $"Application pool {this.AppPoolName} does not exist."
                     );
 
-                    return Task.FromResult<object>(null);
+                    return null;
                 }
 
                 switch (this.OperationType)
@@ -33,7 +34,7 @@ namespace Inedo.Extensions.Windows.Operations.IIS.AppPools
                         this.StartAppPool(pool);
                         break;
                     case AppPoolOperationType.Stop:
-                        this.StopAppPool(pool);
+                        await this.StopAppPoolAsync(pool, cancellationToken);
                         break;
                     case AppPoolOperationType.Recycle:
                         this.RecycleAppPool(pool);
@@ -41,7 +42,7 @@ namespace Inedo.Extensions.Windows.Operations.IIS.AppPools
                 }
             }
 
-            return Task.FromResult<object>(null);
+            return null;
         }
 
         public override void Serialize(Stream stream)
@@ -83,7 +84,7 @@ namespace Inedo.Extensions.Windows.Operations.IIS.AppPools
                 this.LogError($"Cannot start application pool {pool.Name}; current state is {state} (must be Stopped).");
             }
         }
-        private void StopAppPool(ApplicationPool pool)
+        private async Task StopAppPoolAsync(ApplicationPool pool, CancellationToken cancellationToken)
         {
             var state = pool.State;
             if (state == ObjectState.Started)
@@ -91,6 +92,16 @@ namespace Inedo.Extensions.Windows.Operations.IIS.AppPools
                 this.LogInformation($"Stopping application pool {pool.Name}...");
                 var result = pool.Stop();
                 this.LogInformation($"Application pool {pool.Name} state is now {result}.");
+
+                if (this.WaitForTargetStatus)
+                {
+                    while ((state = pool.State) != ObjectState.Stopped)
+                    {
+                        await Task.Delay(100, cancellationToken);
+                    }
+
+                    this.LogInformation("Application pool is stopped.");
+                }
             }
             else if (state == ObjectState.Stopped)
             {

@@ -30,6 +30,8 @@ IIS::Start-Site BuildMaster;
         [Description("The name of the IIS site to operate on.")]
         public string SiteName { get; set; }
 
+        public virtual bool WaitForTargetStatus { get; set; }
+
         internal abstract SiteOperationType OperationType { get; }
 
         public override sealed async Task ExecuteAsync(IOperationExecutionContext context)
@@ -53,7 +55,8 @@ IIS::Start-Site BuildMaster;
                 var job = new SiteJob
                 {
                     SiteName = this.SiteName,
-                    OperationType = this.OperationType
+                    OperationType = this.OperationType,
+                    WaitForTargetStatus = this.WaitForTargetStatus
                 };
 
                 job.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
