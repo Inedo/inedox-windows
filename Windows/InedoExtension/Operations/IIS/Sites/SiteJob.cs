@@ -11,8 +11,9 @@ namespace Inedo.Extensions.Windows.Operations.IIS.Sites
     {
         public string SiteName { get; set; }
         public SiteOperationType OperationType { get; set; }
+        public bool WaitForTargetStatus { get; set; }
 
-        public override Task<object> ExecuteAsync(CancellationToken cancellationToken)
+        public override async Task<object> ExecuteAsync(CancellationToken cancellationToken)
         {
             using (var server = new ServerManager())
             {
@@ -24,7 +25,7 @@ namespace Inedo.Extensions.Windows.Operations.IIS.Sites
                         $"Site {this.SiteName} does not exist."
                     );
 
-                    return Task.FromResult<object>(null);
+                    return null;
                 }
 
                 switch (this.OperationType)
@@ -33,12 +34,12 @@ namespace Inedo.Extensions.Windows.Operations.IIS.Sites
                         this.StartSite(pool);
                         break;
                     case SiteOperationType.Stop:
-                        this.StopSite(pool);
+                        await this.StopSiteAsync(pool, cancellationToken);
                         break;
                 }
             }
 
-            return Task.FromResult<object>(null);
+            return null;
         }
 
         public override void Serialize(Stream stream)
@@ -80,7 +81,7 @@ namespace Inedo.Extensions.Windows.Operations.IIS.Sites
                 this.LogError($"Cannot start site {site.Name}; current state is {state} (must be Stopped).");
             }
         }
-        private void StopSite(Site site)
+        private async Task StopSiteAsync(Site site, CancellationToken cancellationToken)
         {
             var state = site.State;
             if (state == ObjectState.Started)
@@ -88,6 +89,16 @@ namespace Inedo.Extensions.Windows.Operations.IIS.Sites
                 this.LogInformation($"Stopping site {site.Name}...");
                 var result = site.Stop();
                 this.LogInformation($"Site {site.Name} state is now {result}.");
+
+                if (this.WaitForTargetStatus)
+                {
+                    while ((state = site.State) != ObjectState.Stopped)
+                    {
+                        await Task.Delay(100, cancellationToken);
+                    }
+
+                    this.LogInformation("Application pool is stopped.");
+                }
             }
             else if (state == ObjectState.Stopped)
             {

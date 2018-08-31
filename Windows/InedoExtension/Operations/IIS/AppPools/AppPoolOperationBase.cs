@@ -32,6 +32,8 @@ IIS::Recycle-AppPool BuildMasterAppPool;
         [Description("The name of the application pool to operate on.")]
         public string ApplicationPoolName { get; set; }
 
+        public virtual bool WaitForTargetStatus { get; set; }
+
         internal abstract AppPoolOperationType OperationType { get; }
 
         public override sealed Task ExecuteAsync(IOperationExecutionContext context)
@@ -61,7 +63,8 @@ IIS::Recycle-AppPool BuildMasterAppPool;
                 var job = new AppPoolJob
                 {
                     AppPoolName = this.ApplicationPoolName,
-                    OperationType = this.OperationType
+                    OperationType = this.OperationType,
+                    WaitForTargetStatus = this.WaitForTargetStatus
                 };
 
                 job.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
