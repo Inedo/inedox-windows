@@ -26,8 +26,6 @@ namespace Inedo.Extensions.Windows.Configurations.Registry
         [ScriptAlias("Key")]
         public string Key { get; set; }
         [Persistent]
-        [DefaultValue(true)]
-        [ScriptAlias("Exists")]
         public abstract bool Exists { get; set; }
 
         public string GetDisplayPath() => this.Hive.GetAbbreviation() + "\\" + GetCanonicalKey(this.Key);

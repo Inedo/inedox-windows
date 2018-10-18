@@ -30,12 +30,14 @@ namespace Inedo.Extensions.Windows.Configurations.Registry
         public RegistryValueKind ValueKind { get; set; } = RegistryValueKind.String;
 
         [Persistent]
-        public override bool Exists { get; set; }
+        [DefaultValue(true)]
+        [ScriptAlias("Exists")]
+        public override bool Exists { get; set; } = true;
 
         public override ComparisonResult Compare(PersistedConfiguration other)
         {
             if (!(other is RegistryValueConfiguration reg))
-                throw new InvalidOperationException("Cannot compare configurations of different types");
+                throw new ArgumentException("Cannot compare configurations of different types.");
 
             var differences = new List<Difference>();
             if (!this.Exists || !reg.Exists)
@@ -53,7 +55,7 @@ namespace Inedo.Extensions.Windows.Configurations.Registry
                 differences.Add(new Difference(nameof(ValueKind), this.ValueKind, reg.ValueKind));
             }
 
-            if (!this.Value.SequenceEqual(reg.Value))
+            if (!(this.Value ?? Enumerable.Empty<string>()).SequenceEqual(reg.Value ?? Enumerable.Empty<string>()))
             {
                 differences.Add(new Difference(nameof(Value), string.Join("\n", this.Value), string.Join("\n", reg.Value)));
             }

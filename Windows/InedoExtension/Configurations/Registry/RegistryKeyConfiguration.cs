@@ -10,7 +10,9 @@ namespace Inedo.Extensions.Windows.Configurations.Registry
     public sealed class RegistryKeyConfiguration : RegistryConfiguration
     {
         [Persistent]
-        public override bool Exists { get; set; }
+        [DefaultValue(true)]
+        [ScriptAlias("Exists")]
+        public override bool Exists { get; set; } = true;
 
         [Persistent]
         [Category("Advanced")]
