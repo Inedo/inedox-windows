@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.ExecutionEngine.Executer;
 using Inedo.Extensibility;
@@ -30,6 +31,8 @@ namespace Inedo.Extensions.Windows.Operations.Registry
     {
         protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationCollectionContext context)
         {
+            this.LogDebug($"Collecting status of {this.Template.GetDisplayPath()}::{this.Template.ValueName}...");
+
             var config = new RegistryValueConfiguration
             {
                 Hive = this.Template.Hive,
@@ -42,6 +45,7 @@ namespace Inedo.Extensions.Windows.Operations.Registry
             {
                 if (key == null)
                 {
+                    this.LogInformation($"Key {this.Template.GetDisplayPath()} does not exist.");
                     config.Exists = false;
                 }
                 else
@@ -49,10 +53,12 @@ namespace Inedo.Extensions.Windows.Operations.Registry
                     var value = key.GetValue(this.Template.ValueName, null, RegistryValueOptions.DoNotExpandEnvironmentNames);
                     if (value == null)
                     {
+                        this.LogInformation($"Value {this.Template.ValueName} does not exist.");
                         config.Exists = false;
                     }
                     else
                     {
+                        this.LogInformation($"Value {this.Template.ValueName} exists.");
                         config.Exists = true;
                         config.ValueKind = key.GetValueKind(this.Template.ValueName);
                         config.Value = ReadRegistyValue(value, config.ValueKind);
@@ -65,6 +71,8 @@ namespace Inedo.Extensions.Windows.Operations.Registry
 
         protected override Task RemoteConfigureAsync(IRemoteOperationExecutionContext context)
         {
+            this.LogDebug($"Configuring {this.Template.GetDisplayPath()}::{this.Template.ValueName}...");
+
             using (var baseKey = RegistryKey.OpenBaseKey(this.Template.Hive, RegistryView.Default))
             {
                 using (var key = createOrOpenKey())
@@ -72,18 +80,30 @@ namespace Inedo.Extensions.Windows.Operations.Registry
                     if (key != null)
                     {
                         if (this.Template.Exists)
+                        {
+                            this.LogInformation($"Setting {this.Template.ValueName}...");
                             key.SetValue(this.Template.ValueName, this.GetRegistryValue(), this.Template.ValueKind);
+                        }
                         else
+                        {
+                            this.LogInformation($"Deleting {this.Template.ValueName}...");
                             key.DeleteValue(this.Template.ValueName, false);
+                        }
                     }
                 }
 
                 RegistryKey createOrOpenKey()
                 {
                     if (this.Template.Exists)
+                    {
+                        this.LogDebug($"Ensuring that {this.Template.GetDisplayPath()} exists...");
                         return baseKey.CreateSubKey(this.Template.Key);
+                    }
                     else
+                    {
+                        this.LogDebug($"Determining if {this.Template.GetDisplayPath()} exists...");
                         return baseKey.OpenSubKey(this.Template.Key);
+                    }
                 }
             }
 

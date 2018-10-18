@@ -38,12 +38,15 @@ namespace Inedo.Extensions.Windows.Operations.Registry
             {
                 if (key == null)
                 {
+                    this.LogInformation(this.Template.GetDisplayPath() + " does not exist.");
                     config.Exists = false;
                 }
                 else
                 {
                     config.Exists = true;
                     config.DefaultValue = key.GetValue(null)?.ToString();
+
+                    this.LogInformation(this.Template.GetDisplayPath() + " exists.");
                 }
             }
 
@@ -52,18 +55,27 @@ namespace Inedo.Extensions.Windows.Operations.Registry
 
         protected override Task RemoteConfigureAsync(IRemoteOperationExecutionContext context)
         {
+            this.LogDebug($"Configuring {this.Template.GetDisplayPath()}...");
+
             using (var baseKey = RegistryKey.OpenBaseKey(this.Template.Hive, RegistryView.Default))
             {
                 if (this.Template.Exists)
                 {
+                    this.LogInformation($"Ensuring that {this.Template.GetDisplayPath()} exists...");
+
                     using (var key = baseKey.CreateSubKey(this.Template.Key))
                     {
+                        this.LogInformation(this.Template.GetDisplayPath() + " created.");
                         if (!string.IsNullOrWhiteSpace(this.Template.DefaultValue))
+                        {
+                            this.LogDebug($"Setting default value to {this.Template.DefaultValue}...");
                             key.SetValue(null, this.Template.DefaultValue);
+                        }
                     }
                 }
                 else
                 {
+                    this.LogInformation($"Deleting {this.Template.GetDisplayPath()}...");
                     baseKey.DeleteSubKeyTree(this.Template.Key, false);
                 }
             }
