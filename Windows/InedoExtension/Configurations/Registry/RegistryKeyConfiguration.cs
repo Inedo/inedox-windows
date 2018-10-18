@@ -20,5 +20,7 @@ namespace Inedo.Extensions.Windows.Configurations.Registry
         [DisplayName("Default value")]
         [Description("A key's default value is the legacy unnamed value that every registry key may have. This is rarely used.")]
         public string DefaultValue { get; set; }
+
+        public override string ConfigurationKey => this.GetDisplayPath();
     }
 }

@@ -34,6 +34,8 @@ namespace Inedo.Extensions.Windows.Configurations.Registry
         [ScriptAlias("Exists")]
         public override bool Exists { get; set; } = true;
 
+        public override string ConfigurationKey => this.GetDisplayPath() + "::" + this.ValueName;
+
         public override ComparisonResult Compare(PersistedConfiguration other)
         {
             if (!(other is RegistryValueConfiguration reg))
