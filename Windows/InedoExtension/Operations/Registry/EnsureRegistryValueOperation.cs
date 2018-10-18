@@ -77,17 +77,19 @@ namespace Inedo.Extensions.Windows.Operations.Registry
             {
                 using (var key = createOrOpenKey())
                 {
-                    if (key != null)
+                    if (context.Simulation || key != null)
                     {
                         if (this.Template.Exists)
                         {
                             this.LogInformation($"Setting {this.Template.ValueName}...");
-                            key.SetValue(this.Template.ValueName, this.GetRegistryValue(), this.Template.ValueKind);
+                            if (!context.Simulation)
+                                key.SetValue(this.Template.ValueName, this.GetRegistryValue(), this.Template.ValueKind);
                         }
                         else
                         {
                             this.LogInformation($"Deleting {this.Template.ValueName}...");
-                            key.DeleteValue(this.Template.ValueName, false);
+                            if (!context.Simulation)
+                                key.DeleteValue(this.Template.ValueName, false);
                         }
                     }
                 }
@@ -97,7 +99,10 @@ namespace Inedo.Extensions.Windows.Operations.Registry
                     if (this.Template.Exists)
                     {
                         this.LogDebug($"Ensuring that {this.Template.GetDisplayPath()} exists...");
-                        return baseKey.CreateSubKey(this.Template.Key);
+                        if (context.Simulation)
+                            return baseKey.OpenSubKey(this.Template.Key);
+                        else
+                            return baseKey.CreateSubKey(this.Template.Key);
                     }
                     else
                     {

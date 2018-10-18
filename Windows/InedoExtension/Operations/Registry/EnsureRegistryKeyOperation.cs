@@ -63,20 +63,30 @@ namespace Inedo.Extensions.Windows.Operations.Registry
                 {
                     this.LogInformation($"Ensuring that {this.Template.GetDisplayPath()} exists...");
 
-                    using (var key = baseKey.CreateSubKey(this.Template.Key))
+                    using (var key = createOrOpen())
                     {
                         this.LogInformation(this.Template.GetDisplayPath() + " created.");
                         if (!string.IsNullOrWhiteSpace(this.Template.DefaultValue))
                         {
                             this.LogDebug($"Setting default value to {this.Template.DefaultValue}...");
-                            key.SetValue(null, this.Template.DefaultValue);
+                            if (!context.Simulation)
+                                key.SetValue(null, this.Template.DefaultValue);
                         }
                     }
                 }
                 else
                 {
                     this.LogInformation($"Deleting {this.Template.GetDisplayPath()}...");
-                    baseKey.DeleteSubKeyTree(this.Template.Key, false);
+                    if (!context.Simulation)
+                        baseKey.DeleteSubKeyTree(this.Template.Key, false);
+                }
+
+                RegistryKey createOrOpen()
+                {
+                    if (context.Simulation)
+                        return baseKey.OpenSubKey(this.Template.Key);
+                    else
+                        return baseKey.CreateSubKey(this.Template.Key);
                 }
             }
 
