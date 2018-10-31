@@ -30,7 +30,7 @@ Start-Service HDARS;")]
         [DefaultValue(false)]
         [ScriptAlias("FailIfServiceDoesNotExist")]
         [DisplayName("Fail if service does not exist")]
-        public bool FailIfServiceDoesNotExist { get; set; } = true;
+        public bool FailIfServiceDoesNotExist { get; set; } = false;
 
         public override Task ExecuteAsync(IOperationExecutionContext context)
         {
