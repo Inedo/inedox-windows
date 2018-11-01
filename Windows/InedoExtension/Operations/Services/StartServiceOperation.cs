@@ -27,6 +27,10 @@ Start-Service HDARS;")]
         [DisplayName("Wait for running status")]
         [DefaultValue(true)]
         public bool WaitForRunningStatus { get; set; } = true;
+        [DefaultValue(false)]
+        [ScriptAlias("FailIfServiceDoesNotExist")]
+        [DisplayName("Fail if service does not exist")]
+        public bool FailIfServiceDoesNotExist { get; set; } = false;
 
         public override Task ExecuteAsync(IOperationExecutionContext context)
         {
@@ -38,7 +42,13 @@ Start-Service HDARS;")]
             }
 
             var jobExecuter = context.Agent.GetService<IRemoteJobExecuter>();
-            var job = new ControlServiceJob { ServiceName = this.ServiceName, TargetStatus = ServiceControllerStatus.Running, WaitForTargetStatus = this.WaitForRunningStatus };
+            var job = new ControlServiceJob 
+            {
+                ServiceName = this.ServiceName, 
+                TargetStatus = ServiceControllerStatus.Running, 
+                WaitForTargetStatus = this.WaitForRunningStatus,
+                FailIfServiceDoesNotExist = this.FailIfServiceDoesNotExist
+            };
             job.MessageLogged += (s, e) => this.Log(e.Level, e.Message);
             return jobExecuter.ExecuteJobAsync(job, context.CancellationToken);
         }
