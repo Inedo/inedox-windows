@@ -53,7 +53,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
             var parts = info.Split(':');
 
-            var sslFlags = (BindingSslFlags)Convert.ToInt32(binding?.GetAttributeValue("sslFlags") ?? 0);
+            var sslFlags = GetBindingSslFlagsSafe(binding);
 
             if (parts.Length == 2)
                 return new BindingInfo(parts[0], parts[1], null, protocol, certificateStoreName, certificateHash, sslFlags);
@@ -61,6 +61,19 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
                 return new BindingInfo(parts[0], parts[1], parts[2], protocol, certificateStoreName, certificateHash, sslFlags);
             else
                 return null;
+
+            BindingSslFlags GetBindingSslFlagsSafe(Binding b)
+            {
+                try
+                {
+                    // GetAttributeValue apparently throws a COMException if sslFlags is unavailable in whatever IIS version
+                    return (BindingSslFlags)Convert.ToInt32(b?.GetAttributeValue("sslFlags") ?? 0);
+                }
+                catch
+                {
+                    return BindingSslFlags.None;
+                }
+            }
         }
 
         public static BindingInfo FromMap(IReadOnlyDictionary<string, RuntimeValue> map)
