@@ -102,6 +102,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
             var siteBindings = site.Bindings
                 .Select(b => BindingInfo.FromBindingInformation(b.BindingInformation, b.Protocol, b.CertificateStoreName, b.CertificateHash, b))
+                .Where(b => b != null)
                 .ToArray();
 
             if (siteBindings.Length == 0)

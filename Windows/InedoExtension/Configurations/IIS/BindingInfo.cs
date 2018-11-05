@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using Inedo.ExecutionEngine;
+using Inedo.ExecutionEngine.Executer;
 using Microsoft.Web.Administration;
 
 namespace Inedo.Extensions.Windows.Configurations.IIS
@@ -26,7 +27,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
                 throw new ArgumentNullException(nameof(port));
 
             this.IpAddress = AH.CoalesceString(ipAddress.Trim(), "*");
-            this.Port = port.Trim();
+            this.Port = port?.Trim();
             this.HostName = hostName?.Trim() ?? string.Empty;
             this.Protocol = AH.CoalesceString(protocol?.Trim(), "http");
             this.CertificateStoreName = AH.CoalesceString(certificateStoreName?.Trim(), "My");
@@ -133,8 +134,8 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
         public override int GetHashCode()
         {
-            return StringComparer.OrdinalIgnoreCase.GetHashCode(this.IpAddress)
-                ^ StringComparer.OrdinalIgnoreCase.GetHashCode(this.Port);
+            return StringComparer.OrdinalIgnoreCase.GetHashCode(this.IpAddress ?? string.Empty)
+                ^ StringComparer.OrdinalIgnoreCase.GetHashCode(this.Port ?? string.Empty);
         }
 
         public override bool Equals(object obj) => Equals(this, obj as BindingInfo);
