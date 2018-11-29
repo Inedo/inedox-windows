@@ -1,6 +1,6 @@
 # inedox-windows
 
-[![Build status](https://buildmaster.inedo.com/api/ci-badges/image?API_Key=badges&$ApplicationId=1)](https://buildmaster.inedo.com/api/ci-badges/page?API_Key=badges&$ApplicationId=1)
+[![Build status](https://buildmaster.inedo.com/api/ci-badges/image?API_Key=badges&$ApplicationId=1)](https://buildmaster.inedo.com/api/ci-badges/link?API_Key=badges&$ApplicationId=1)
 
 Contains operations to interact with Windows features, including IIS and services.
 
