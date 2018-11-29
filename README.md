@@ -1,6 +1,6 @@
 # inedox-windows
 
-[![Build status](https://ci.appveyor.com/api/projects/status/wnpa1c9fhu5fesxl/branch/master?svg=true)](https://ci.appveyor.com/project/Inedo/inedox-windows/branch/master)
+[![Build status](https://buildmaster.inedo.com/api/ci-badges/image?API_Key=badges&$ApplicationId=1)](https://buildmaster.inedo.com/api/ci-badges/page?API_Key=badges&$ApplicationId=1)
 
 Contains operations to interact with Windows features, including IIS and services.
 
