@@ -34,30 +34,36 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Inedo.Agents.Client, Version=520.0.0.0, Culture=neutral, PublicKeyToken=9de986a2f8db80fc, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.SDK.1.0.1\lib\net452\Inedo.Agents.Client.dll</HintPath>
+    <Reference Include="Inedo.Agents.Client, Version=1000.0.0.0, Culture=neutral, PublicKeyToken=9de986a2f8db80fc, processorArchitecture=MSIL">
+      <HintPath>..\packages\Inedo.SDK.1.0.4\lib\net452\Inedo.Agents.Client.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Inedo.ExecutionEngine, Version=63.2.0.0, Culture=neutral, PublicKeyToken=68703f0e52007e75, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.SDK.1.0.1\lib\net452\Inedo.ExecutionEngine.dll</HintPath>
+    <Reference Include="Inedo.ExecutionEngine, Version=64.0.0.0, Culture=neutral, PublicKeyToken=68703f0e52007e75, processorArchitecture=MSIL">
+      <HintPath>..\packages\Inedo.SDK.1.0.4\lib\net452\Inedo.ExecutionEngine.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Inedo.SDK, Version=1.0.0.0, Culture=neutral, PublicKeyToken=29fae5dec3001603, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.SDK.1.0.1\lib\net452\Inedo.SDK.dll</HintPath>
+    <Reference Include="Inedo.SDK, Version=1.0.4.0, Culture=neutral, PublicKeyToken=29fae5dec3001603, processorArchitecture=MSIL">
+      <HintPath>..\packages\Inedo.SDK.1.0.4\lib\net452\Inedo.SDK.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
-    <Reference Include="InedoLib, Version=520.0.0.0, Culture=neutral, PublicKeyToken=112cfb71329714a6, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.SDK.1.0.1\lib\net452\InedoLib.dll</HintPath>
+    <Reference Include="InedoLib, Version=1000.0.0.0, Culture=neutral, PublicKeyToken=112cfb71329714a6, processorArchitecture=MSIL">
+      <HintPath>..\packages\Inedo.SDK.1.0.4\lib\net452\InedoLib.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.Web.Administration, Version=7.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Web.Administration.7.0.0.0\lib\net20\Microsoft.Web.Administration.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Inedo.SDK.1.0.4\lib\net452\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -77,13 +83,16 @@
   <ItemGroup>
     <Compile Include="Configurations\DSC\DscConfiguration.cs" />
     <Compile Include="Configurations\DSC\DscEntry.cs" />
+    <Compile Include="Configurations\IIS\BindingConfig.cs" />
     <Compile Include="Configurations\IIS\BindingInfo.cs" />
     <Compile Include="Configurations\IIS\IisApplicationConfiguration.cs" />
     <Compile Include="Configurations\IIS\IisAppPoolConfiguration.cs" />
     <Compile Include="Configurations\IIS\IisConfigurationBase.cs" />
     <Compile Include="Configurations\IIS\IisObjectState.cs" />
+    <Compile Include="Configurations\IIS\IisSiteBindingConfiguration.cs" />
     <Compile Include="Configurations\IIS\IisSiteConfiguration.cs" />
     <Compile Include="Configurations\IIS\IisVirtualDirectoryConfiguration.cs" />
+    <Compile Include="Configurations\IIS\ISiteBindingConfig.cs" />
     <Compile Include="Configurations\Registry\InternalExtensions.cs" />
     <Compile Include="Configurations\Registry\RegistryConfiguration.cs" />
     <Compile Include="Configurations\Registry\RegistryKeyConfiguration.cs" />
@@ -102,6 +111,7 @@
     <Compile Include="Operations\IIS\AppPools\RecycleAppPoolOperation.cs" />
     <Compile Include="Operations\IIS\AppPools\StartAppPoolOperation.cs" />
     <Compile Include="Operations\IIS\AppPools\StopAppPoolOperation.cs" />
+    <Compile Include="Operations\IIS\Sites\EnsureIisSiteBindingOperation.cs" />
     <Compile Include="Operations\IIS\Sites\EnsureIisSiteOperation.cs" />
     <Compile Include="Operations\IIS\Sites\SiteJob.cs" />
     <Compile Include="Operations\IIS\Sites\SiteOperationBase.cs" />
