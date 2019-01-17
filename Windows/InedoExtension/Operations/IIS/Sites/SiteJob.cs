@@ -31,7 +31,7 @@ namespace Inedo.Extensions.Windows.Operations.IIS.Sites
                 switch (this.OperationType)
                 {
                     case SiteOperationType.Start:
-                        this.StartSite(pool);
+                        await this.StartSiteAsync(pool, cancellationToken);
                         break;
                     case SiteOperationType.Stop:
                         await this.StopSiteAsync(pool, cancellationToken);
@@ -65,7 +65,7 @@ namespace Inedo.Extensions.Windows.Operations.IIS.Sites
             return null;
         }
 
-        private void StartSite(Site site)
+        private async Task StartSiteAsync(Site site, CancellationToken cancellationToken)
         {
             var state = site.State;
             if (state == ObjectState.Stopped)
@@ -73,14 +73,27 @@ namespace Inedo.Extensions.Windows.Operations.IIS.Sites
                 this.LogInformation($"Starting site {site.Name}...");
                 var result = site.Start();
                 this.LogInformation($"Site {site.Name} state is now {result}.");
+
+                if (this.WaitForTargetStatus)
+                {
+                    while ((state = site.State) != ObjectState.Started && state != ObjectState.Stopped)
+                    {
+                        await Task.Delay(100, cancellationToken);
+                    }
+
+                    if (state == ObjectState.Stopped)
+                        this.LogInformation("Site is started.");
+                    else
+                        this.LogError("Site could not be started.");
+                }
             }
             else if (state == ObjectState.Started)
             {
-                this.LogInformation($"Site {site.Name} is already Started.");
+                this.LogInformation($"Site {site.Name} is already started.");
             }
             else
             {
-                this.LogError($"Cannot start site {site.Name}; current state is {state} (must be Stopped).");
+                this.LogError($"Cannot start site {site.Name}; current state is {state} (must be stopped).");
             }
         }
         private async Task StopSiteAsync(Site site, CancellationToken cancellationToken)
@@ -99,16 +112,16 @@ namespace Inedo.Extensions.Windows.Operations.IIS.Sites
                         await Task.Delay(100, cancellationToken);
                     }
 
-                    this.LogInformation("Application pool is stopped.");
+                    this.LogInformation("Site is stopped.");
                 }
             }
             else if (state == ObjectState.Stopped)
             {
-                this.LogInformation($"Site {site.Name} is already Stopped.");
+                this.LogInformation($"Site {site.Name} is already stopped.");
             }
             else
             {
-                this.LogError($"Cannot stop Site {site.Name}; current state is {state} (must be Started).");
+                this.LogError($"Cannot stop Site {site.Name}; current state is {state} (must be started).");
             }
         }
     }
