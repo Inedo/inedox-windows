@@ -47,12 +47,14 @@ namespace Inedo.Extensions.Windows.Operations.IIS.Sites
             var writer = new BinaryWriter(stream, InedoLib.UTF8Encoding);
             writer.Write((byte)this.OperationType);
             writer.Write(this.SiteName ?? string.Empty);
+            writer.Write(this.WaitForTargetStatus);
         }
         public override void Deserialize(Stream stream)
         {
             var reader = new BinaryReader(stream, InedoLib.UTF8Encoding);
             this.OperationType = (SiteOperationType)reader.ReadByte();
             this.SiteName = reader.ReadString();
+            this.WaitForTargetStatus = reader.ReadBoolean();
         }
 
         public override void SerializeResponse(Stream stream, object result)
