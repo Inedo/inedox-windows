@@ -6,7 +6,7 @@ using Inedo.Extensibility.Operations;
 namespace Inedo.Extensions.Windows.Operations.IIS.AppPools
 {
     [DisplayName("Stop App Pool")]
-    [Description("Stops an application pool.")]
+    [Description("Stops an IIS app pool.")]
     [ScriptAlias("Stop-AppPool")]
     [SeeAlso(typeof(StartAppPoolOperation))]
     [ScriptNamespace(Namespaces.IIS)]

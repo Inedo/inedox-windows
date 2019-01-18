@@ -9,7 +9,7 @@ using Inedo.Extensibility.Operations;
 namespace Inedo.Extensions.Windows.Operations.IIS.AppPools
 {
     [Tag(Tags.IIS)]
-    [Tag(Tags.ApplicationPools)]
+    [Tag(Tags.AppPools)]
     [DefaultProperty(nameof(ApplicationPoolName))]
     [Example(@"
 # stops the BuildMaster application pool 
@@ -29,10 +29,11 @@ IIS::Recycle-AppPool BuildMasterAppPool;
 
         [Required]
         [ScriptAlias("Name")]
+        [DisplayName("App pool")]
         [Description("The name of the application pool to operate on.")]
         public string ApplicationPoolName { get; set; }
 
-        public virtual bool WaitForTargetStatus { get; set; }
+        public abstract bool WaitForTargetStatus { get; set; }
 
         internal abstract AppPoolOperationType OperationType { get; }
 
@@ -43,16 +44,16 @@ IIS::Recycle-AppPool BuildMasterAppPool;
                 switch (this.OperationType)
                 {
                     case AppPoolOperationType.Start:
-                        this.LogInformation($"Starting application pool {this.ApplicationPoolName}...");
-                        this.LogInformation($"Application pool {this.ApplicationPoolName} state is now Started.");
+                        this.LogInformation($"Starting app pool {this.ApplicationPoolName}...");
+                        this.LogInformation($"App pool {this.ApplicationPoolName} state is now Started.");
                         break;
                     case AppPoolOperationType.Stop:
-                        this.LogInformation($"Stopping application pool {this.ApplicationPoolName}...");
-                        this.LogInformation($"Application pool {this.ApplicationPoolName} state is now Stopped.");
+                        this.LogInformation($"Stopping app pool {this.ApplicationPoolName}...");
+                        this.LogInformation($"App pool {this.ApplicationPoolName} state is now Stopped.");
                         break;
                     case AppPoolOperationType.Recycle:
-                        this.LogInformation($"Recycling application pool {this.ApplicationPoolName}...");
-                        this.LogInformation($"Application pool {this.ApplicationPoolName} state is now Started.");
+                        this.LogInformation($"Recycling app pool {this.ApplicationPoolName}...");
+                        this.LogInformation($"App pool {this.ApplicationPoolName} state is now Started.");
                         break;
                 }
 

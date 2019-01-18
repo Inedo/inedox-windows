@@ -159,7 +159,7 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>powershell -Command "if (Test-Path C:\Projects\Hedgehog\Extensions -PathType Container) { Compress-Archive -Path '$(TargetDir)*' -DestinationPath C:\Projects\Hedgehog\Extensions\$(TargetName).zip -Force; Move-Item C:\Projects\Hedgehog\Extensions\$(TargetName).zip -Destination C:\Projects\Hedgehog\Extensions\$(TargetName).inedox -Force }"
+    <PostBuildEvent>powershell -Command "if (Test-Path C:\Projects\BuildMaster\Extensions -PathType Container) { Compress-Archive -Path '$(TargetDir)*' -DestinationPath C:\Projects\BuildMaster\Extensions\$(TargetName).zip -Force; Move-Item C:\Projects\BuildMaster\Extensions\$(TargetName).zip -Destination C:\Projects\BuildMaster\Extensions\$(TargetName).inedox -Force }"
 powershell -Command "if (Test-Path C:\Projects\Otter\Extensions -PathType Container) { Compress-Archive -Path '$(TargetDir)*' -DestinationPath C:\Projects\Otter\Extensions\$(TargetName).zip -Force; Move-Item C:\Projects\Otter\Extensions\$(TargetName).zip -Destination C:\Projects\Otter\Extensions\$(TargetName).inedox -Force }"</PostBuildEvent>
   </PropertyGroup>
 </Project>

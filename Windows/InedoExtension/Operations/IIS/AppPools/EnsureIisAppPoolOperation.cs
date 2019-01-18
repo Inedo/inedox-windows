@@ -20,7 +20,7 @@ namespace Inedo.Extensions.Windows.Operations.IIS.AppPools
     [ScriptNamespace(Namespaces.IIS)]
     [SeeAlso(typeof(Sites.EnsureIisSiteOperation))]
     [Tag(Tags.IIS)]
-    [Tag(Tags.ApplicationPools)]
+    [Tag(Tags.AppPools)]
     [Example(@"
 # ensures that the Otter application pool is present on the web server
 IIS::Ensure-AppPool(

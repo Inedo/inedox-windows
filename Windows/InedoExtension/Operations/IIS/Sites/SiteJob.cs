@@ -81,7 +81,7 @@ namespace Inedo.Extensions.Windows.Operations.IIS.Sites
                         await Task.Delay(100, cancellationToken);
                     }
 
-                    if (state == ObjectState.Stopped)
+                    if (state == ObjectState.Started)
                         this.LogInformation("Site is started.");
                     else
                         this.LogError("Site could not be started.");

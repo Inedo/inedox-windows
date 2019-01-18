@@ -13,6 +13,11 @@ namespace Inedo.Extensions.Windows.Operations.IIS.AppPools
     {
         internal override AppPoolOperationType OperationType => AppPoolOperationType.Recycle;
 
+        [ScriptAlias("WaitForStartedStatus")]
+        [DisplayName("Wait for started status")]
+        [DefaultValue(true)]
+        public override bool WaitForTargetStatus { get; set; } = true;
+
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
             return new ExtendedRichDescription(

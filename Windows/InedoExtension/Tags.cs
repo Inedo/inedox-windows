@@ -2,7 +2,7 @@
 {
     internal static class Tags
     {
-        public const string ApplicationPools = "application-pools";
+        public const string AppPools = "app-pools";
         public const string IIS = "iis";
         public const string PowerShell = "powershell";
         public const string Registry = "registry";

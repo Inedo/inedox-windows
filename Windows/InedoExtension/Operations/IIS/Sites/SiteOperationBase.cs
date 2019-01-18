@@ -26,7 +26,7 @@ IIS::Start-Site BuildMaster;
 
         [Required]
         [ScriptAlias("Name")]
-        [DisplayName("Site name")]
+        [DisplayName("Site")]
         [Description("The name of the IIS site to operate on.")]
         public string SiteName { get; set; }
 
