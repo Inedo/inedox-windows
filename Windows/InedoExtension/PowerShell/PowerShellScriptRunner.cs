@@ -143,6 +143,9 @@ namespace Inedo.Extensions.Windows.PowerShell
                     }
                 }
 
+                if (int.TryParse(s, out int i2))
+                    return i2;
+
                 if (string.Equals(s, "true", StringComparison.OrdinalIgnoreCase))
                     return true;
 
