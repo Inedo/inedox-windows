@@ -14,6 +14,7 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
     [ScriptAlias("Ensure-DscResource")]
     [ScriptNamespace(Namespaces.PowerShell, PreferUnqualified = true)]
     [SeeAlso(typeof(PSDscOperation))]
+    [Note("An argument may be explicitly converted to an integral type by prefixing the value with [type::<typeName>], where <typeName> is one of: int, uint, long, ulong, double, decimal. Normally this conversion is performed automatically and this is not necessary.")]
     [Example(@"
 # ensures the existence of a file on the server
 Ensure-DscResource(

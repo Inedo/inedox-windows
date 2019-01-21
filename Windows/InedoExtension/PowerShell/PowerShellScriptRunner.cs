@@ -15,6 +15,7 @@ namespace Inedo.Extensions.Windows.PowerShell
 {
     internal class PowerShellScriptRunner : ILogger, IDisposable
     {
+        public static readonly LazyRegex TypeCastRegex = new LazyRegex(@"^\[type::(?<1>[^\]]+)\](?<2>.+)$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
         private static readonly LazyRegex VariableRegex = new LazyRegex(@"(?>\$(?<1>[a-zA-Z0-9_]+)|\${(?<2>[^}]+)})", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
         private readonly InedoPSHost pshost = new InedoPSHost();
         private readonly Lazy<Runspace> runspaceFactory;
@@ -58,6 +59,89 @@ namespace Inedo.Extensions.Windows.PowerShell
                 var s = value.AsString() ?? string.Empty;
                 if (s.StartsWith(Functions.PsCredentialVariableFunction.Prefix))
                     return Functions.PsCredentialVariableFunction.Deserialize(s.Substring(Functions.PsCredentialVariableFunction.Prefix.Length));
+
+                var match = TypeCastRegex.Match(s);
+                if (match.Success)
+                {
+                    var v = match.Groups[2].Value;
+                    switch (match.Groups[1].Value.ToLowerInvariant())
+                    {
+                        case "int":
+                        case "int32":
+                        case "sint32":
+                        case "system.int32":
+                            if (int.TryParse(v, out var i))
+                                return i;
+                            break;
+                        case "uint":
+                        case "uint32":
+                        case "system.uint32":
+                            if (uint.TryParse(v, out var u))
+                                return u;
+                            break;
+                        case "bool":
+                        case "boolean":
+                        case "system.boolean":
+                            if (bool.TryParse(v, out var b))
+                                return b;
+                            break;
+                        case "long":
+                        case "int64":
+                        case "system.int64":
+                            if (long.TryParse(v, out var l))
+                                return l;
+                            break;
+                        case "ulong":
+                        case "uint64":
+                        case "system.uint64":
+                            if (ulong.TryParse(v, out var ul))
+                                return ul;
+                            break;
+                        case "string":
+                        case "system.string":
+                            return v;
+                        case "float":
+                        case "single":
+                        case "system.single":
+                            if (float.TryParse(v, out var f))
+                                return f;
+                            break;
+                        case "double":
+                        case "system.double":
+                            if (double.TryParse(v, out var d))
+                                return d;
+                            break;
+                        case "decimal":
+                        case "system.decimal":
+                            if (decimal.TryParse(v, out var de))
+                                return de;
+                            break;
+                        case "byte":
+                        case "uint8":
+                        case "system.byte":
+                            if (byte.TryParse(v, out var bt))
+                                return bt;
+                            break;
+                        case "int8":
+                        case "sbyte":
+                        case "system.sbyte":
+                            if (sbyte.TryParse(v, out var sbt))
+                                return sbt;
+                            break;
+                        case "short":
+                        case "int16":
+                        case "system.int16":
+                            if (short.TryParse(v, out var sh))
+                                return sh;
+                            break;
+                        case "ushort":
+                        case "uint16":
+                        case "system.uint16":
+                            if (ushort.TryParse(v, out var ush))
+                                return ush;
+                            break;
+                    }
+                }
 
                 if (string.Equals(s, "true", StringComparison.OrdinalIgnoreCase))
                     return true;

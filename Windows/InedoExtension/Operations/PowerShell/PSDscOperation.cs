@@ -26,6 +26,7 @@ namespace Inedo.Extensions.Windows.Operations.PowerShell
             + @"property or you would like to override the default configuration key name, specify a property named """
             + ConfigurationKeyPropertyName + @""" with the value containing a string (or list of strings) "
             + @"indicating the name of the property (or properties) to be used as the unique configuration key.", Heading = "Configuration Key")]
+    [Note("An argument may be explicitly converted to an integral type by prefixing the value with [type::<typeName>], where <typeName> is one of: int, uint, long, ulong, double, decimal. Normally this conversion is performed automatically and this is not necessary.")]
     [Example(@"
 # ensures the existence of a file on the server
 PSDsc File (
