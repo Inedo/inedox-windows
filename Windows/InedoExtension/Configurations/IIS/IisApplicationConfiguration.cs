@@ -11,12 +11,12 @@ using Microsoft.Web.Administration;
 
 namespace Inedo.Extensions.Windows.Configurations.IIS
 {
+    [Serializable]
+    [SlimSerializable]
     [DisplayName("IIS Application")]
     [DefaultProperty(nameof(ApplicationPath))]
-    [Serializable]
     public sealed class IisApplicationConfiguration : IisConfigurationBase, IHasCredentials
     {
-
         [DisplayName("Site name")]
         [Description("The name of this site where the application would exist")]
         [ScriptAlias("Site")]

@@ -37,8 +37,6 @@ IIS::Ensure-AppPool(
 ")]
     public sealed class EnsureIisAppPoolOperation : RemoteEnsureOperation<IisAppPoolConfiguration>
     {
-        private readonly static object syncLock = new object();
-
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
             var shortDesc = new RichDescription("Ensure ", new Hilite(config[nameof(IisAppPoolConfiguration.Name)]), " Application Pool");
@@ -126,7 +124,7 @@ IIS::Ensure-AppPool(
         {
             this.LogDebug($"Looking for Application Pool \"{this.Template.Name}\"...");
 
-            lock (syncLock)
+            lock (Locks.IIS)
             {
                 using (var manager = new ServerManager())
                 {
@@ -149,7 +147,7 @@ IIS::Ensure-AppPool(
 
             this.LogDebug($"Looking for Application Pool \"{this.Template.Name}\"...");
 
-            lock (syncLock)
+            lock (Locks.IIS)
             {
                 using (var manager = new ServerManager())
                 {

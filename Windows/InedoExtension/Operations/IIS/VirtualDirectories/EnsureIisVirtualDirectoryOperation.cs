@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Threading;
 using System.Threading.Tasks;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
@@ -28,9 +29,10 @@ IIS::Ensure-VirtualDirectory(
     PhysicalPath: C:\hdars
 );
 ")]
-    public sealed class EnsureIisVirtualDirectoryOperation : RemoteEnsureOperation<IisVirtualDirectoryConfiguration>
+    public sealed class EnsureIisVirtualDirectoryOperation : EnsureOperation<IisVirtualDirectoryConfiguration>
     {
-        private readonly static object lockbox = new object();
+        public override Task<PersistedConfiguration> CollectAsync(IOperationCollectionContext context) => EnsureVirtualDirectoryJob.CollectAsync<EnsureVirtualDirectoryJob>(this, context);
+        public override Task ConfigureAsync(IOperationExecutionContext context) => EnsureVirtualDirectoryJob.EnsureAsync<EnsureVirtualDirectoryJob>(this, context);
 
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
@@ -64,112 +66,124 @@ IIS::Ensure-VirtualDirectory(
             return new ExtendedRichDescription(shortDesc, longDesc);
         }
         
-        protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationCollectionContext context)
+        private sealed class EnsureVirtualDirectoryJob : SlimEnsureJob<IisVirtualDirectoryConfiguration>
         {
-            if (this.Template == null)
-                throw new InvalidOperationException("Template is not set.");
+            public override Task<IisVirtualDirectoryConfiguration> CollectAsync(CancellationToken cancellationToken) => Task.FromResult(this.Collect());
+            public override Task ConfigureAsync(CancellationToken cancellationToken)
+            {
+                this.Configure();
+                return InedoLib.NullTask;
+            }
 
-            this.LogDebug($"Looking for Virtual Directory \"{this.Template.FullPath}\"...");
+            private IisVirtualDirectoryConfiguration Collect()
+            {
+                if (this.Template == null)
+                    throw new InvalidOperationException("Template is not set.");
 
-            lock (lockbox)
-                using (var manager = new ServerManager())
+                this.LogDebug($"Looking for Virtual Directory \"{this.Template.FullPath}\"...");
+
+                lock (Locks.IIS)
                 {
-                    var uninclused = new IisVirtualDirectoryConfiguration
+                    using (var manager = new ServerManager())
                     {
-                        Exists = false,
-                        Path = this.Template.Path,
-                        SiteName = this.Template.SiteName,
-                        ApplicationPath = this.Template.ApplicationPath
-                    };
+                        var uninclused = new IisVirtualDirectoryConfiguration
+                        {
+                            Exists = false,
+                            Path = this.Template.Path,
+                            SiteName = this.Template.SiteName,
+                            ApplicationPath = this.Template.ApplicationPath
+                        };
 
-                    var site = manager.Sites[this.Template.SiteName];
-                    if (site == null)
-                    {
-                        this.LogInformation($"Site \"{this.Template.SiteName}\" does not exist.");
-                        return Complete(uninclused);
-                    }
-                    var app = site.Applications[this.Template.ApplicationPath];
-                    if (app == null)
-                    {
-                        this.LogInformation($"Application \"{this.Template.ApplicationPath}\" does not exist.");
-                        return Complete(uninclused);
-                    }
-                    var vdir = app.VirtualDirectories[this.Template.Path];
-                    if (vdir == null)
-                    {
-                        this.LogInformation($"Virtual Directory \"{this.Template.Path}\" does not exist.");
-                        return Complete(uninclused);
-                    }
-
-                    return Complete(IisVirtualDirectoryConfiguration.FromMwaVirtualDirectory(this, this.Template.SiteName, vdir, this.Template));
-                }
-        }
-
-        protected override Task RemoteConfigureAsync(IRemoteOperationExecutionContext context)
-        {
-            if (this.Template == null)
-                throw new InvalidOperationException("Template is not set.");
-
-            lock (lockbox)
-                using (var manager = new ServerManager())
-                {
-                    var site = manager.Sites[this.Template.SiteName];
-                    if (site == null)
-                    {
-                        this.LogWarning($"Site \"{this.Template.SiteName}\" does not exist, cannot ensure a vdir on it.");
-                        return Complete();
-                    }
-                    var app = site.Applications[this.Template.ApplicationPath];
-                    if (app == null)
-                    {
-                        this.LogWarning($"Application \"{this.Template.ApplicationPath}\" does not exist, cannot ensure a vdir on it.");
-                        return Complete();
-                    }
-
-                    var vdir = app.VirtualDirectories[this.Template.Path];
-                    if (this.Template.Exists)
-                    {
+                        var site = manager.Sites[this.Template.SiteName];
+                        if (site == null)
+                        {
+                            this.LogInformation($"Site \"{this.Template.SiteName}\" does not exist.");
+                            return uninclused;
+                        }
+                        var app = site.Applications[this.Template.ApplicationPath];
+                        if (app == null)
+                        {
+                            this.LogInformation($"Application \"{this.Template.ApplicationPath}\" does not exist.");
+                            return uninclused;
+                        }
+                        var vdir = app.VirtualDirectories[this.Template.Path];
                         if (vdir == null)
                         {
-                            this.LogDebug("Does not exist. Creating...");
-                            if (!context.Simulation)
+                            this.LogInformation($"Virtual Directory \"{this.Template.Path}\" does not exist.");
+                            return uninclused;
+                        }
+
+                        return IisVirtualDirectoryConfiguration.FromMwaVirtualDirectory(this.GetLogWrapper(), this.Template.SiteName, vdir, this.Template);
+                    }
+                }
+            }
+            private void Configure()
+            {
+                if (this.Template == null)
+                    throw new InvalidOperationException("Template is not set.");
+
+                lock (Locks.IIS)
+                {
+                    using (var manager = new ServerManager())
+                    {
+                        var site = manager.Sites[this.Template.SiteName];
+                        if (site == null)
+                        {
+                            this.LogWarning($"Site \"{this.Template.SiteName}\" does not exist, cannot ensure a vdir on it.");
+                            return;
+                        }
+
+                        var app = site.Applications[this.Template.ApplicationPath];
+                        if (app == null)
+                        {
+                            this.LogWarning($"Application \"{this.Template.ApplicationPath}\" does not exist, cannot ensure a vdir on it.");
+                            return;
+                        }
+
+                        var vdir = app.VirtualDirectories[this.Template.Path];
+                        if (this.Template.Exists)
+                        {
+                            if (vdir == null)
                             {
-                                vdir = app.VirtualDirectories.Add(this.Template.Path, this.Template.PhysicalPath);
-                                manager.CommitChanges();
+                                this.LogDebug("Does not exist. Creating...");
+                                if (!this.Simulation)
+                                {
+                                    vdir = app.VirtualDirectories.Add(this.Template.Path, this.Template.PhysicalPath);
+                                    manager.CommitChanges();
+                                }
+
+                                this.LogInformation($"Virtual Directory \"{this.Template.FullPath}\" added.");
+                                site = manager.Sites[this.Template.SiteName];
+                                app = site.Applications[this.Template.ApplicationPath];
+                                vdir = app.VirtualDirectories[this.Template.Path];
                             }
 
-                            this.LogInformation($"Virtual Directory \"{this.Template.FullPath}\" added.");
-                            site = manager.Sites[this.Template.SiteName];
-                            app = site.Applications[this.Template.ApplicationPath];
-                            vdir = app.VirtualDirectories[this.Template.Path];
+                            this.LogDebug("Applying configuration...");
+                            if (!this.Simulation)
+                                IisVirtualDirectoryConfiguration.SetMwaVirtualDirectory(this.GetLogWrapper(), this.Template, vdir);
+
                         }
-
-                        this.LogDebug("Applying configuration...");
-                        if (!context.Simulation)
-                            IisVirtualDirectoryConfiguration.SetMwaVirtualDirectory(this, this.Template, vdir);
-
-                    }
-                    else
-                    {
-                        if (vdir == null)
+                        else
                         {
-                            this.LogWarning("Virtual directory doesn't exist.");
-                            return Complete();
+                            if (vdir == null)
+                            {
+                                this.LogWarning("Virtual directory doesn't exist.");
+                                return;
+                            }
+
+                            this.LogDebug("Exists. Deleting...");
+                            if (!this.Simulation)
+                                app.VirtualDirectories.Remove(vdir);
                         }
 
-                        this.LogDebug("Exists. Deleting...");
-                        if (!context.Simulation)
-                            app.VirtualDirectories.Remove(vdir);
+                        this.LogDebug("Committing configuration...");
+                        if (!this.Simulation)
+                            manager.CommitChanges();
+
+                        this.LogInformation($"Virtual Directory \"{this.Template.FullPath}\" {(this.Template.Exists ? "configured" : "removed")}.");
                     }
-
-                    this.LogDebug("Committing configuration...");
-                    if (!context.Simulation)
-                        manager.CommitChanges();
-
-                    this.LogInformation($"Virtual Directory \"{this.Template.FullPath}\" {(this.Template.Exists ? "configured" : "removed")}.");
                 }
-
-            return Complete();
+            }
         }
     }
 }

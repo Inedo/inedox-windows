@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Threading;
 using System.Threading.Tasks;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
@@ -28,9 +29,10 @@ IIS::Ensure-Application(
     PhysicalPath: C:\hdars
 );
 ")]
-    public sealed class EnsureIisApplicationOperation : RemoteEnsureOperation<IisApplicationConfiguration>
+    public sealed class EnsureIisApplicationOperation : EnsureOperation<IisApplicationConfiguration>
     {
-        private readonly static object iisManagerLock = new object();
+        public override Task<PersistedConfiguration> CollectAsync(IOperationCollectionContext context) => EnsureApplicationJob.CollectAsync<EnsureApplicationJob>(this, context);
+        public override Task ConfigureAsync(IOperationExecutionContext context) => EnsureApplicationJob.EnsureAsync<EnsureApplicationJob>(this, context);
 
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
@@ -50,102 +52,110 @@ IIS::Ensure-Application(
             return new ExtendedRichDescription(shortDesc, longDesc);
         }
 
-        protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationCollectionContext context)
+        private sealed class EnsureApplicationJob : SlimEnsureJob<IisApplicationConfiguration>
         {
-            if (this.Template == null)
-                throw new InvalidOperationException("Template is not set.");
-
-            this.LogDebug($"Looking for Application \"{this.Template.ApplicationPath}\"...");
-
-            lock (iisManagerLock)
+            public override Task<IisApplicationConfiguration> CollectAsync(CancellationToken cancellationToken) => Task.FromResult(this.Collect());
+            public override Task ConfigureAsync(CancellationToken cancellationToken)
             {
-                using (var manager = new ServerManager())
-                {
-                    var uninclused = new IisApplicationConfiguration
-                    {
-                        Exists = false,
-                        ApplicationPath = this.Template.ApplicationPath,
-                        SiteName = this.Template.SiteName
-                    };
-
-                    var site = manager.Sites[this.Template.SiteName];
-                    if (site == null)
-                    {
-                        this.LogInformation($"Site \"{this.Template.SiteName}\" does not exist.");
-                        return Complete(uninclused);
-                    }
-                    var app = site.Applications[this.Template.ApplicationPath];
-                    if (app == null)
-                    {
-                        this.LogInformation($"Application \"{this.Template.ApplicationPath}\" does not exist.");
-                        return Complete(uninclused);
-                    }
-
-                    return Complete(IisApplicationConfiguration.FromMwaApplication(this, this.Template.SiteName, app, this.Template));
-                }
+                this.Configure();
+                return InedoLib.NullTask;
             }
-        }
 
-        protected override Task RemoteConfigureAsync(IRemoteOperationExecutionContext context)
-        {
-            if (this.Template == null)
-                throw new InvalidOperationException("Template is not set.");
-
-            lock (iisManagerLock)
+            private IisApplicationConfiguration Collect()
             {
-                using (var manager = new ServerManager())
+                if (this.Template == null)
+                    throw new InvalidOperationException("Template is not set.");
+
+                this.LogDebug($"Looking for Application \"{this.Template.ApplicationPath}\"...");
+
+                lock (Locks.IIS)
                 {
-                    var site = manager.Sites[this.Template.SiteName];
-                    if (site == null)
+                    using (var manager = new ServerManager())
                     {
-                        if (this.Template.Exists)
-                            this.LogWarning($"Site \"{this.Template.SiteName}\" does not exist, cannot ensure an application on it.");
-                        return Complete();
-                    }
-                    var app = site.Applications[this.Template.ApplicationPath];
-                    if (this.Template.Exists)
-                    {
+                        var uninclused = new IisApplicationConfiguration
+                        {
+                            Exists = false,
+                            ApplicationPath = this.Template.ApplicationPath,
+                            SiteName = this.Template.SiteName
+                        };
+
+                        var site = manager.Sites[this.Template.SiteName];
+                        if (site == null)
+                        {
+                            this.LogInformation($"Site \"{this.Template.SiteName}\" does not exist.");
+                            return uninclused;
+                        }
+                        var app = site.Applications[this.Template.ApplicationPath];
                         if (app == null)
                         {
-                            this.LogDebug("Does not exist. Creating...");
-                            if (!context.Simulation)
+                            this.LogInformation($"Application \"{this.Template.ApplicationPath}\" does not exist.");
+                            return uninclused;
+                        }
+
+                        return IisApplicationConfiguration.FromMwaApplication(this.GetLogWrapper(), this.Template.SiteName, app, this.Template);
+                    }
+                }
+            }
+            private void Configure()
+            {
+                if (this.Template == null)
+                    throw new InvalidOperationException("Template is not set.");
+
+                lock (Locks.IIS)
+                {
+                    using (var manager = new ServerManager())
+                    {
+                        var site = manager.Sites[this.Template.SiteName];
+                        if (site == null)
+                        {
+                            if (this.Template.Exists)
+                                this.LogWarning($"Site \"{this.Template.SiteName}\" does not exist, cannot ensure an application on it.");
+
+                            return;
+                        }
+                        var app = site.Applications[this.Template.ApplicationPath];
+                        if (this.Template.Exists)
+                        {
+                            if (app == null)
                             {
-                                app = site.Applications.Add(this.Template.ApplicationPath, this.Template.PhysicalPath);
-                                manager.CommitChanges();
+                                this.LogDebug("Does not exist. Creating...");
+                                if (!this.Simulation)
+                                {
+                                    app = site.Applications.Add(this.Template.ApplicationPath, this.Template.PhysicalPath);
+                                    manager.CommitChanges();
+                                }
+
+                                this.LogInformation($"Application \"{this.Template.ApplicationPath}\" added.");
+                                site = manager.Sites[this.Template.SiteName];
+                                app = site.Applications[this.Template.ApplicationPath];
                             }
 
-                            this.LogInformation($"Application \"{this.Template.ApplicationPath}\" added.");
-                            site = manager.Sites[this.Template.SiteName];
-                            app = site.Applications[this.Template.ApplicationPath];
+                            this.LogDebug("Applying configuration...");
+                            if (!this.Simulation)
+                                IisApplicationConfiguration.SetMwaApplication(this.GetLogWrapper(), this.Template, app);
+
                         }
-
-                        this.LogDebug("Applying configuration...");
-                        if (!context.Simulation)
-                            IisApplicationConfiguration.SetMwaApplication(this, this.Template, app);
-
-                    }
-                    else
-                    {
-                        if (app == null)
+                        else
                         {
-                            this.LogWarning("Application doesn't exist.");
-                            return Complete();
+                            if (app == null)
+                            {
+                                this.LogWarning("Application doesn't exist.");
+                                return;
+                            }
+
+                            this.LogDebug("Exists. Deleting...");
+                            if (!this.Simulation)
+                                site.Applications.Remove(app);
                         }
 
-                        this.LogDebug("Exists. Deleting...");
-                        if (!context.Simulation)
-                            site.Applications.Remove(app);
+                        this.LogDebug("Committing configuration...");
+                        if (!this.Simulation)
+                            manager.CommitChanges();
+
+                        this.LogInformation($"Application \"{this.Template.ApplicationPath}\" {(this.Template.Exists ? "configured" : "removed")}.");
                     }
-
-                    this.LogDebug("Committing configuration...");
-                    if (!context.Simulation)
-                        manager.CommitChanges();
-
-                    this.LogInformation($"Application \"{this.Template.ApplicationPath}\" {(this.Template.Exists ? "configured" : "removed")}.");
                 }
             }
-
-            return Complete();
         }
     }
 }
