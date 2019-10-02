@@ -185,8 +185,7 @@ PSEnsure(
                 result = await jobRunner.ExecuteJobAsync(job, context.CancellationToken) as ExecutePowerShellJob.Result;
             }
 
-            if (result.ExitCode != null)
-                this.LogDebug("Script exit code: " + result.ExitCode);
+            PSUtil.LogExit(this, result.ExitCode);
 
             return new KeyValueConfiguration
             {
@@ -232,8 +231,7 @@ PSEnsure(
                 job.ProgressUpdate += (s, e) => Interlocked.Exchange(ref this.currentProgress, e);
 
                 result = await jobRunner.ExecuteJobAsync(job, context.CancellationToken) as ExecutePowerShellJob.Result;
-                if (result.ExitCode != null)
-                    this.LogDebug("Script exit code: " + result.ExitCode);
+                PSUtil.LogExit(this, result.ExitCode);
             }
         }
 

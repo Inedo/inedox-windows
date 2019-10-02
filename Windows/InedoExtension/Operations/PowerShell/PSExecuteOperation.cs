@@ -65,6 +65,14 @@ psexec >>
         [Description("When true, the script is run in a temporary AppDomain that is unloaded when the script completes. This is an experimental feature and may decrease performance, but may be useful if a script loads assemblies or other resources that would otherwise be leaked.")]
         public bool Isolated { get; set; }
 
+        [ScriptAlias("SuccessExitCode")]
+        [DisplayName("Success exit code")]
+        [Description("Integer exit code which indicates no error. The default is 0. This can also be an integer prefixed with an inequality operator.")]
+        [Example("SuccessExitCode: 0 # Fail on nonzero.")]
+        [Example("SuccessExitCode: >= 0 # Fail on negative numbers.")]
+        [DefaultValue("== 0")]
+        public string SuccessExitCode { get; set; }
+
         public override async Task ExecuteAsync(IOperationExecutionContext context)
         {
             if (context.Simulation && !this.RunOnSimulation)
@@ -91,8 +99,7 @@ psexec >>
             job.ProgressUpdate += (s, e) => Interlocked.Exchange(ref this.currentProgress, e);
 
             var result = (ExecutePowerShellJob.Result)await jobRunner.ExecuteJobAsync(job, context.CancellationToken);
-            if (result.ExitCode != null)
-                this.LogDebug("Script exit code: " + result.ExitCode);
+            PSUtil.LogExit(this, result.ExitCode, this.SuccessExitCode);
         }
 
         public override OperationProgress GetProgress()

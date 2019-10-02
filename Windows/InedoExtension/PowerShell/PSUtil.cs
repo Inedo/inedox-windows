@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Management.Automation;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Inedo.Agents;
 using Inedo.Diagnostics;
@@ -15,7 +16,7 @@ namespace Inedo.Extensions.Windows.PowerShell
 {
     internal static class PSUtil
     {
-        public static async Task<ExecutePowerShellJob.Result> ExecuteScriptAsync(ILogSink logger, IOperationExecutionContext context, string fullScriptName, IReadOnlyDictionary<string, RuntimeValue> arguments, IDictionary<string, RuntimeValue> outArguments, bool collectOutput, EventHandler<PSProgressEventArgs> progressUpdateHandler)
+        public static async Task<ExecutePowerShellJob.Result> ExecuteScriptAsync(ILogSink logger, IOperationExecutionContext context, string fullScriptName, IReadOnlyDictionary<string, RuntimeValue> arguments, IDictionary<string, RuntimeValue> outArguments, bool collectOutput, EventHandler<PSProgressEventArgs> progressUpdateHandler, string successExitCode = null)
         {
             var scriptText = await GetScriptTextAsync(logger, fullScriptName, context);
 
@@ -60,8 +61,7 @@ namespace Inedo.Extensions.Windows.PowerShell
                 job.ProgressUpdate += progressUpdateHandler;
 
             var result = (ExecutePowerShellJob.Result)await jobRunner.ExecuteJobAsync(job, context.CancellationToken);
-            if (result.ExitCode != null)
-                logger.LogDebug("Script exit code: " + result.ExitCode);
+            LogExit(logger, result.ExitCode, successExitCode);
 
             foreach (var var in result.OutVariables)
                 outArguments[var.Key] = var.Value;
@@ -146,6 +146,79 @@ namespace Inedo.Extensions.Windows.PowerShell
                         return scriptText;
                     }
                 }
+            }
+        }
+
+        public static void LogExit(ILogSink logger, int? exitCode, string successExitCode = null)
+        {
+            if (!exitCode.HasValue)
+                return;
+
+            var comparator = ExitCodeComparator.TryParse(successExitCode);
+            if (comparator != null && !comparator.Evaluate(exitCode.Value))
+            {
+                logger.LogError("Script exit code: " + exitCode);
+            }
+            else
+            {
+                logger.LogDebug("Script exit code: " + exitCode);
+            }
+        }
+
+        private sealed class ExitCodeComparator
+        {
+            private static readonly string[] ValidOperators = new[] { "=", "==", "!=", "<", ">", "<=", ">=" };
+
+            private ExitCodeComparator(string op, int value)
+            {
+                this.Operator = op;
+                this.Value = value;
+            }
+
+            public string Operator { get; }
+            public int Value { get; }
+
+            public static ExitCodeComparator TryParse(string s)
+            {
+                if (string.IsNullOrWhiteSpace(s))
+                    return null;
+
+                var match = Regex.Match(s, @"^\s*(?<1>[=<>!])*\s*(?<2>[0-9]+)\s*$", RegexOptions.ExplicitCapture);
+                if (!match.Success)
+                    return null;
+
+                var op = match.Groups[1].Value;
+                if (string.IsNullOrEmpty(op) || !ValidOperators.Contains(op))
+                    op = "==";
+
+                return new ExitCodeComparator(op, int.Parse(match.Groups[2].Value));
+            }
+
+            public bool Evaluate(int exitCode)
+            {
+                switch (this.Operator)
+                {
+                    case "=":
+                    case "==":
+                        return exitCode == this.Value;
+
+                    case "!=":
+                        return exitCode != this.Value;
+
+                    case "<":
+                        return exitCode < this.Value;
+
+                    case ">":
+                        return exitCode > this.Value;
+
+                    case "<=":
+                        return exitCode <= this.Value;
+
+                    case ">=":
+                        return exitCode >= this.Value;
+                }
+
+                return false;
             }
         }
     }
