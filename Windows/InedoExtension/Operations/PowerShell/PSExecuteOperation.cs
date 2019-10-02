@@ -67,10 +67,9 @@ psexec >>
 
         [ScriptAlias("SuccessExitCode")]
         [DisplayName("Success exit code")]
-        [Description("Integer exit code which indicates no error. The default is 0. This can also be an integer prefixed with an inequality operator.")]
+        [Description("Integer exit code which indicates no error. The default is empty, treating all exit codes as success. This can also be an integer prefixed with an inequality operator.")]
         [Example("SuccessExitCode: 0 # Fail on nonzero.")]
         [Example("SuccessExitCode: >= 0 # Fail on negative numbers.")]
-        [DefaultValue("== 0")]
         public string SuccessExitCode { get; set; }
 
         public override async Task ExecuteAsync(IOperationExecutionContext context)
