@@ -188,10 +188,17 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             if (site == null)
                 throw new ArgumentNullException(nameof(site));
 
+            Application app;
             if (site.Applications.Count > 1)
-                logger.LogWarning("Site has more than one Application defined; this will only configure the first one.");
+            {
+                logger.LogDebug(@"Site has more than one Application defined; using application with path=""/"".");
+                app = site.Applications.FirstOrDefault(a => a.Path == "/");
+            }
+            else
+            {                
+                app = site.Applications.FirstOrDefault();
+            }
 
-            var app = site.Applications.FirstOrDefault();
             if (app == null)
             {
                 logger.LogDebug("Site does not have an Application; creating Application...");
