@@ -98,26 +98,20 @@ namespace Inedo.Extensions.Windows.PowerShell
             );
         }
 
-        public static async Task<PowerShellScriptInfo> TryLoadAsync(LooselyQualifiedName scriptName)
+        public static PowerShellScriptInfo TryLoad(LooselyQualifiedName scriptName)
         {
-            using (var raft = RaftRepository.OpenRaft(scriptName.Namespace ?? RaftRepository.DefaultName))
+            var name = scriptName.FullName;
+            if (!name.EndsWith(".ps1", StringComparison.OrdinalIgnoreCase))
+                name += ".ps1";
+
+            var item = SDK.GetRaftItem(RaftItemType.Script, name, null);
+            if (item == null)
+                return null;
+
+            using (var reader = new StringReader(item.Content))
             {
-                if (raft == null)
-                    return null;
-
-                using (var item = await raft.OpenRaftItemAsync(RaftItemType.Script, scriptName.Name + ".ps1", FileMode.Open, FileAccess.Read).ConfigureAwait(false))
-                {
-                    if (item == null)
-                        return null;
-
-                    using (var reader = new StreamReader(item, InedoLib.UTF8Encoding))
-                    {
-                        if (!TryParse(reader, out var info))
-                            return null;
-
-                        return info;
-                    }
-                }
+                TryParse(reader, out var info);
+                return info;
             }
         }
 

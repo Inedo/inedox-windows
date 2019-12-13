@@ -18,7 +18,7 @@ namespace Inedo.Extensions.Windows.PowerShell
     {
         public static async Task<ExecutePowerShellJob.Result> ExecuteScriptAsync(ILogSink logger, IOperationExecutionContext context, string fullScriptName, IReadOnlyDictionary<string, RuntimeValue> arguments, IDictionary<string, RuntimeValue> outArguments, bool collectOutput, EventHandler<PSProgressEventArgs> progressUpdateHandler, string successExitCode = null)
         {
-            var scriptText = await GetScriptTextAsync(logger, fullScriptName, context);
+            var scriptText = GetScriptText(logger, fullScriptName, context);
 
             var variables = new Dictionary<string, RuntimeValue>();
             var parameters = new Dictionary<string, RuntimeValue>();
@@ -107,46 +107,21 @@ namespace Inedo.Extensions.Windows.PowerShell
             return new RuntimeValue(value?.ToString());
         }
 
-        private static async Task<string> GetScriptTextAsync(ILogSink logger, string fullScriptName, IOperationExecutionContext context)
+        private static string GetScriptText(ILogSink logger, string fullScriptName, IOperationExecutionContext context)
         {
-            string scriptName;
-            string raftName;
-            var scriptNameParts = fullScriptName.Split(new[] { "::" }, 2, StringSplitOptions.None);
-            if (scriptNameParts.Length == 2)
+            var scriptName = fullScriptName;
+            if (!scriptName.EndsWith(".ps1", StringComparison.OrdinalIgnoreCase))
+                scriptName += ".ps1";
+
+            var scriptItem = SDK.GetRaftItem(RaftItemType.Script, scriptName, context);
+
+            if (scriptItem == null)
             {
-                raftName = scriptNameParts[0];
-                scriptName = scriptNameParts[1];
-            }
-            else
-            {
-                raftName = RaftRepository.DefaultName;
-                scriptName = scriptNameParts[0];
+                logger.LogError($"Script {scriptName} not found.");
+                return null;
             }
 
-            using (var raft = RaftRepository.OpenRaft(raftName))
-            {
-                if (raft == null)
-                {
-                    logger.LogError($"Raft {raftName} not found.");
-                    return null;
-                }
-
-                using (var scriptItem = await raft.OpenRaftItemAsync(RaftItemType.Script, scriptName + ".ps1", FileMode.Open, FileAccess.Read))
-                {
-                    if (scriptItem == null)
-                    {
-                        logger.LogError($"Script {scriptName}.ps1 not found in {raftName} raft.");
-                        return null;
-                    }
-
-                    using (var reader = new StreamReader(scriptItem, InedoLib.UTF8Encoding))
-                    {
-                        var scriptText = reader.ReadToEnd();
-                        logger.LogDebug($"Found script {scriptName}.ps1 in {raftName} raft.");
-                        return scriptText;
-                    }
-                }
-            }
+            return scriptItem.Content;
         }
 
         public static void LogExit(ILogSink logger, int? exitCode, string successExitCode = null)
