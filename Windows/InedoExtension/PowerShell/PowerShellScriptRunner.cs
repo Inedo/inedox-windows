@@ -156,7 +156,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             }
             else if (value.ValueType == RuntimeValueType.Vector)
             {
-                return value.AsEnumerable().Select(v => v.ToString() ?? string.Empty).ToArray();
+                return value.AsEnumerable().Select(ConvertToPSValue).ToArray();
             }
             else if (value.ValueType == RuntimeValueType.Map)
             {
