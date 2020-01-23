@@ -13,4 +13,4 @@ using Inedo.Extensibility;
 [assembly: CLSCompliant(false)]
 [assembly: ComVisible(false)]
 
-[assembly: AppliesTo(InedoProduct.BuildMaster | InedoProduct.Otter | InedoProduct.Hedgehog)]
+[assembly: AppliesTo(InedoProduct.BuildMaster | InedoProduct.Otter)]
