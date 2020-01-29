@@ -44,7 +44,7 @@ Log-Information $NextYear;
             };
 
             var jobExecuter = execContext.Agent.GetService<IRemoteJobExecuter>();
-            var result = (ExecutePowerShellJob.Result)jobExecuter.ExecuteJobAsync(job, execContext.CancellationToken).Result();
+            var result = (ExecutePowerShellJob.Result)jobExecuter.ExecuteJobAsync(job, execContext.CancellationToken).GetAwaiter().GetResult();
 
             if (result.Output.Count == 1)
                 return result.Output[0];
