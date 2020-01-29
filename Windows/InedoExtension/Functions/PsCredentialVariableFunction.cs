@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Security;
 using Inedo.Documentation;
 using Inedo.Extensibility;
+using Inedo.Extensibility.Credentials;
 using Inedo.Extensibility.VariableFunctions;
 
 namespace Inedo.Extensions.Windows.Functions
@@ -24,16 +25,16 @@ PSCall MyPowerShellScript
     {
         internal static string Prefix = "{229C065F-9E8F-4679-AD52-0DD5B7334FA3}";
 
-        [DisplayName("userName")]
+        [DisplayName("userNameOrCredential")]
         [VariableFunctionParameter(0)]
-        [Description("The user name of the PSCredential object.")]
+        [Description("The user name of the PSCredential object, or a UsernamePassword credential.")]
         public string UserName { get; set; }
         [DisplayName("password")]
-        [VariableFunctionParameter(1)]
+        [VariableFunctionParameter(1, Optional = true)]
         [Description("The password of the PSCredential object.")]
         public SecureString Password { get; set; }
 
-        protected override object EvaluateScalar(IVariableFunctionContext context) => this.Serialize();
+        protected override object EvaluateScalar(IVariableFunctionContext context) => this.Serialize(context);
 
         internal static PSCredential Deserialize(string s)
         {
@@ -73,8 +74,23 @@ PSCall MyPowerShellScript
             }
         }
 
-        private string Serialize()
+        private string Serialize(IVariableFunctionContext context)
         {
+            // Empty string is interpreted as a password to make the two-argument version of this function keep its existing behavior.
+            if (this.Password == null)
+            {
+                var credential = SecureCredentials.TryCreate(this.UserName, (ICredentialResolutionContext)context);
+                if (credential is Credentials.UsernamePasswordCredentials upcred)
+                {
+                    this.UserName = upcred.UserName;
+                    this.Password = upcred.Password;
+                }
+                else
+                {
+                    throw new InvalidOperationException($"No such UsernamePassword credential: {this.UserName}");
+                }
+            }
+
             var userName = InedoLib.UTF8Encoding.GetBytes(this.UserName ?? string.Empty);
             var password = default(IntPtr);
             try
