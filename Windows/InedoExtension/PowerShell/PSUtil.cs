@@ -123,7 +123,7 @@ namespace Inedo.Extensions.Windows.PowerShell
                 scriptName = scriptNameParts[0];
             }
 
-            using (var raft = RaftRepository.OpenRaft(raftName))
+            using (var raft = await context.OpenRaftAsync(raftName, OpenRaftOptions.OptimizeLoadTime))
             {
                 if (raft == null)
                 {
