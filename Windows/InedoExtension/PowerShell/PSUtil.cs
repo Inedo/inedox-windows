@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Management.Automation;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Inedo.Agents;
@@ -119,7 +120,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             }
             else
             {
-                raftName = RaftRepository.DefaultName;
+                raftName = HACK_GetDefaultRaftName(context);
                 scriptName = scriptNameParts[0];
             }
 
@@ -147,6 +148,24 @@ namespace Inedo.Extensions.Windows.PowerShell
                     }
                 }
             }
+        }
+        private static string HACK_GetDefaultRaftName(IOperationExecutionContext context)
+        {
+            // this is really bad, but Otter doesn't expose any way to do this
+            try
+            {
+                if (SDK.ProductName == "Otter")
+                {
+                    var executer = context.GetType().GetField("executer", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(context);
+                    if (executer != null)
+                        return (string)executer.GetType().GetField("defaultRaftName", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(executer);
+                }
+            }
+            catch
+            {
+            }
+
+            return RaftRepository.DefaultName;
         }
 
         public static void LogExit(ILogSink logger, int? exitCode, string successExitCode = null)
