@@ -100,24 +100,31 @@ namespace Inedo.Extensions.Windows.PowerShell
 
         public static async Task<PowerShellScriptInfo> TryLoadAsync(LooselyQualifiedName scriptName)
         {
-            using (var raft = RaftRepository.OpenRaft(scriptName.Namespace ?? RaftRepository.DefaultName))
+            try
             {
-                if (raft == null)
-                    return null;
-
-                using (var item = await raft.OpenRaftItemAsync(RaftItemType.Script, scriptName.Name + ".ps1", FileMode.Open, FileAccess.Read).ConfigureAwait(false))
+                using (var raft = RaftRepository.OpenRaft(scriptName.Namespace ?? RaftRepository.DefaultName))
                 {
-                    if (item == null)
+                    if (raft == null)
                         return null;
 
-                    using (var reader = new StreamReader(item, InedoLib.UTF8Encoding))
+                    using (var item = await raft.OpenRaftItemAsync(RaftItemType.Script, scriptName.Name + ".ps1", FileMode.Open, FileAccess.Read).ConfigureAwait(false))
                     {
-                        if (!TryParse(reader, out var info))
+                        if (item == null)
                             return null;
 
-                        return info;
+                        using (var reader = new StreamReader(item, InedoLib.UTF8Encoding))
+                        {
+                            if (!TryParse(reader, out var info))
+                                return null;
+
+                            return info;
+                        }
                     }
                 }
+            }
+            catch
+            {
+                return null;
             }
         }
 
