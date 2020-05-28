@@ -90,7 +90,8 @@ psexec >>
                 CollectOutput = false,
                 LogOutput = true,
                 Variables = PowerShellScriptRunner.ExtractVariables(this.ScriptText, context),
-                Isolated = this.Isolated
+                Isolated = this.Isolated,
+                WorkingDirectory = context.WorkingDirectory
             };
 
             job.MessageLogged += (s, e) => this.Log(e.Level, e.Message);

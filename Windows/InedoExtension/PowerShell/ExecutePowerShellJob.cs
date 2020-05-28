@@ -27,6 +27,7 @@ namespace Inedo.Extensions.Windows.PowerShell
         public Dictionary<string, RuntimeValue> Parameters { get; set; }
         public string[] OutVariables { get; set; }
         public bool Isolated { get; set; }
+        public string WorkingDirectory { get; set; }
 
         public override async Task<object> ExecuteAsync(CancellationToken cancellationToken)
         {
@@ -35,7 +36,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             if (this.LogOutput)
                 runner.OutputReceived += (s, e) => this.LogInformation(e.Output?.ToString());
 
-            return await runner.ExecuteAsync(this.ScriptText, this.Variables, this.Parameters, this.OutVariables, cancellationToken);
+            return await runner.ExecuteAsync(this.ScriptText, this.Variables, this.Parameters, this.OutVariables, this.WorkingDirectory, cancellationToken);
         }
 
         public override void Serialize(Stream stream)
@@ -47,6 +48,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             writer.Write(this.CollectOutput);
             writer.Write(this.LogOutput);
             writer.Write(this.Isolated);
+            writer.Write(this.WorkingDirectory ?? string.Empty);
 
             WriteDictionary(writer, this.Variables);
             WriteDictionary(writer, this.Parameters);
@@ -64,6 +66,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             this.CollectOutput = reader.ReadBoolean();
             this.LogOutput = reader.ReadBoolean();
             this.Isolated = reader.ReadBoolean();
+            this.WorkingDirectory = reader.ReadString();
 
             this.Variables = ReadDictionary(reader);
             this.Parameters = ReadDictionary(reader);
@@ -258,7 +261,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             public event EventHandler<LogMessageEventArgs> MessageLogged;
             public event EventHandler<PSProgressEventArgs> ProgressUpdate;
 
-            public async Task<Result> ExecuteAsync(string script, Dictionary<string, RuntimeValue> variables, Dictionary<string, RuntimeValue> parameters, string[] outVariables, CancellationToken cancellationToken)
+            public async Task<Result> ExecuteAsync(string script, Dictionary<string, RuntimeValue> variables, Dictionary<string, RuntimeValue> parameters, string[] outVariables, string workingDirectory, CancellationToken cancellationToken)
             {
                 using (var runner = new PowerShellScriptRunner { DebugLogging = this.DebugLogging, VerboseLogging = this.VerboseLogging })
                 {
@@ -285,7 +288,7 @@ namespace Inedo.Extensions.Windows.PowerShell
 
                     runner.ProgressUpdate += (s, e) => this.ProgressUpdate?.Invoke(this, e);
 
-                    int? exitCode = await runner.RunAsync(script, variables, parameters, outVariables2, cancellationToken);
+                    int? exitCode = await runner.RunAsync(script, variables, parameters, outVariables2, workingDirectory, cancellationToken);
 
                     return new Result
                     {
