@@ -172,11 +172,11 @@ namespace Inedo.Extensions.Windows.PowerShell
             }
         }
 
-        public async Task<int?> RunAsync(string script, Dictionary<string, RuntimeValue> variables = null, Dictionary<string, RuntimeValue> parameters = null, Dictionary<string, RuntimeValue> outVariables = null, CancellationToken cancellationToken = default)
+        public async Task<int?> RunAsync(string script, Dictionary<string, RuntimeValue> variables = null, Dictionary<string, RuntimeValue> parameters = null, Dictionary<string, RuntimeValue> outVariables = null, string workingDirectory = null, CancellationToken cancellationToken = default)
         {
-            variables = variables ?? new Dictionary<string, RuntimeValue>();
-            parameters = parameters ?? new Dictionary<string, RuntimeValue>();
-            outVariables = outVariables ?? new Dictionary<string, RuntimeValue>();
+            variables ??= new Dictionary<string, RuntimeValue>();
+            parameters ??= new Dictionary<string, RuntimeValue>();
+            outVariables ??= new Dictionary<string, RuntimeValue>();
 
             var runspace = this.Runspace;
 
@@ -206,6 +206,14 @@ namespace Inedo.Extensions.Windows.PowerShell
             powerShell.Streams.Progress.DataAdded += (s, e) => this.OnProgressUpdate(powerShell.Streams.Progress[e.Index]);
 
             powerShell.Streams.AttachLogging(this);
+
+            if (!string.IsNullOrWhiteSpace(workingDirectory))
+            {
+                powerShell.AddCommand("Set-Location");
+                powerShell.AddParameter("Path", workingDirectory);
+                powerShell.AddStatement();
+            }
+
             powerShell.AddScript(script);
 
             foreach (var p in parameters)

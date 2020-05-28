@@ -54,7 +54,8 @@ namespace Inedo.Extensions.Windows.PowerShell
                 LogOutput = !collectOutput,
                 Variables = variables,
                 Parameters = parameters,
-                OutVariables = outArguments.Keys.ToArray()
+                OutVariables = outArguments.Keys.ToArray(),
+                WorkingDirectory = context.WorkingDirectory
             };
 
             job.MessageLogged += (s, e) => logger.Log(e.Level, e.Message);

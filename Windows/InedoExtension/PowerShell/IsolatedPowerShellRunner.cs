@@ -21,7 +21,7 @@ namespace Inedo.Extensions.Windows.PowerShell
         public bool DebugLogging { get; set; }
         public bool VerboseLogging { get; set; }
 
-        public Task<ExecutePowerShellJob.Result> ExecuteAsync(string script, Dictionary<string, RuntimeValue> variables, Dictionary<string, RuntimeValue> parameters, string[] outVariables, CancellationToken cancellationToken)
+        public Task<ExecutePowerShellJob.Result> ExecuteAsync(string script, Dictionary<string, RuntimeValue> variables, Dictionary<string, RuntimeValue> parameters, string[] outVariables, string workingDirectory, CancellationToken cancellationToken)
         {
             var domainLock = new object();
             var domain = AppDomain.CreateDomain("InedoPSScript", null, new AppDomainSetup { ApplicationBase = Path.GetDirectoryName(typeof(IsolatedPowerShellRunner).Assembly.Location) });
@@ -38,6 +38,7 @@ namespace Inedo.Extensions.Windows.PowerShell
                 inner.Parameters = parameters;
                 inner.OutVariables = outVariables;
                 inner.CoreAssemblyPath = Path.GetDirectoryName(typeof(AH).Assembly.Location);
+                inner.WorkingDirectory = workingDirectory;
 
                 inner.Initialize();
 
@@ -91,6 +92,7 @@ namespace Inedo.Extensions.Windows.PowerShell
             public Action<MessageLevel, string> MessageLogged { get; set; }
             public Action<int, string> ProgressUpdate { get; set; }
             public string CoreAssemblyPath { get; set; }
+            public string WorkingDirectory { get; set; }
 
             public void Initialize() => AppDomain.CurrentDomain.AssemblyResolve += this.CurrentDomain_AssemblyResolve;
 
@@ -121,7 +123,7 @@ namespace Inedo.Extensions.Windows.PowerShell
 
                     runner.ProgressUpdate += (s, e) => this.ProgressUpdate(e.PercentComplete, e.Activity);
 
-                    int? exitCode = runner.RunAsync(this.ScriptText, this.Variables, this.Parameters, outVariables, default).GetAwaiter().GetResult();
+                    int? exitCode = runner.RunAsync(this.ScriptText, this.Variables, this.Parameters, outVariables, this.WorkingDirectory, default).GetAwaiter().GetResult();
 
                     return new ExecutePowerShellJob.Result
                     {
