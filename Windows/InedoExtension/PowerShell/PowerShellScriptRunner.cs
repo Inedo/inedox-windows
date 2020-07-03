@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Inedo.Diagnostics;
 using Inedo.ExecutionEngine;
 using Inedo.Extensibility.Operations;
+using Inedo.IO;
 
 namespace Inedo.Extensions.Windows.PowerShell
 {
@@ -209,6 +210,7 @@ namespace Inedo.Extensions.Windows.PowerShell
 
             if (!string.IsNullOrWhiteSpace(workingDirectory))
             {
+                DirectoryEx.Create(workingDirectory);
                 powerShell.AddCommand("Set-Location");
                 powerShell.AddParameter("Path", workingDirectory);
                 powerShell.AddStatement();
