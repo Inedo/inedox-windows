@@ -1,184 +1,20 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{2AD1B2EC-F181-46CD-ACCA-B4DD1C5AA24E}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Inedo.Extensions.Windows</RootNamespace>
     <AssemblyName>Windows</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;Hedgehog</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>Inedo.Extensions.Windows</RootNamespace>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net452</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <NoWarn>CS0618</NoWarn>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;Hedgehog</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Inedo.Agents, Version=46.0.0.0, Culture=neutral, PublicKeyToken=9de986a2f8db80fc, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.SDK.1.7.2\lib\net452\Inedo.Agents.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Inedo.Agents.Client, Version=1000.0.0.0, Culture=neutral, PublicKeyToken=9de986a2f8db80fc, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.SDK.1.7.2\lib\net452\Inedo.Agents.Client.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Inedo.ExecutionEngine, Version=1000.0.0.0, Culture=neutral, PublicKeyToken=68703f0e52007e75, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.SDK.1.7.2\lib\net452\Inedo.ExecutionEngine.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Inedo.SDK, Version=1.7.2.0, Culture=neutral, PublicKeyToken=29fae5dec3001603, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.SDK.1.7.2\lib\net452\Inedo.SDK.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="InedoLib, Version=1000.0.0.0, Culture=neutral, PublicKeyToken=112cfb71329714a6, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.SDK.1.7.2\lib\net452\InedoLib.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Web.Administration, Version=7.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Web.Administration.7.0.0.0\lib\net20\Microsoft.Web.Administration.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.SDK.1.7.2\lib\net452\Newtonsoft.Json.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Management.Automation, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Management.Automation_PowerShell_3.0.6.3.9600.17400\lib\net40\System.Management.Automation.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.SDK.1.7.2\lib\net452\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System.ServiceProcess" />
-    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\Inedo.SDK.1.7.2\lib\net452\System.Threading.Tasks.Extensions.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System.Web" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <PackageReference Include="System.Management.Automation_PowerShell_3.0" Version="6.3.9600.17400" />
+    <PackageReference Include="Microsoft.Web.Administration" Version="7.0.0.0" />
+    <PackageReference Include="Inedo.SDK" Version="1.7.2">
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Configurations\DSC\DscConfiguration.cs" />
-    <Compile Include="Configurations\DSC\DscEntry.cs" />
-    <Compile Include="Configurations\IIS\BindingConfig.cs" />
-    <Compile Include="Configurations\IIS\BindingInfo.cs" />
-    <Compile Include="Configurations\IIS\IisApplicationConfiguration.cs" />
-    <Compile Include="Configurations\IIS\IisAppPoolConfiguration.cs" />
-    <Compile Include="Configurations\IIS\IisConfigurationBase.cs" />
-    <Compile Include="Configurations\IIS\IisObjectState.cs" />
-    <Compile Include="Configurations\IIS\IisSiteBindingConfiguration.cs" />
-    <Compile Include="Configurations\IIS\IisSiteConfiguration.cs" />
-    <Compile Include="Configurations\IIS\IisVirtualDirectoryConfiguration.cs" />
-    <Compile Include="Configurations\IIS\ISiteBindingConfig.cs" />
-    <Compile Include="Configurations\Registry\InternalExtensions.cs" />
-    <Compile Include="Configurations\Registry\RegistryConfiguration.cs" />
-    <Compile Include="Configurations\Registry\RegistryKeyConfiguration.cs" />
-    <Compile Include="Configurations\Registry\RegistryValueConfiguration.cs" />
-    <Compile Include="Configurations\Services\WindowsServiceConfiguration.cs" />
-    <Compile Include="Functions\PsCredentialVariableFunction.cs" />
-    <Compile Include="Functions\PsEvalVariableFunction.cs" />
-    <Compile Include="Functions\SpecialWindowsPathVariableFunction.cs" />
-    <Compile Include="Locks.cs" />
-    <Compile Include="LooselyQualifiedName.cs" />
-    <Compile Include="Namespaces.cs" />
-    <Compile Include="Operations\DotNet\EnsureAppSettingOperation.cs" />
-    <Compile Include="Operations\IIS\Applications\EnsureIisApplicationOperation.cs" />
-    <Compile Include="Operations\IIS\AppPools\AppPoolJob.cs" />
-    <Compile Include="Operations\IIS\AppPools\AppPoolOperationBase.cs" />
-    <Compile Include="Operations\IIS\AppPools\EnsureIisAppPoolOperation.cs" />
-    <Compile Include="Operations\IIS\AppPools\RecycleAppPoolOperation.cs" />
-    <Compile Include="Operations\IIS\AppPools\StartAppPoolOperation.cs" />
-    <Compile Include="Operations\IIS\AppPools\StopAppPoolOperation.cs" />
-    <Compile Include="Operations\IIS\Sites\EnsureIisSiteBindingOperation.cs" />
-    <Compile Include="Operations\IIS\Sites\EnsureIisSiteOperation.cs" />
-    <Compile Include="Operations\IIS\Sites\SiteJob.cs" />
-    <Compile Include="Operations\IIS\Sites\SiteOperationBase.cs" />
-    <Compile Include="Operations\IIS\Sites\StartSiteOperation.cs" />
-    <Compile Include="Operations\IIS\Sites\StopSiteOperation.cs" />
-    <Compile Include="Operations\IIS\VirtualDirectories\EnsureIisVirtualDirectoryOperation.cs" />
-    <Compile Include="Operations\PowerShell\CollectDscModulesOperation.cs" />
-    <Compile Include="Operations\PowerShell\Dsc.cs" />
-    <Compile Include="Operations\PowerShell\EnsureDscResourceOperation.cs" />
-    <Compile Include="Operations\PowerShell\PSCallOperation.cs" />
-    <Compile Include="Operations\PowerShell\PSCallOperationEditor.cs" />
-    <Compile Include="Operations\PowerShell\PSDscOperation.cs" />
-    <Compile Include="Operations\PowerShell\PSEnsureOperation.cs" />
-    <Compile Include="Operations\PowerShell\PSExecuteOperation.cs" />
-    <Compile Include="Operations\Registry\EnsureRegistryKeyOperation.cs" />
-    <Compile Include="Operations\Registry\EnsureRegistryValueOperation.cs" />
-    <Compile Include="Operations\Registry\GetRegistryValueOperation.cs" />
-    <Compile Include="Operations\Services\ControlServiceJob.cs" />
-    <Compile Include="Operations\Services\EnsureServiceOperation.cs" />
-    <Compile Include="Operations\Services\StartServiceOperation.cs" />
-    <Compile Include="Operations\Services\StopServiceOperation.cs" />
-    <Compile Include="PowerShell\CollectDscModulesJob.cs" />
-    <Compile Include="PowerShell\ExecutePowerShellJob.cs" />
-    <Compile Include="PowerShell\InedoPSHost.cs" />
-    <Compile Include="PowerShell\InedoPSHostRawUserInterface.cs" />
-    <Compile Include="PowerShell\InedoPSHostUserInterface.cs" />
-    <Compile Include="PowerShell\IPowerShellRunner.cs" />
-    <Compile Include="PowerShell\IsolatedPowerShellRunner.cs" />
-    <Compile Include="PowerShell\PowerShellExtensions.cs" />
-    <Compile Include="PowerShell\PowerShellOutputEventArgs.cs" />
-    <Compile Include="PowerShell\PowerShellParameterInfo.cs" />
-    <Compile Include="PowerShell\PowerShellScriptInfo.cs" />
-    <Compile Include="PowerShell\PowerShellScriptInfo.Parse.cs" />
-    <Compile Include="PowerShell\PowerShellScriptRunner.cs" />
-    <Compile Include="PowerShell\PSProgressEventArgs.cs" />
-    <Compile Include="PowerShell\PSUtil.cs" />
-    <Compile Include="PowerShell\ShouldExitEventArgs.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SlimEnsureJob.cs" />
-    <Compile Include="SuggestionProviders\LegacyBindingSuggestionProvider.cs" />
-    <Compile Include="Tags.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>powershell -Command "if (Test-Path C:\Projects\Extensions\Shared -PathType Container) { Compress-Archive -Path '$(TargetDir)*' -DestinationPath C:\Projects\Extensions\Shared\$(TargetName).zip -Force; Move-Item C:\Projects\Extensions\Shared\$(TargetName).zip -Destination C:\Projects\Extensions\Shared\$(TargetName).inedox -Force }"</PostBuildEvent>
-  </PropertyGroup>
 </Project>
