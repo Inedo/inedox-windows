@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <AssemblyName>Windows</AssemblyName>
+    <RootNamespace>Inedo.Extensions.Windows</RootNamespace>
     <TargetFrameworks>net452;net5.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <SignAssembly>false</SignAssembly>
-    <AssemblyName>Windows</AssemblyName>
-   <RootNamespace>Inedo.Extensions.Windows</RootNamespace>
   </PropertyGroup>
   <ItemGroup>   
     <PackageReference Include="Inedo.SDK" Version="1.9.0-ci.46" />
