@@ -1,14 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net452</TargetFramework>
+    <TargetFrameworks>net452;net5.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <SignAssembly>false</SignAssembly>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup>   
+    <PackageReference Include="Inedo.SDK" Version="1.9.0-ci.46" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework) == 'net452'">
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.ServiceProcess" />
@@ -18,9 +21,10 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <PackageReference Include="Inedo.SDK" Version="1.7.2" />
     <PackageReference Include="Microsoft.Web.Administration" Version="7.0.0.0" />
-    <PackageReference Include="System.Management.Automation_PowerShell_3.0" Version="6.3.9600.17400" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework) == 'net5.0'">
+    <PackageReference Include="Microsoft.Web.Administration" Version="11.1.0.0" />
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="powershell -Command &quot;if (Test-Path C:\Projects\Extensions\Shared -PathType Container) { Compress-Archive -Path '$(TargetDir)*' -DestinationPath C:\Projects\Extensions\Shared\$(TargetName).zip -Force; Move-Item C:\Projects\Extensions\Shared\$(TargetName).zip -Destination C:\Projects\Extensions\Shared\$(TargetName).inedox -Force }&quot;" />

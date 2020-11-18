@@ -18,8 +18,10 @@ namespace Inedo.Extensions.Windows.Configurations.Registry
                     return "HKU";
                 case RegistryHive.CurrentConfig:
                     return "HKCC";
+#if NET452
                 case RegistryHive.DynData:
                     return "HKDD";
+#endif
                 case RegistryHive.PerformanceData:
                     return "HKPD";
                 default:
