@@ -28,7 +28,7 @@
   <ItemGroup Condition="$(TargetFramework) == 'net5.0'">
     <PackageReference Include="Microsoft.Web.Administration" Version="11.1.0.0" />
   </ItemGroup>
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="powershell -Command &quot;if (Test-Path C:\Projects\Extensions\Shared -PathType Container) { Compress-Archive -Path '$(TargetDir)*' -DestinationPath C:\Projects\Extensions\Shared\$(TargetName).zip -Force; Move-Item C:\Projects\Extensions\Shared\$(TargetName).zip -Destination C:\Projects\Extensions\Shared\$(TargetName).inedox -Force }&quot;" />
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$(TargetFramework) == 'net452'">
+    <Exec Command="powershell -Command &quot;if ((Test-Path C:\LocalDev\Tools\inedoxpack\inedoxpack.exe) -And (Test-Path C:\LocalDev\Otter\Extensions -PathType Container)) { C:\LocalDev\Tools\inedoxpack\inedoxpack.exe '$(TargetDir)..\$(TargetFileName)' 'C:\LocalDev\Otter\Extensions\$(TargetName).upack' 0.0.0 }&quot;" />
   </Target>
 </Project>
