@@ -4,11 +4,13 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.ExecutionEngine;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
+using Inedo.Extensibility.Operations;
 using Inedo.Extensions.Windows.SuggestionProviders;
 using Inedo.Serialization;
 using Inedo.Web;
@@ -128,8 +130,10 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             if (site == null)
                 throw new ArgumentNullException(nameof(site));
 
-            var config = new IisSiteConfiguration();
-            config.Name = site.Name;
+            var config = new IisSiteConfiguration
+            {
+                Name = site.Name
+            };
 
             var app = site.Applications.FirstOrDefault();
             if (app == null)
@@ -258,12 +262,47 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             return new ReadOnlyDictionary<string,string>(dic);
         }
 
+        [Obsolete("Use CompareAsync instead.")]
         public override ComparisonResult Compare(PersistedConfiguration other)
         {
             if (this.IsSimpleBindingSpecified())
                 return BindingConfig.Compare(base.Compare, this, other);
 
             var result = base.Compare(other);
+
+            var differences = result.Differences.Where(d => d.Name != nameof(this.Bindings)).ToList();
+
+            if (this.Bindings == null && this.BindingInformation != null)
+                this.Bindings = new[] { BindingInfo.FromBindingInformation(this.BindingInformation, this.BindingProtocol).ToDictionary() };
+
+            if (this.Bindings == null)
+                return new ComparisonResult(differences);
+
+            var otherBindings = ((IisSiteConfiguration)other).Bindings;
+            if (otherBindings == null && ((IisSiteConfiguration)other).BindingInformation != null)
+                otherBindings = new[] { BindingInfo.FromBindingInformation(((IisSiteConfiguration)other).BindingInformation, ((IisSiteConfiguration)other).BindingProtocol).ToDictionary() };
+
+            if (otherBindings == null)
+                otherBindings = Enumerable.Empty<IReadOnlyDictionary<string, RuntimeValue>>();
+
+            var template = this.Bindings.Select(b => BindingInfo.FromMap(b)).ToHashSet();
+            var actual = otherBindings.Select(b => BindingInfo.FromMap(b)).ToHashSet();
+
+            if (template.SetEquals(actual))
+                return new ComparisonResult(differences);
+
+            var diff = new Difference(nameof(this.Bindings), string.Join("; ", template), string.Join("; ", actual));
+            differences.Add(diff);
+
+            return new ComparisonResult(differences);
+        }
+
+        public override async Task<ComparisonResult> CompareAsync(PersistedConfiguration other, IOperationCollectionContext context)
+        {
+            if (this.IsSimpleBindingSpecified())
+                return await BindingConfig.CompareAsync(base.CompareAsync, this, other, context);
+
+            var result = await base.CompareAsync(other, context);
 
             var differences = result.Differences.Where(d => d.Name != nameof(this.Bindings)).ToList();
 

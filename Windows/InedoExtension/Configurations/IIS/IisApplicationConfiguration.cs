@@ -75,10 +75,12 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
         public static IisApplicationConfiguration FromMwaApplication(ILogSink logger, string siteName, Application app, IisApplicationConfiguration template = null)
         {
-            var config = new IisApplicationConfiguration();
-            config.SiteName = siteName;
-            config.ApplicationPath = app.Path;
-            config.ApplicationPoolName = app.ApplicationPoolName;
+            var config = new IisApplicationConfiguration
+            {
+                SiteName = siteName,
+                ApplicationPath = app.Path,
+                ApplicationPoolName = app.ApplicationPoolName
+            };
             config.SetPropertiesFromMwa(logger, app.VirtualDirectories["/"], template);
             return config;
         }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
+using Inedo.Extensibility.Operations;
 using Inedo.Serialization;
 using Inedo.Web;
 
@@ -76,7 +77,10 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
         bool ISiteBindingConfig.IsFullyPopulated { get; set; }
 
+        [Obsolete("Use CompareAsync instead.")]
         public override ComparisonResult Compare(PersistedConfiguration other) => BindingConfig.Compare(base.Compare, this, other);
+
+        public override Task<ComparisonResult> CompareAsync(PersistedConfiguration other, IOperationCollectionContext context) => BindingConfig.CompareAsync(base.CompareAsync, this, other, context);
     }
 
     internal sealed class ProtocolProvider : ISuggestionProvider

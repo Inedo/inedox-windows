@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 using Inedo.Diagnostics;
 using Inedo.Extensibility.Configurations;
+using Inedo.Extensibility.Operations;
 using Microsoft.Web.Administration;
 
 namespace Inedo.Extensions.Windows.Configurations.IIS
@@ -127,6 +129,32 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
             return baseMethod(other);
         }
+
+
+        public static async Task<ComparisonResult> CompareAsync(Func<PersistedConfiguration, IOperationCollectionContext, Task<ComparisonResult>> baseMethod, ISiteBindingConfig config, PersistedConfiguration other, IOperationCollectionContext context)
+        {
+            var diffs = await baseMethod(other, context);
+            if (diffs.AreEqual)
+                return diffs;
+
+            try
+            {
+                PopulateCertificateProperties(config);
+            }
+            catch
+            {
+            }
+
+            try
+            {
+                PopulateCertificateProperties((ISiteBindingConfig)other);
+            }
+            catch
+            {
+            }
+
+            return await baseMethod(other, context);
+        }
         public static void Configure(ISiteBindingConfig config, Site site, ILogSink log)
         {
             var binding = config.FindMatch(site.Bindings);
@@ -248,7 +276,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
             return hash.ToArray();
 
-            int parseNibble(char c)
+            static int parseNibble(char c)
             {
                 if (c >= '0' && c <= '9')
                     return c - '0';
