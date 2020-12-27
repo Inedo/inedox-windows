@@ -6,6 +6,7 @@ using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
+using Inedo.Extensibility.Credentials;
 using Inedo.Extensibility.Operations;
 using Inedo.Extensions.Windows.Configurations.IIS;
 using Microsoft.Web.Administration;
@@ -31,8 +32,16 @@ IIS::Ensure-Application(
 ")]
     public sealed class EnsureIisApplicationOperation : EnsureOperation<IisApplicationConfiguration>
     {
-        public override Task<PersistedConfiguration> CollectAsync(IOperationCollectionContext context) => EnsureApplicationJob.CollectAsync<EnsureApplicationJob>(this, context);
-        public override Task ConfigureAsync(IOperationExecutionContext context) => EnsureApplicationJob.EnsureAsync<EnsureApplicationJob>(this, context);
+        public override Task<PersistedConfiguration> CollectAsync(IOperationCollectionContext context) 
+        {
+            this.Template.SetCredentialProperties(context as ICredentialResolutionContext);
+            return EnsureApplicationJob.CollectAsync<EnsureApplicationJob>(this, context);
+        }
+        public override Task ConfigureAsync(IOperationExecutionContext context) 
+        {
+            this.Template.SetCredentialProperties(context as ICredentialResolutionContext);
+            return EnsureApplicationJob.EnsureAsync<EnsureApplicationJob>(this, context);
+        }
 
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
@@ -103,57 +112,55 @@ IIS::Ensure-Application(
 
                 lock (Locks.IIS)
                 {
-                    using (var manager = new ServerManager())
+                    using var manager = new ServerManager();
+                    var site = manager.Sites[this.Template.SiteName];
+                    if (site == null)
                     {
-                        var site = manager.Sites[this.Template.SiteName];
-                        if (site == null)
-                        {
-                            if (this.Template.Exists)
-                                this.LogWarning($"Site \"{this.Template.SiteName}\" does not exist, cannot ensure an application on it.");
+                        if (this.Template.Exists)
+                            this.LogWarning($"Site \"{this.Template.SiteName}\" does not exist, cannot ensure an application on it.");
 
+                        return;
+                    }
+                    var app = site.Applications[this.Template.ApplicationPath];
+                    if (this.Template.Exists)
+                    {
+                        if (app == null)
+                        {
+                            this.LogDebug("Does not exist. Creating...");
+                            if (!this.Simulation)
+                            {
+                                app = site.Applications.Add(this.Template.ApplicationPath, this.Template.PhysicalPath);
+                                manager.CommitChanges();
+                            }
+
+                            this.LogInformation($"Application \"{this.Template.ApplicationPath}\" added.");
+                            site = manager.Sites[this.Template.SiteName];
+                            app = site.Applications[this.Template.ApplicationPath];
+                        }
+
+                        this.LogDebug("Applying configuration...");
+                        if (!this.Simulation)
+                            IisApplicationConfiguration.SetMwaApplication(this.GetLogWrapper(), this.Template, app);
+
+                    }
+                    else
+                    {
+                        if (app == null)
+                        {
+                            this.LogWarning("Application doesn't exist.");
                             return;
                         }
-                        var app = site.Applications[this.Template.ApplicationPath];
-                        if (this.Template.Exists)
-                        {
-                            if (app == null)
-                            {
-                                this.LogDebug("Does not exist. Creating...");
-                                if (!this.Simulation)
-                                {
-                                    app = site.Applications.Add(this.Template.ApplicationPath, this.Template.PhysicalPath);
-                                    manager.CommitChanges();
-                                }
 
-                                this.LogInformation($"Application \"{this.Template.ApplicationPath}\" added.");
-                                site = manager.Sites[this.Template.SiteName];
-                                app = site.Applications[this.Template.ApplicationPath];
-                            }
-
-                            this.LogDebug("Applying configuration...");
-                            if (!this.Simulation)
-                                IisApplicationConfiguration.SetMwaApplication(this.GetLogWrapper(), this.Template, app);
-
-                        }
-                        else
-                        {
-                            if (app == null)
-                            {
-                                this.LogWarning("Application doesn't exist.");
-                                return;
-                            }
-
-                            this.LogDebug("Exists. Deleting...");
-                            if (!this.Simulation)
-                                site.Applications.Remove(app);
-                        }
-
-                        this.LogDebug("Committing configuration...");
+                        this.LogDebug("Exists. Deleting...");
                         if (!this.Simulation)
-                            manager.CommitChanges();
-
-                        this.LogInformation($"Application \"{this.Template.ApplicationPath}\" {(this.Template.Exists ? "configured" : "removed")}.");
+                            site.Applications.Remove(app);
                     }
+
+                    this.LogDebug("Committing configuration...");
+                    if (!this.Simulation)
+                        manager.CommitChanges();
+
+                    this.LogInformation($"Application \"{this.Template.ApplicationPath}\" {(this.Template.Exists ? "configured" : "removed")}.");
                 }
             }
         }

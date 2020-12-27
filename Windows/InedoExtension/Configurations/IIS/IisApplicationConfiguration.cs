@@ -6,8 +6,11 @@ using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
 using Inedo.Extensibility.Credentials;
+using Inedo.Extensions.Credentials;
 using Inedo.Serialization;
+using Inedo.Web;
 using Microsoft.Web.Administration;
+using UsernamePasswordCredentials = Inedo.Extensions.Credentials.UsernamePasswordCredentials;
 
 namespace Inedo.Extensions.Windows.Configurations.IIS
 {
@@ -15,7 +18,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
     [SlimSerializable]
     [DisplayName("IIS Application")]
     [DefaultProperty(nameof(ApplicationPath))]
-    public sealed class IisApplicationConfiguration : IisConfigurationBase, IHasCredentials
+    public sealed class IisApplicationConfiguration : IisConfigurationBase
     {
         [DisplayName("Site name")]
         [Description("The name of this site where the application would exist")]
@@ -57,22 +60,19 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [Description("The Otter credential name to be impersonated when accessing the physical path for the application. If a credential name is specified, the username and password fields will be ignored.")]
         [ScriptAlias("Credentials")]
         [Persistent]
+        [SuggestableValue(typeof(SecureCredentialsSuggestionProvider<UsernamePasswordCredentials>))]
         public string CredentialName { get; set; }
 
         [Category("Impersonation")]
         [DisplayName("User name")]
         [ScriptAlias("UserName")]
-        [MappedCredential(nameof(UsernamePasswordCredentials.UserName))]
         [Persistent]
         public string UserName { get; set; }
 
         [Category("Impersonation")]
         [DisplayName("Password")]
         [ScriptAlias("Password")]
-        [MappedCredential(nameof(UsernamePasswordCredentials.Password))]
-        [Persistent]
         public string Password { get; set; }
-
         public static IisApplicationConfiguration FromMwaApplication(ILogSink logger, string siteName, Application app, IisApplicationConfiguration template = null)
         {
             var config = new IisApplicationConfiguration
@@ -104,10 +104,22 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
                 return true;
 
             if (!string.IsNullOrEmpty((template as IisApplicationConfiguration)?.CredentialName)
-                && Attribute.IsDefined(templateProperty, typeof(MappedCredentialAttribute)))
+                && (templateProperty.Name == nameof(UserName) || templateProperty.Name == nameof(Password)))
                 return false;
 
             return base.SkipTemplateProperty(template, templateProperty);
         }
+        public void SetCredentialProperties(ICredentialResolutionContext context)
+        {
+            if (string.IsNullOrEmpty(this.CredentialName))
+            {
+                var credentials = SecureCredentials.Create(this.CredentialName, context) as UsernamePasswordCredentials;
+                if (credentials == null)
+                    throw new InvalidOperationException($"{this.CredentialName} is not a " + nameof(UsernamePasswordCredentials));
+                this.UserName = credentials.UserName;
+                this.Password = AH.Unprotect(credentials.Password);
+            }
+        }
+
     }
 }
