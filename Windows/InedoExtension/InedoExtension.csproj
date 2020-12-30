@@ -11,7 +11,8 @@
     <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <ItemGroup>   
-    <PackageReference Include="Inedo.SDK" Version="1.9.1" />
+    <PackageReference Include="Inedo.SDK" Version="1.10.0-ci.7" />
+  <PackageReference Include="WindowsFirewallHelper" Version="1.6.3.40" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework) == 'net452'">
     <Reference Include="System" />

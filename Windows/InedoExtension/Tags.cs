@@ -8,5 +8,6 @@
         public const string Registry = "registry";
         public const string Services = "services";
         public const string Sites = "sites";
+        public const string Firewall = "firewall";
     }
 }
