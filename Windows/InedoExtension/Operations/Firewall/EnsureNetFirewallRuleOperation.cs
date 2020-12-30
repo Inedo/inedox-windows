@@ -23,8 +23,8 @@ Firewall::Ensure-NetFirewallRule(
     Profiles: ""Domain, Private"",
     Port: ""80,443"",
     Protocol: TCP,
-    Direction: Inbound,
-    Action: Allow
+    Inbound: true,
+    Allow: true
 );
 
 
@@ -34,8 +34,8 @@ Firewall::Ensure-NetFirewallRule(
     Profiles: ""Domain"",
     Port: ""5000-5004,5008"",
     Protocol: UDP,
-    Direction: Inbound,
-    Action: Allow
+    Inbound: true,
+    Allow: true
 );
 
 # ensures that the ""OtterHttpTCP80443"" Window's Firewall rule is removed
@@ -64,9 +64,9 @@ IIS::Ensure-Site(
             else
             {
                 richDesc.ShortDescription.AppendContent(
-                    " ", 
-                    new Hilite(config[nameof(NetFirewallRuleConfiguration.Direction)]), 
-                    " is ", new Hilite(config[nameof(NetFirewallRuleConfiguration.Action)]), "ed on ", 
+                    " Inbound is ", 
+                    new Hilite(config[nameof(NetFirewallRuleConfiguration.Inbound)]), 
+                    " and is Allowed ", new Hilite(config[nameof(NetFirewallRuleConfiguration.Allow)]), " on ", 
                     new Hilite(config[nameof(NetFirewallRuleConfiguration.Port)])
                 );
             }
@@ -77,7 +77,7 @@ IIS::Ensure-Site(
         protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationCollectionContext context)
         {
             this.LogDebug($"Looking for firewall rule \"{this.Template.Name}\"...");
-            return Complete(NetFirewallRuleConfiguration.GetRule(this.Template.Name, this.Template.Direction ?? "Inbound"));
+            return Complete(NetFirewallRuleConfiguration.GetRule(this.Template.Name, this.Template.Inbound));
         }
 
         protected override Task RemoteConfigureAsync(IRemoteOperationExecutionContext context)
@@ -86,7 +86,7 @@ IIS::Ensure-Site(
                 throw new InvalidOperationException("Template is not set.");
 
             this.LogDebug($"Looking for firewall rule \"{this.Template.Name}\"...");
-            var rule = NetFirewallRuleConfiguration.GetRule(this.Template.Name, this.Template.Direction);
+            var rule = NetFirewallRuleConfiguration.GetRule(this.Template.Name, this.Template.Inbound);
             if(!this.Template.Exists)
             {
                 if (!rule.Exists)
