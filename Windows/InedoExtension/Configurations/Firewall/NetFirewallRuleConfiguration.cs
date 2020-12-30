@@ -33,10 +33,10 @@ namespace Inedo.Extensions.Windows.Configurations.Firewall
 
         [Persistent]
         [Required]
-        [ScriptAlias("LocalPort")]
-        [DisplayName("Local Port or Local Port Range")]
+        [ScriptAlias("Port")]
+        [DisplayName("Port or Port Range")]
         [Description("Specify the port(s) affected by the firewall rule.  Ports can be a comma separated list or a port range specified as \"start-end\" ex: 80-81,443")]
-        public string LocalPort { get; set; }
+        public string Port { get; set; }
 
         [Persistent]
         [Required]
@@ -83,7 +83,7 @@ namespace Inedo.Extensions.Windows.Configurations.Firewall
             {
                 Name = r.Name,
                 Profiles = r.Profiles.ToString(),
-                LocalPort = r.Direction == FirewallDirection.Inbound ? string.Join(",", r.LocalPorts) : string.Join(",", r.RemotePorts),
+                Port = r.Direction == FirewallDirection.Inbound ? string.Join(",", r.LocalPorts) : string.Join(",", r.RemotePorts),
                 Protocol = r.Protocol.GetProtocalString(),
                 Direction = r.Direction.ToString(),
                 Action = r.Action.ToString(),
@@ -115,7 +115,7 @@ namespace Inedo.Extensions.Windows.Configurations.Firewall
 
             if (this.ParsedPort().SequenceEqual(rule.ParsedPort()))
             {
-                differences.Add(new Difference(nameof(LocalPort), this.LocalPort, rule.LocalPort));
+                differences.Add(new Difference(nameof(Port), this.Port, rule.Port));
             }
 
             if (!this.Protocol.Equals(rule.Protocol, StringComparison.OrdinalIgnoreCase))
@@ -148,14 +148,14 @@ namespace Inedo.Extensions.Windows.Configurations.Firewall
         public ushort[] ParsedPort()
         {
             var parsedPorts = new List<ushort>();
-            var ports = this.LocalPort.Split(',');
+            var ports = this.Port.Split(',');
             foreach(var port in ports)
             {
                 if (port.Contains("-"))
                 {
                     var range = port.Split('-');
                     if (range.Length != 2)
-                        throw new FormatException($"Invalid port format for Local Ports: \"{this.LocalPort}\"");
+                        throw new FormatException($"Invalid port format for Local Ports: \"{this.Port}\"");
 
                     var begin = int.Parse(range[0].Trim());
                     var end = int.Parse(range[1].Trim());
@@ -166,7 +166,7 @@ namespace Inedo.Extensions.Windows.Configurations.Firewall
                     }
                     if (end < begin)
                     {
-                        throw new FormatException($"Invalid port format for Local Ports: \"{this.LocalPort}\"");
+                        throw new FormatException($"Invalid port format for Local Ports: \"{this.Port}\"");
                     }
                     parsedPorts.AddRange(Enumerable.Range(begin, end).Select(p => Convert.ToUInt16(p)));
 

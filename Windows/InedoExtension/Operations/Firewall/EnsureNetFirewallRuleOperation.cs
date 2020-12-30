@@ -21,7 +21,7 @@ namespace Inedo.Extensions.Windows.Operations.Firewall
 Firewall::Ensure-NetFirewallRule(
     Name: OtterHttpTCP80443,
     Profiles: ""Domain, Private"",
-    LocalPort: ""80,443"",
+    Port: ""80,443"",
     Protocol: TCP,
     Direction: Inbound,
     Action: Allow
@@ -32,7 +32,7 @@ Firewall::Ensure-NetFirewallRule(
 Firewall::Ensure-NetFirewallRule(
     Name: OtterHttpUdpTest,
     Profiles: ""Domain"",
-    LocalPort: ""5000-5004,5008"",
+    Port: ""5000-5004,5008"",
     Protocol: UDP,
     Direction: Inbound,
     Action: Allow
@@ -67,7 +67,7 @@ IIS::Ensure-Site(
                     " ", 
                     new Hilite(config[nameof(NetFirewallRuleConfiguration.Direction)]), 
                     " is ", new Hilite(config[nameof(NetFirewallRuleConfiguration.Action)]), "ed on ", 
-                    new Hilite(config[nameof(NetFirewallRuleConfiguration.LocalPort)])
+                    new Hilite(config[nameof(NetFirewallRuleConfiguration.Port)])
                 );
             }
 
