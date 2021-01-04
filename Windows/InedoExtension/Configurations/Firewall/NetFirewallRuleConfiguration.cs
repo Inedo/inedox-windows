@@ -110,7 +110,7 @@ namespace Inedo.Extensions.Windows.Configurations.Firewall
                 differences.Add(new Difference(nameof(Profiles), this.Profiles, rule.Profiles));
             }
 
-            if (this.ParsedPort().SequenceEqual(rule.ParsedPort()))
+            if (!this.ParsedPort().SequenceEqual(rule.ParsedPort()))
             {
                 differences.Add(new Difference(nameof(Port), this.Port, rule.Port));
             }
@@ -120,12 +120,12 @@ namespace Inedo.Extensions.Windows.Configurations.Firewall
                 differences.Add(new Difference(nameof(Protocol), this.Protocol, rule.Protocol));
             }
 
-            if (this.Inbound == rule.Inbound)
+            if (this.Inbound != rule.Inbound)
             {
                 differences.Add(new Difference(nameof(Inbound), this.Inbound, rule.Inbound));
             }
 
-            if (this.Allow == rule.Allow)
+            if (this.Allow != rule.Allow)
             {
                 differences.Add(new Difference(nameof(Allow), this.Allow, rule.Allow));
             }
