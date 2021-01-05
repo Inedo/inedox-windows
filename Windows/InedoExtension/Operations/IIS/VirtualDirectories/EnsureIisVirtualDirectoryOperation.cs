@@ -6,6 +6,7 @@ using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
+using Inedo.Extensibility.Credentials;
 using Inedo.Extensibility.Operations;
 using Inedo.Extensions.Windows.Configurations.IIS;
 using Microsoft.Web.Administration;
@@ -31,8 +32,17 @@ IIS::Ensure-VirtualDirectory(
 ")]
     public sealed class EnsureIisVirtualDirectoryOperation : EnsureOperation<IisVirtualDirectoryConfiguration>
     {
-        public override Task<PersistedConfiguration> CollectAsync(IOperationCollectionContext context) => EnsureVirtualDirectoryJob.CollectAsync<EnsureVirtualDirectoryJob>(this, context);
-        public override Task ConfigureAsync(IOperationExecutionContext context) => EnsureVirtualDirectoryJob.EnsureAsync<EnsureVirtualDirectoryJob>(this, context);
+        public override Task<PersistedConfiguration> CollectAsync(IOperationCollectionContext context)
+        {
+            this.Template?.SetCredentialProperties(context as ICredentialResolutionContext);
+            return EnsureVirtualDirectoryJob.CollectAsync<EnsureVirtualDirectoryJob>(this, context);
+        }
+
+        public override Task ConfigureAsync(IOperationExecutionContext context)
+        {
+            this.Template?.SetCredentialProperties(context as ICredentialResolutionContext);
+            return EnsureVirtualDirectoryJob.EnsureAsync<EnsureVirtualDirectoryJob>(this, context);
+        }
 
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {

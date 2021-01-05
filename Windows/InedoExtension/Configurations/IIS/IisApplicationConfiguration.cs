@@ -72,6 +72,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [Category("Impersonation")]
         [DisplayName("Password")]
         [ScriptAlias("Password")]
+        [Persistent(Encrypted = true)]
         public string Password { get; set; }
         public static IisApplicationConfiguration FromMwaApplication(ILogSink logger, string siteName, Application app, IisApplicationConfiguration template = null)
         {
@@ -113,8 +114,8 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         {
             if (string.IsNullOrEmpty(this.CredentialName))
             {
-                var credentials = SecureCredentials.Create(this.CredentialName, context) as UsernamePasswordCredentials;
-                if (credentials == null)
+
+                if (SecureCredentials.Create(this.CredentialName, context) is not UsernamePasswordCredentials credentials)
                     throw new InvalidOperationException($"{this.CredentialName} is not a " + nameof(UsernamePasswordCredentials));
                 this.UserName = credentials.UserName;
                 this.Password = AH.Unprotect(credentials.Password);

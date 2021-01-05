@@ -7,6 +7,7 @@ using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
+using Inedo.Extensibility.Credentials;
 using Inedo.Extensibility.Operations;
 using Inedo.Extensions.Windows.Configurations.Services;
 using Inedo.WindowsServices;
@@ -68,12 +69,14 @@ Windows::Ensure-Service
 
         protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationCollectionContext context)
         {
+            this.Template?.SetCredentialProperties(context as ICredentialResolutionContext);
             this.LogDebug($"Looking for service \"{this.Template.Name}\"...");
             return Complete(WindowsServiceConfiguration.FromService(this.Template.Name));
         }
 
         protected async override Task RemoteConfigureAsync(IRemoteOperationExecutionContext context)
         {
+            this.Template?.SetCredentialProperties(context as ICredentialResolutionContext);
             if (this.Template == null)
                 throw new InvalidOperationException("Template is not set.");
 

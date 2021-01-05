@@ -7,6 +7,7 @@ using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
+using Inedo.Extensibility.Credentials;
 using Inedo.Extensibility.Operations;
 using Inedo.Extensions.Windows.Configurations.IIS;
 using Microsoft.Web.Administration;
@@ -122,6 +123,7 @@ IIS::Ensure-AppPool(
 
         protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationCollectionContext context)
         {
+            this.Template?.SetCredentialProperties(context as ICredentialResolutionContext);
             this.LogDebug($"Looking for Application Pool \"{this.Template.Name}\"...");
 
             lock (Locks.IIS)
@@ -145,78 +147,79 @@ IIS::Ensure-AppPool(
             if (this.Template == null)
                 throw new InvalidOperationException("Template is not set.");
 
+            this.Template.SetCredentialProperties(context as ICredentialResolutionContext);
+
             this.LogDebug($"Looking for Application Pool \"{this.Template.Name}\"...");
 
             lock (Locks.IIS)
             {
-                using (var manager = new ServerManager())
+                using var manager = new ServerManager();
+                
+                var pool = manager.ApplicationPools[this.Template.Name];
+                if (this.Template.Exists)
                 {
-                    var pool = manager.ApplicationPools[this.Template.Name];
-                    if (this.Template.Exists)
+                    if (pool == null)
                     {
-                        if (pool == null)
-                        {
-                            this.LogDebug("Does not exist. Creating...");
-                            if (!context.Simulation)
-                            {
-                                pool = manager.ApplicationPools.Add(this.Template.Name);
-                                manager.CommitChanges();
-                            }
-
-                            this.LogInformation($"Application Pool \"{this.Template.Name}\" added.");
-                            this.LogDebug("Reloading configuration...");
-                            pool = manager.ApplicationPools[this.Template.Name];
-                        }
-
-                        this.LogDebug("Applying configuration...");
+                        this.LogDebug("Does not exist. Creating...");
                         if (!context.Simulation)
                         {
-                            IisAppPoolConfiguration.SetMwaApplicationPool(this, this.Template, pool);
+                            pool = manager.ApplicationPools.Add(this.Template.Name);
                             manager.CommitChanges();
                         }
 
-                        if (this.Template.Status.HasValue)
-                        {
-                            this.LogDebug("Reloading configuration...");
-                            pool = manager.ApplicationPools[this.Template.Name];
-
-                            if (this.Template.Status.Value == IisObjectState.Started && pool.State == ObjectState.Stopped)
-                            {
-                                this.LogDebug($"Starting application pool...");
-                                if (!context.Simulation)
-                                    pool.Start();
-                            }
-                            else if (this.Template.Status.Value == IisObjectState.Stopped && pool.State == ObjectState.Started)
-                            {
-                                this.LogDebug($"Stopping application pool...");
-                                if (!context.Simulation)
-                                    pool.Stop();
-                            }
-                            else
-                            {
-                                this.LogDebug($"State not changed to {this.Template.Status.Value} because state is currently {pool.State}.");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (pool == null)
-                        {
-                            this.LogWarning("Application pool doesn't exist.");
-                            return Complete();
-                        }
-
-                        this.LogDebug("Exists. Deleting...");
-                        if (!context.Simulation)
-                            manager.ApplicationPools.Remove(pool);
+                        this.LogInformation($"Application Pool \"{this.Template.Name}\" added.");
+                        this.LogDebug("Reloading configuration...");
+                        pool = manager.ApplicationPools[this.Template.Name];
                     }
 
-                    this.LogDebug("Committing configuration...");
+                    this.LogDebug("Applying configuration...");
                     if (!context.Simulation)
+                    {
+                        IisAppPoolConfiguration.SetMwaApplicationPool(this, this.Template, pool);
                         manager.CommitChanges();
+                    }
 
-                    this.LogInformation($"Application Pool \"{this.Template.Name}\" {(this.Template.Exists ? "configured" : "removed")}.");
+                    if (this.Template.Status.HasValue)
+                    {
+                        this.LogDebug("Reloading configuration...");
+                        pool = manager.ApplicationPools[this.Template.Name];
+
+                        if (this.Template.Status.Value == IisObjectState.Started && pool.State == ObjectState.Stopped)
+                        {
+                            this.LogDebug($"Starting application pool...");
+                            if (!context.Simulation)
+                                pool.Start();
+                        }
+                        else if (this.Template.Status.Value == IisObjectState.Stopped && pool.State == ObjectState.Started)
+                        {
+                            this.LogDebug($"Stopping application pool...");
+                            if (!context.Simulation)
+                                pool.Stop();
+                        }
+                        else
+                        {
+                            this.LogDebug($"State not changed to {this.Template.Status.Value} because state is currently {pool.State}.");
+                        }
+                    }
                 }
+                else
+                {
+                    if (pool == null)
+                    {
+                        this.LogWarning("Application pool doesn't exist.");
+                        return Complete();
+                    }
+
+                    this.LogDebug("Exists. Deleting...");
+                    if (!context.Simulation)
+                        manager.ApplicationPools.Remove(pool);
+                }
+
+                this.LogDebug("Committing configuration...");
+                if (!context.Simulation)
+                    manager.CommitChanges();
+
+                this.LogInformation($"Application Pool \"{this.Template.Name}\" {(this.Template.Exists ? "configured" : "removed")}.");                
             }
 
             return Complete();

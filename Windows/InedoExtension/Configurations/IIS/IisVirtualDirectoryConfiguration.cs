@@ -7,7 +7,9 @@ using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
 using Inedo.Extensibility.Credentials;
 using Inedo.Serialization;
+using Inedo.Web;
 using Microsoft.Web.Administration;
+using UsernamePasswordCredentials = Inedo.Extensions.Credentials.UsernamePasswordCredentials;
 
 namespace Inedo.Extensions.Windows.Configurations.IIS
 {
@@ -16,7 +18,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
     [Serializable]
     [SlimSerializable]
     [PersistFrom("Inedo.Otter.Extensions.Configurations.IIS.IisVirtualDirectoryConfiguration,OtterCoreEx")]
-    public sealed class IisVirtualDirectoryConfiguration : IisConfigurationBase, IHasCredentials
+    public sealed class IisVirtualDirectoryConfiguration : IisConfigurationBase
     {
 
         [DisplayName("Site name")]
@@ -61,20 +63,19 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [Description("The Otter credential name to be impersonated when accessing the physical path for the virtual directory. If a credential name is specified, the username and password fields will be ignored.")]
         [ScriptAlias("Credentials")]
         [Persistent]
+        [SuggestableValue(typeof(SecureCredentialsSuggestionProvider<UsernamePasswordCredentials>))]
         public string CredentialName { get; set; }
 
         [Category("Impersonation")]
         [DisplayName("User name")]
         [ScriptAlias("UserName")]
-        [MappedCredential(nameof(UsernamePasswordCredentials.UserName))]
         [Persistent]
         public string UserName { get; set; }
 
         [Category("Impersonation")]
         [DisplayName("Password")]
         [ScriptAlias("Password")]
-        [MappedCredential(nameof(UsernamePasswordCredentials.Password))]
-        [Persistent]
+        [Persistent(Encrypted = true)]
         public string Password { get; set; }
 
         public string FullPath => this.ApplicationPath?.TrimEnd('/') + "/" + this.Path?.TrimStart('/');
@@ -102,10 +103,21 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
                 return true;
 
             if (!string.IsNullOrEmpty((template as IisVirtualDirectoryConfiguration)?.CredentialName) 
-                && Attribute.IsDefined(templateProperty, typeof(MappedCredentialAttribute)))
+                && (templateProperty.Name == nameof(UserName) || templateProperty.Name == nameof(Password)))
                 return false;
 
             return base.SkipTemplateProperty(template, templateProperty);
+        }
+
+        public void SetCredentialProperties(ICredentialResolutionContext context)
+        {
+            if (string.IsNullOrEmpty(this.CredentialName))
+            {
+                if (SecureCredentials.Create(this.CredentialName, context) is not UsernamePasswordCredentials credentials)
+                    throw new InvalidOperationException($"{this.CredentialName} is not a " + nameof(UsernamePasswordCredentials));
+                this.UserName = credentials.UserName;
+                this.Password = AH.Unprotect(credentials.Password);
+            }
         }
     }
 }

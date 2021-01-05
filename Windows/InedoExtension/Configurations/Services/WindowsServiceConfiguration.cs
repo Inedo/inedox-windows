@@ -9,14 +9,16 @@ using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
 using Inedo.Extensibility.Credentials;
 using Inedo.Serialization;
+using Inedo.Web;
 using Inedo.WindowsServices;
+using UsernamePasswordCredentials = Inedo.Extensions.Credentials.UsernamePasswordCredentials;
 
 namespace Inedo.Extensions.Windows.Configurations.Services
 {
     [DisplayName("Service")]
     [PersistFrom("Inedo.Otter.Extensions.Configurations.WindowsServices.WindowsServiceConfiguration,OtterCoreEx")]
     [Serializable]
-    public sealed class WindowsServiceConfiguration : PersistedConfiguration, IExistential, IHasCredentials<UsernamePasswordCredentials>
+    public sealed class WindowsServiceConfiguration : PersistedConfiguration, IExistential
     {
         [Required]
         [Persistent]
@@ -57,18 +59,17 @@ namespace Inedo.Extensions.Windows.Configurations.Services
         [ScriptAlias("Credentials")]
         [Description("The Otter credential name to use as the service's Log On user. If a credential name is specified, the username and password fields will be ignored.")]
         [Persistent]
+        [SuggestableValue(typeof(SecureCredentialsSuggestionProvider<UsernamePasswordCredentials>))]
         public string CredentialName { get; set; }
         [Category("Log On")]
         [Persistent]
         [ScriptAlias("UserName")]
         [DisplayName("User name")]
-        [MappedCredential(nameof(UsernamePasswordCredentials.UserName))]
         [Description("The user account name to run the service as. If this value is not supplied, NT AUTHORITY\\LocalSystem will be assumed.")]
         public string UserAccount { get; set; }
         [Category("Log On")]
-        [Persistent]
+        [Persistent(Encrypted = true)]
         [ScriptAlias("Password")]
-        [MappedCredential(nameof(UsernamePasswordCredentials.Password))]
         [Description("The password for the account that runs the service. If NT AUTHORITY\\LocalSystem is specified, this field must not have a value set.")]
         [IgnoreConfigurationDrift]
         public string Password { get; set; }
@@ -183,6 +184,17 @@ namespace Inedo.Extensions.Windows.Configurations.Services
             }
 
             return new ReadOnlyDictionary<string, string>(dic);
+        }
+
+        public void SetCredentialProperties(ICredentialResolutionContext context)
+        {
+            if (string.IsNullOrEmpty(this.CredentialName))
+            {
+                if (SecureCredentials.Create(this.CredentialName, context) is not UsernamePasswordCredentials credentials)
+                    throw new InvalidOperationException($"{this.CredentialName} is not a " + nameof(UsernamePasswordCredentials));
+                this.UserAccount = credentials.UserName;
+                this.Password = AH.Unprotect(credentials.Password);
+            }
         }
 
     }

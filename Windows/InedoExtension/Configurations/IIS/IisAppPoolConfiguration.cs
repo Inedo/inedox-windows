@@ -9,7 +9,9 @@ using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
 using Inedo.Extensibility.Credentials;
 using Inedo.Serialization;
+using Inedo.Web;
 using Microsoft.Web.Administration;
+using UsernamePasswordCredentials = Inedo.Extensions.Credentials.UsernamePasswordCredentials;
 
 namespace Inedo.Extensions.Windows.Configurations.IIS
 {
@@ -17,7 +19,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
     [DefaultProperty(nameof(Name))]
     [DisplayName("IIS Application Pool")]
     [PersistFrom("Inedo.Otter.Extensions.Configurations.IIS.IisAppPoolConfiguration,OtterCoreEx")]
-    public sealed class IisAppPoolConfiguration : IisConfigurationBase, IHasCredentials<UsernamePasswordCredentials>
+    public sealed class IisAppPoolConfiguration : IisConfigurationBase
     {
         // https://technet.microsoft.com/en-us/library/cc745955.aspx
 
@@ -79,20 +81,19 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [Description("The Otter credential name to use for the application pool's identity. If a credential name is specified, the username and password fields will be ignored.")]
         [ScriptAlias("Credentials")]
         [Persistent]
+        [SuggestableValue(typeof(SecureCredentialsSuggestionProvider<UsernamePasswordCredentials>))]
         public string CredentialName { get; set; }
 
         [Category("Identity")]
         [DisplayName("User name")]
         [ScriptAlias("UserName")]
         [Description("Configures the application pool to run as a built-in account, such as Network Service (recommended), Local Service, or as a specific user identity.")]
-        [MappedCredential(nameof(UsernamePasswordCredentials.UserName))]
         [Persistent]
         public string ProcessModel_UserName { get; set; }
 
         [Category("Identity")]
         [DisplayName("Password")]
         [ScriptAlias("Password")]
-        [MappedCredential(nameof(UsernamePasswordCredentials.Password))]
         [Persistent(Encrypted = true)]
         public string ProcessModel_Password { get; set; }
 #endregion
@@ -363,10 +364,22 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             if (value != null)
                 return false;
 
-            if (!string.IsNullOrEmpty(template.CredentialName) && Attribute.IsDefined(templateProperty, typeof(MappedCredentialAttribute)))
+            if (!string.IsNullOrEmpty(template.CredentialName) && (templateProperty.Name == nameof(ProcessModel_UserName) || templateProperty.Name == nameof(ProcessModel_Password)))
                 return false;
 
             return true;
+        }
+
+        public void SetCredentialProperties(ICredentialResolutionContext context)
+        {
+            if (string.IsNullOrEmpty(this.CredentialName))
+            {
+
+                if (SecureCredentials.Create(this.CredentialName, context) is not UsernamePasswordCredentials credentials)
+                    throw new InvalidOperationException($"{this.CredentialName} is not a " + nameof(UsernamePasswordCredentials));
+                this.ProcessModel_UserName = credentials.UserName;
+                this.ProcessModel_Password = AH.Unprotect(credentials.Password);
+            }
         }
 
         public static void SetMwaApplicationPool(ILogSink logger, IisAppPoolConfiguration config, ApplicationPool pool)
