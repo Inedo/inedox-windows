@@ -38,6 +38,19 @@ IIS::Ensure-AppPool(
 ")]
     public sealed class EnsureIisAppPoolOperation : RemoteEnsureOperation<IisAppPoolConfiguration>
     {
+        protected override Task BeforeRemoteCollectAsync(IOperationCollectionContext context)
+        {
+            this.Template?.SetCredentialProperties(context as ICredentialResolutionContext);
+            return base.BeforeRemoteCollectAsync(context);
+        }
+
+        protected override Task BeforeRemoteConfigureAsync(IOperationExecutionContext context)
+        {
+
+            this.Template?.SetCredentialProperties(context as ICredentialResolutionContext);
+            return base.BeforeRemoteConfigureAsync(context);
+        }
+
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
             var shortDesc = new RichDescription("Ensure ", new Hilite(config[nameof(IisAppPoolConfiguration.Name)]), " Application Pool");
@@ -120,10 +133,8 @@ IIS::Ensure-AppPool(
             return new ExtendedRichDescription(shortDesc, longDesc);
         }
 
-
         protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationCollectionContext context)
-        {
-            this.Template?.SetCredentialProperties(context as ICredentialResolutionContext);
+        {            
             this.LogDebug($"Looking for Application Pool \"{this.Template.Name}\"...");
 
             lock (Locks.IIS)
@@ -146,8 +157,6 @@ IIS::Ensure-AppPool(
         {
             if (this.Template == null)
                 throw new InvalidOperationException("Template is not set.");
-
-            this.Template.SetCredentialProperties(context as ICredentialResolutionContext);
 
             this.LogDebug($"Looking for Application Pool \"{this.Template.Name}\"...");
 
@@ -224,5 +233,8 @@ IIS::Ensure-AppPool(
 
             return Complete();
         }
+
+
+
     }
 }

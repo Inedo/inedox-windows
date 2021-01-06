@@ -188,7 +188,7 @@ namespace Inedo.Extensions.Windows.Configurations.Services
 
         public void SetCredentialProperties(ICredentialResolutionContext context)
         {
-            if (string.IsNullOrEmpty(this.CredentialName))
+            if (!string.IsNullOrEmpty(this.CredentialName))
             {
                 if (SecureCredentials.Create(this.CredentialName, context) is not UsernamePasswordCredentials credentials)
                     throw new InvalidOperationException($"{this.CredentialName} is not a " + nameof(UsernamePasswordCredentials));

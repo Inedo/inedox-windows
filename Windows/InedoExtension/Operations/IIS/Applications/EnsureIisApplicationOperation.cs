@@ -79,30 +79,28 @@ IIS::Ensure-Application(
 
                 lock (Locks.IIS)
                 {
-                    using (var manager = new ServerManager())
+                    using var manager = new ServerManager();
+                    var uninclused = new IisApplicationConfiguration
                     {
-                        var uninclused = new IisApplicationConfiguration
-                        {
-                            Exists = false,
-                            ApplicationPath = this.Template.ApplicationPath,
-                            SiteName = this.Template.SiteName
-                        };
+                        Exists = false,
+                        ApplicationPath = this.Template.ApplicationPath,
+                        SiteName = this.Template.SiteName
+                    };
 
-                        var site = manager.Sites[this.Template.SiteName];
-                        if (site == null)
-                        {
-                            this.LogInformation($"Site \"{this.Template.SiteName}\" does not exist.");
-                            return uninclused;
-                        }
-                        var app = site.Applications[this.Template.ApplicationPath];
-                        if (app == null)
-                        {
-                            this.LogInformation($"Application \"{this.Template.ApplicationPath}\" does not exist.");
-                            return uninclused;
-                        }
-
-                        return IisApplicationConfiguration.FromMwaApplication(this.GetLogWrapper(), this.Template.SiteName, app, this.Template);
+                    var site = manager.Sites[this.Template.SiteName];
+                    if (site == null)
+                    {
+                        this.LogInformation($"Site \"{this.Template.SiteName}\" does not exist.");
+                        return uninclused;
                     }
+                    var app = site.Applications[this.Template.ApplicationPath];
+                    if (app == null)
+                    {
+                        this.LogInformation($"Application \"{this.Template.ApplicationPath}\" does not exist.");
+                        return uninclused;
+                    }
+
+                    return IisApplicationConfiguration.FromMwaApplication(this.GetLogWrapper(), this.Template.SiteName, app, this.Template);
                 }
             }
             private void Configure()

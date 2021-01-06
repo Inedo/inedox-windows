@@ -67,16 +67,27 @@ Windows::Ensure-Service
             return richDesc;
         }
 
-        protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationCollectionContext context)
+        protected override Task BeforeRemoteCollectAsync(IOperationCollectionContext context)
         {
             this.Template?.SetCredentialProperties(context as ICredentialResolutionContext);
+            return base.BeforeRemoteCollectAsync(context);
+        }
+
+        protected override Task BeforeRemoteConfigureAsync(IOperationExecutionContext context)
+        {
+
+            this.Template?.SetCredentialProperties(context as ICredentialResolutionContext);
+            return base.BeforeRemoteConfigureAsync(context);
+        }
+
+        protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationCollectionContext context)
+        {
             this.LogDebug($"Looking for service \"{this.Template.Name}\"...");
             return Complete(WindowsServiceConfiguration.FromService(this.Template.Name));
         }
 
         protected async override Task RemoteConfigureAsync(IRemoteOperationExecutionContext context)
         {
-            this.Template?.SetCredentialProperties(context as ICredentialResolutionContext);
             if (this.Template == null)
                 throw new InvalidOperationException("Template is not set.");
 
@@ -84,88 +95,86 @@ Windows::Ensure-Service
 
             bool userWasChanged = false;
 
-            using (var service = GetOrCreateService(!context.Simulation))
+            using var service = GetOrCreateService(!context.Simulation);
+            if (this.Template.Exists)
             {
-                if (this.Template.Exists)
+                if (service == null)
                 {
-                    if (service == null)
-                    {
-                        // simulation
-                        this.LogInformation($"{this.Template.Name} service does not exist.");
-                        return;
-                    }
-
-                    if (this.Template.DisplayName != null && this.Template.DisplayName != service.DisplayName)
-                        service.DisplayName = this.Template.DisplayName;
-
-                    if (this.Template.Description != null && this.Template.Description != service.Description)
-                        service.Description = this.Template.Description;
-
-                    if (this.Template.Path != null && this.Template.Path != service.FileName)
-                        service.FileName = this.Template.Path;
-
-                    if (this.Template.StartMode != null && this.Template.StartMode != service.StartMode)
-                        service.StartMode = this.Template.StartMode.Value;
-
-                    if (this.Template.DelayedStart != null && this.Template.DelayedStart != service.DelayedStart)
-                        service.DelayedStart = this.Template.DelayedStart.Value;
-
-                    if (this.Template.UserAccount != null && this.Template.UserAccount != service.UserAccountName)
-                    {
-                        userWasChanged = true;
-                        service.SetUserAccount(this.Template.UserAccount, this.Template.Password);
-                    }
-
-                    if (this.Template.Dependencies != null && !this.Template.Dependencies.ToHashSet().SetEquals(service.Dependencies))
-                    {
-                        service.SetDependencies(this.Template.Dependencies.ToList());
-                    }
-
-                    if (FailureActionsChanged(service))
-                    {
-                        var timeDelay = this.Template.RestartDelay != null ? TimeSpan.FromMinutes(this.Template.RestartDelay.Value) : TimeSpan.Zero;
-
-                        var newFailureActions = new ServiceFailureActions(
-                            resetPeriod: this.Template.RestartDelay,
-                            rebootMessage: this.Template.RebootMessage,
-                            command: this.Template.OnFailureProgramPath,
-                            actions: new[]
-                            {
-                                new ServiceControllerAction(this.Template.OnFirstFailure ?? ServiceControllerActionType.None, timeDelay),
-                                new ServiceControllerAction(this.Template.OnSecondFailure ?? ServiceControllerActionType.None, timeDelay),
-                                new ServiceControllerAction(this.Template.OnSubsequentFailures ?? ServiceControllerActionType.None, timeDelay)
-                            });
-
-                        service.FailureActions = newFailureActions;
-                    }
-
-                    if (this.Template.Status != null)
-                    {
-                        if (!IsPending(this.Template.Status.Value))
-                        {
-                            await this.EnsureServiceStatusAsync(service.Name, this.Template.Status.Value);
-                        }
-                        else
-                        {
-                            this.LogWarning($"Specified service status \"{this.Template.Status.Value}\" is invalid, therefore the service's status will not be modified.");
-                        }
-                    }
+                    // simulation
+                    this.LogInformation($"{this.Template.Name} service does not exist.");
+                    return;
                 }
-                else
+
+                if (this.Template.DisplayName != null && this.Template.DisplayName != service.DisplayName)
+                    service.DisplayName = this.Template.DisplayName;
+
+                if (this.Template.Description != null && this.Template.Description != service.Description)
+                    service.Description = this.Template.Description;
+
+                if (this.Template.Path != null && this.Template.Path != service.FileName)
+                    service.FileName = this.Template.Path;
+
+                if (this.Template.StartMode != null && this.Template.StartMode != service.StartMode)
+                    service.StartMode = this.Template.StartMode.Value;
+
+                if (this.Template.DelayedStart != null && this.Template.DelayedStart != service.DelayedStart)
+                    service.DelayedStart = this.Template.DelayedStart.Value;
+
+                if (this.Template.UserAccount != null && this.Template.UserAccount != service.UserAccountName)
                 {
-                    if (service == null)
+                    userWasChanged = true;
+                    service.SetUserAccount(this.Template.UserAccount, this.Template.Password);
+                }
+
+                if (this.Template.Dependencies != null && !this.Template.Dependencies.ToHashSet().SetEquals(service.Dependencies))
+                {
+                    service.SetDependencies(this.Template.Dependencies.ToList());
+                }
+
+                if (FailureActionsChanged(service))
+                {
+                    var timeDelay = this.Template.RestartDelay != null ? TimeSpan.FromMinutes(this.Template.RestartDelay.Value) : TimeSpan.Zero;
+
+                    var newFailureActions = new ServiceFailureActions(
+                        resetPeriod: this.Template.RestartDelay,
+                        rebootMessage: this.Template.RebootMessage,
+                        command: this.Template.OnFailureProgramPath,
+                        actions: new[]
+                        {
+                            new ServiceControllerAction(this.Template.OnFirstFailure ?? ServiceControllerActionType.None, timeDelay),
+                            new ServiceControllerAction(this.Template.OnSecondFailure ?? ServiceControllerActionType.None, timeDelay),
+                            new ServiceControllerAction(this.Template.OnSubsequentFailures ?? ServiceControllerActionType.None, timeDelay)
+                        });
+
+                    service.FailureActions = newFailureActions;
+                }
+
+                if (this.Template.Status != null)
+                {
+                    if (!IsPending(this.Template.Status.Value))
                     {
-                        this.LogWarning("Service doesn't exist.");
-                        return;
+                        await this.EnsureServiceStatusAsync(service.Name, this.Template.Status.Value);
                     }
-
-                    this.LogDebug("Service exists. Stopping before deleting...");
-                    await this.EnsureServiceStatusAsync(service.Name, ServiceControllerStatus.Stopped);
-
-                    this.LogDebug($"Deleting {service.Name} service...");
-                    service.Delete();
+                    else
+                    {
+                        this.LogWarning($"Specified service status \"{this.Template.Status.Value}\" is invalid, therefore the service's status will not be modified.");
+                    }
                 }
             }
+            else
+            {
+                if (service == null)
+                {
+                    this.LogWarning("Service doesn't exist.");
+                    return;
+                }
+
+                this.LogDebug("Service exists. Stopping before deleting...");
+                await this.EnsureServiceStatusAsync(service.Name, ServiceControllerStatus.Stopped);
+
+                this.LogDebug($"Deleting {service.Name} service...");
+                service.Delete();
+            }            
 
             if (userWasChanged && this.Template.Status == ServiceControllerStatus.Running)
             {
@@ -197,61 +206,59 @@ Windows::Ensure-Service
         {
             var timeout = this.Template?.StatusChangeTimeout ?? TimeSpan.FromSeconds(30);
 
-            using (var controller = new ServiceController(serviceName))
+            using var controller = new ServiceController(serviceName);
+            this.LogDebug($"{controller.ServiceName} service is in {controller.Status} state.");
+
+            if (IsPending(controller.Status))
             {
-                this.LogDebug($"{controller.ServiceName} service is in {controller.Status} state.");
-
-                if (IsPending(controller.Status))
-                {
-                    var goalState = GetPendingGoalState(controller.Status);
-                    this.LogDebug($"Waiting for state {goalState}...");
-                    controller.WaitForStatus(goalState, timeout);
-                    this.LogDebug($"Service is in {goalState} state.");
-                }
-
-                if (desiredStatus == ServiceControllerStatus.Running && controller.Status != ServiceControllerStatus.Running)
-                {
-                    this.LogDebug($"Starting the {controller.ServiceName} service...");
-                    controller.Start();
-                    await Task.Delay(1000);
-                    controller.WaitForStatus(ServiceControllerStatus.Running, timeout);
-                    this.LogDebug($"{controller.ServiceName} service is now running.");
-                }
-                else if (desiredStatus == ServiceControllerStatus.Stopped && controller.Status != ServiceControllerStatus.Stopped)
-                {
-                    if (controller.CanStop)
-                    {
-                        this.LogDebug($"Stopping the {controller.ServiceName} service...");
-                        controller.Stop();
-                        await Task.Delay(1000);
-                        controller.WaitForStatus(ServiceControllerStatus.Stopped, timeout);
-                        this.LogDebug($"{controller.ServiceName} service is now stopped.");
-                    }
-                    else
-                    {
-                        this.LogWarning($"Service controller reported that {controller.ServiceName} cannot be stopped.");
-                    }
-                }
-                else if (desiredStatus == ServiceControllerStatus.Paused && controller.Status != ServiceControllerStatus.Paused)
-                {
-                    if (controller.CanPauseAndContinue)
-                    {
-                        this.LogDebug($"Pausing the {controller.ServiceName} service...");
-                        controller.Pause();
-                        await Task.Delay(1000);
-                        controller.WaitForStatus(ServiceControllerStatus.Paused, timeout);
-                        this.LogDebug($"{controller.ServiceName} service is now paused.");
-                    }
-                    else
-                    {
-                        this.LogWarning($"Service controller reported that {controller.ServiceName} cannot be paused or continued.");
-                    }
-                }
-
-                controller.Refresh();
-
-                this.LogDebug($"{controller.ServiceName} service is now in {controller.Status} state.");
+                var goalState = GetPendingGoalState(controller.Status);
+                this.LogDebug($"Waiting for state {goalState}...");
+                controller.WaitForStatus(goalState, timeout);
+                this.LogDebug($"Service is in {goalState} state.");
             }
+
+            if (desiredStatus == ServiceControllerStatus.Running && controller.Status != ServiceControllerStatus.Running)
+            {
+                this.LogDebug($"Starting the {controller.ServiceName} service...");
+                controller.Start();
+                await Task.Delay(1000);
+                controller.WaitForStatus(ServiceControllerStatus.Running, timeout);
+                this.LogDebug($"{controller.ServiceName} service is now running.");
+            }
+            else if (desiredStatus == ServiceControllerStatus.Stopped && controller.Status != ServiceControllerStatus.Stopped)
+            {
+                if (controller.CanStop)
+                {
+                    this.LogDebug($"Stopping the {controller.ServiceName} service...");
+                    controller.Stop();
+                    await Task.Delay(1000);
+                    controller.WaitForStatus(ServiceControllerStatus.Stopped, timeout);
+                    this.LogDebug($"{controller.ServiceName} service is now stopped.");
+                }
+                else
+                {
+                    this.LogWarning($"Service controller reported that {controller.ServiceName} cannot be stopped.");
+                }
+            }
+            else if (desiredStatus == ServiceControllerStatus.Paused && controller.Status != ServiceControllerStatus.Paused)
+            {
+                if (controller.CanPauseAndContinue)
+                {
+                    this.LogDebug($"Pausing the {controller.ServiceName} service...");
+                    controller.Pause();
+                    await Task.Delay(1000);
+                    controller.WaitForStatus(ServiceControllerStatus.Paused, timeout);
+                    this.LogDebug($"{controller.ServiceName} service is now paused.");
+                }
+                else
+                {
+                    this.LogWarning($"Service controller reported that {controller.ServiceName} cannot be paused or continued.");
+                }
+            }
+
+            controller.Refresh();
+
+            this.LogDebug($"{controller.ServiceName} service is now in {controller.Status} state.");
         }
 
         private static bool IsPending(ServiceControllerStatus value)

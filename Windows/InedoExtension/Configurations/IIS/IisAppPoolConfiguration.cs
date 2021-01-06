@@ -372,7 +372,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
         public void SetCredentialProperties(ICredentialResolutionContext context)
         {
-            if (string.IsNullOrEmpty(this.CredentialName))
+            if (!string.IsNullOrEmpty(this.CredentialName))
             {
 
                 if (SecureCredentials.Create(this.CredentialName, context) is not UsernamePasswordCredentials credentials)
