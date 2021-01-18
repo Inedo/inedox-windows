@@ -82,6 +82,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [ScriptAlias("Credentials")]
         [Persistent]
         [SuggestableValue(typeof(SecureCredentialsSuggestionProvider<UsernamePasswordCredentials>))]
+        [IgnoreConfigurationDrift]
         public string CredentialName { get; set; }
 
         [Category("Identity")]
