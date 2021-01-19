@@ -60,6 +60,7 @@ namespace Inedo.Extensions.Windows.Configurations.Services
         [Description("The Otter credential name to use as the service's Log On user. If a credential name is specified, the username and password fields will be ignored.")]
         [Persistent]
         [SuggestableValue(typeof(SecureCredentialsSuggestionProvider<UsernamePasswordCredentials>))]
+        [IgnoreConfigurationDrift]
         public string CredentialName { get; set; }
         [Category("Log On")]
         [Persistent]

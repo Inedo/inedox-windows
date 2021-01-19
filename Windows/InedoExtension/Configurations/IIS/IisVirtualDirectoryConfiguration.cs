@@ -63,6 +63,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [Description("The Otter credential name to be impersonated when accessing the physical path for the virtual directory. If a credential name is specified, the username and password fields will be ignored.")]
         [ScriptAlias("Credentials")]
         [Persistent]
+        [IgnoreConfigurationDrift]
         [SuggestableValue(typeof(SecureCredentialsSuggestionProvider<UsernamePasswordCredentials>))]
         public string CredentialName { get; set; }
 
