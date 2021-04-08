@@ -77,15 +77,13 @@ DotNet::Ensure-AppSetting(
             if (!await fileOps.FileExistsAsync(fileName))
                 return this.GetConfiguration(null);
 
-            using (var file = await fileOps.OpenFileAsync(fileName, FileMode.Open, FileAccess.Read))
-            {
-                var doc = XDocument.Load(file);
-                var keyElement = this.GetAppSettingsElements(doc)
-                    .Elements("add")
-                    .FirstOrDefault(e => string.Equals((string)e.Attribute("key"), this.ConfigurationKey, StringComparison.OrdinalIgnoreCase));
+            using var file = await fileOps.OpenFileAsync(fileName, FileMode.Open, FileAccess.Read);
+            var doc = XDocument.Load(file);
+            var keyElement = this.GetAppSettingsElements(doc)
+                .Elements("add")
+                .FirstOrDefault(e => string.Equals((string)e.Attribute("key"), this.ConfigurationKey, StringComparison.OrdinalIgnoreCase));
 
-                return this.GetConfiguration((string)keyElement?.Attribute("value"));
-            }
+            return this.GetConfiguration((string)keyElement?.Attribute("value"));
         }
 
         public override async Task ConfigureAsync(IOperationExecutionContext context)
@@ -132,10 +130,8 @@ DotNet::Ensure-AppSetting(
 
             if (!context.Simulation)
             {
-                using (var file = await fileOps.OpenFileAsync(fileName, FileMode.Create, FileAccess.Write))
-                {
-                    doc.Save(file);
-                }
+                using var file = await fileOps.OpenFileAsync(fileName, FileMode.Create, FileAccess.Write);
+                doc.Save(file);
             }
 
             this.LogInformation($"AppSetting \"{this.ConfigurationKey}\" set to \"{this.ExpectedValue}\".");
