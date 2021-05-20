@@ -21,13 +21,16 @@ namespace Inedo.Extensions.Windows.Operations.IIS.Sites
     [ScriptNamespace(Namespaces.IIS)]
     [Tag(Tags.Sites)]
     [SeeAlso(typeof(AppPools.EnsureIisAppPoolOperation))]
+    [Note("When creating a site, you must specify binding information.")]
     [Example(@"
-# ensures that the Otter web site is present on the web server, and binds the site to the single IP address 192.0.2.100 on port 80 and hostname ""example.com""
+# ensures that the FooBar web site is present on the web server, and binds the site to the single IP address 192.0.2.100  and hostname ""foorbar.corp""
 IIS::Ensure-Site(
-    Name: Otter,
-    AppPool: OtterAppPool,
-    Path: E:\Websites\Otter,
-    Bindings: @(%(IPAddress: 192.0.2.100, Port: 80, HostName: example.com, Protocol: http))
+    Name: FooBar,
+    AppPool: FooBarAppPool,
+    Path: E:\Websites\FooBar,
+    BindingProtocol: http,
+    BindingAddress: 192.0.2.100,
+    BindingHostName: foobar.corp
 );
 
 # ensures that the Default Web Site is removed from the web server
@@ -50,6 +53,37 @@ IIS::Ensure-Site(
                 return new ExtendedRichDescription(shortDesc, new RichDescription("does not exist"));
             else
                 return new ExtendedRichDescription(shortDesc, new RichDescription("application pool ", new Hilite(appPool), "; virtual directory path: ", new Hilite(vdir)));
+        }
+
+        private void HandleLegacyBindingInformation()
+        {
+            if (!string.IsNullOrEmpty(this.Template?.LegacyBindingInformation))
+            {
+                this.LogWarning($"This operation uses a legacy binding string ({this.Template?.LegacyBindingInformation}), which is no longer supported.");
+
+                var parts = this.Template.LegacyBindingInformation.Split(':');
+                if (parts.Length >= 2)
+                {
+                    this.Template.BindingAddress = parts[0];
+                    this.Template.BindingPort = AH.ParseInt(parts[1]) ?? this.Template.BindingPort;
+                }
+                if (parts.Length >= 3)
+                {
+                    this.Template.BindingHostName = parts[2];
+                }
+                this.Template.LegacyBindingInformation = null;
+            }
+        }
+
+        protected override Task BeforeRemoteCollectAsync(IOperationCollectionContext context)
+        {
+            this.HandleLegacyBindingInformation();
+            return base.BeforeRemoteCollectAsync(context);
+        }
+        protected override Task BeforeRemoteConfigureAsync(IOperationExecutionContext context)
+        {
+            this.HandleLegacyBindingInformation();
+            return base.BeforeRemoteConfigureAsync(context);
         }
 
         protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationCollectionContext context)
@@ -95,15 +129,32 @@ IIS::Ensure-Site(
                         this.LogDebug("Does not exist. Creating...");
                         if (!context.Simulation)
                         {
-                            var templateBinding = this.Template.Bindings?.FirstOrDefault();
-                            if (templateBinding == null)
-                                throw new ExecutionFailureException("When creating a new IIS site, at least one binding is required.");
+                            string mwaBindingInfo, bindingProtocol;
 
-                            var binding = BindingInfo.FromMap(templateBinding);
-                            if (binding == null)
-                                throw new ExecutionFailureException("Binding info could not be parsed. At a minimum, 'IPAddress' and 'Port' must be specified.");
+                            var simpleBinding = this.Template.GetSingleBindingConfiguration();
+                            if (simpleBinding != null)
+                            {
+                                mwaBindingInfo = simpleBinding.GetMwaBindingInformationString();
+                                bindingProtocol = simpleBinding.Protocol;
+                            }
+                            else
+                            {
+                                var firstMultipleBinding = this.Template.MultipleBindings?.FirstOrDefault();
+                                if (firstMultipleBinding != null)
+                                {
+                                    var binding = IisSiteBindingConfiguration.FromRuntimeValueMap(firstMultipleBinding);
+                                    if (binding == null)
+                                        throw new ExecutionFailureException("Binding info from MultipleBindings could not be parsed. At a minimum, 'IPAddress' and 'Port' must be specified.");
 
-                            site = manager.Sites.Add(this.Template.Name, this.Template.VirtualDirectoryPhysicalPath, int.Parse(binding.Port));
+                                    mwaBindingInfo = binding.GetMwaBindingInformationString();
+                                    bindingProtocol = binding.Protocol;
+                                }
+                                else
+                                    throw new ExecutionFailureException("You must specify binding information when creating a site.");
+                            }
+
+                            this.LogDebug("Does not exist. Creating...");
+                            site = manager.Sites.Add(this.Template.Name, bindingProtocol, mwaBindingInfo, this.Template.VirtualDirectoryPhysicalPath);
                             manager.CommitChanges();
                         }
 

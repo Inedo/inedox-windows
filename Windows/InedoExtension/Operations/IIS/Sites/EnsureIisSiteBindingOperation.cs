@@ -40,26 +40,22 @@ IIS::Ensure-SiteBinding(
         protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationCollectionContext context)
         {
             this.LogDebug($"Looking for site \"{this.Template.SiteName}\"...");
-            using (var manager = new ServerManager())
+            using var manager = new ServerManager();
+            var site = manager.Sites[this.Template.SiteName];
+            if (site == null)
             {
-                var site = manager.Sites[this.Template.SiteName];
-                if (site == null)
-                {
-                    this.LogInformation($"Site \"{this.Template.SiteName}\" does not exist.");
-                    return Task.FromResult<PersistedConfiguration>(this.GetMissing());
-                }
-
-                var binding = this.Template.FindMatch(site.Bindings);
-                if (binding == null)
-                {
-                    this.LogInformation($"Binding {this.Template.ConfigurationKey} does not exist.");
-                    return Task.FromResult<PersistedConfiguration>(this.GetMissing());
-                }
-
-                var config = new IisSiteBindingConfiguration();
-                BindingConfig.SetFromBinding(binding, config, this.Template.SiteName);
-                return Task.FromResult<PersistedConfiguration>(config);
+                this.LogInformation($"Site \"{this.Template.SiteName}\" does not exist.");
+                return Task.FromResult<PersistedConfiguration>(this.GetMissing());
             }
+
+            var binding = site.Bindings.FindMatch(this.Template);
+            if (binding == null)
+            {
+                this.LogInformation($"Binding {this.Template.ConfigurationKey} does not exist.");
+                return Task.FromResult<PersistedConfiguration>(this.GetMissing());
+            }
+
+            return Task.FromResult<PersistedConfiguration>(IisSiteBindingConfiguration.FromMwaBinding(this, binding, this.Template.SiteName, this.Template));
         }
 
         protected override Task RemoteConfigureAsync(IRemoteOperationExecutionContext context)
@@ -78,7 +74,7 @@ IIS::Ensure-SiteBinding(
                     return Complete();
                 }
 
-                BindingConfig.Configure(this.Template, site, this);
+                this.Template.EnsureBindingOnMwaSite(site, this, false);
 
                 if (!context.Simulation)
                 {
