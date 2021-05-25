@@ -106,10 +106,10 @@ namespace Inedo.Extensions.Windows.Configurations.Services
         [ScriptAlias("RebootMessage")]
         public string RebootMessage { get; set; }
 
-        // TODO: multiline textbox for array
         [Category("Dependencies")]
         [Persistent]
         [ScriptAlias("Dependencies")]
+        [FieldEditMode(FieldEditMode.Multiline)]
         public IEnumerable<string> Dependencies { get; set; }
 
         [Persistent]
@@ -150,7 +150,7 @@ namespace Inedo.Extensions.Windows.Configurations.Services
                     StartMode = service.StartMode,
                     UserAccount = service.UserAccountName,
                     DelayedStart = service.DelayedStart,
-                    Dependencies = service.Dependencies,
+                    Dependencies = service.Dependencies.ToArray(),
                     OnFirstFailure = failureActions?.ElementAtOrDefault(0)?.Type,
                     OnSecondFailure = failureActions?.ElementAtOrDefault(1)?.Type,
                     OnSubsequentFailures = failureActions?.ElementAtOrDefault(2)?.Type,
