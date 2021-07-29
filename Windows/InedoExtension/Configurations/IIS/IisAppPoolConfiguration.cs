@@ -23,7 +23,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
     {
         // https://technet.microsoft.com/en-us/library/cc745955.aspx
 
-#region (General)
+        #region (General)
         [Required]
         [Persistent]
         [ConfigurationKey]
@@ -66,9 +66,9 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [ScriptAlias("State")]
         [Persistent]
         public IisObjectState? Status { get; set; }
-#endregion
+        #endregion
 
-#region Identity
+        #region Identity
         [Category("Identity")]
         [DisplayName("Identity type")]
         [Description("Configures the application pool to run as a built-in account, such as Network Service (recommended), Local Service, or as a specific user identity.")]
@@ -97,9 +97,9 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [ScriptAlias("Password")]
         [Persistent(Encrypted = true)]
         public string ProcessModel_Password { get; set; }
-#endregion
+        #endregion
 
-#region CPU
+        #region CPU
         [Category("CPU")]
         [DisplayName("Limit (percent)")]
         [Description("Configures the maximum percentage of CPU time (in 1/1000ths of a percent) that the worker processes in an application pool are allowed to consume over a period of time as indicated by the Limit Interval setting (resetInterval property). If the limit set by Limit (limit property) is exceeded, the event is written to the event log and an optional set of events can be triggered or determined by the Limit Action setting (action property). Setting the value of Limit to 0 disables limiting the worker processes to a percentage of CPU time.")]
@@ -142,9 +142,9 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [ScriptAlias("CpuSmpProcessorAffinityMask2")]
         [Persistent]
         public long? Cpu_SmpProcessorAffinityMask2 { get; set; }
-#endregion
+        #endregion
 
-#region Process Model
+        #region Process Model
         [Category("Process Model")]
         [DisplayName("Idle time-out (minutes)")]
         [Description("Amount of time (in minutes) a worker process remains idle before it shuts down. A worker process is idle if it is not processing requests and no new requests are received.")]
@@ -201,9 +201,9 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [ScriptAlias("StartupTimeLimit")]
         [Persistent]
         public TimeSpan? ProcessModel_StartupTimeLimit { get; set; }
-#endregion
+        #endregion
 
-#region Process Orphaning 
+        #region Process Orphaning 
         [Category("Process Orphaning")]
         [DisplayName("Process orphaning enabled")]
         [Description("If True, an unresponsive worker process is abandoned (orphaned) instead of terminated. This feature can be used to debug a worker process failure.")]
@@ -224,9 +224,9 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [ScriptAlias("OrphanActionParams")]
         [Persistent]
         public string Failure_OrphanActionParams { get; set; }
-#endregion
+        #endregion
 
-#region Rapid Fail Protection 
+        #region Rapid Fail Protection 
         [Category("Rapid Fail Protection")]
         [DisplayName("Service unavailable response type")]
         [Description("If set to HttpLevel and the application pool is stopped, Http.sys returns an HTTP 503 error. If set to TcpLevel, Http.sys resets the connection. This is useful if the load balancer recognizes one of the response types and subsequently redirects it.")]
@@ -269,9 +269,9 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [ScriptAlias("AutoShutdownParams")]
         [Persistent]
         public string Failure_AutoShutdownParams { get; set; }
-#endregion
+        #endregion
 
-#region Recycling 
+        #region Recycling 
         [Category("Recycling")]
         [DisplayName("Disable overlapped recycle")]
         [Description("If True, when the application pool recycles, the existing worker process exits before another worker process is created. Set to True if the worker process loads an application that does not support multiple instances.")]
@@ -323,7 +323,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [ScriptAlias("PeriodicRestartMemory")]
         [Persistent]
         public long? Recycling_PeriodicRestart_Memory { get; set; }
-#endregion
+        #endregion
 
         public static IisAppPoolConfiguration FromMwaApplicationPool(ILogSink logger, ApplicationPool pool, IisAppPoolConfiguration template = null)
         {
@@ -343,39 +343,38 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
             foreach (var templateProperty in templateProperties)
             {
-                if (SkipTemplateProperty(template, templateProperty))
-                    continue;
-
-                var mappedProperty = FindMatchingProperty(templateProperty.Name.Split('_'), pool);
-                if (mappedProperty != null)
-                    templateProperty.SetValue(config, mappedProperty.GetValue());
-                else
-                    logger.LogWarning($"Matching MWA property \"{templateProperty.Name}\" was not found.");
+                if (IncludeTemplateProperty(template, templateProperty))
+                {
+                    var mappedProperty = FindMatchingProperty(templateProperty.Name.Split('_'), pool);
+                    if (mappedProperty != null)
+                        templateProperty.SetValue(config, mappedProperty.GetValue());
+                    else
+                        logger.LogWarning($"Matching MWA property \"{templateProperty.Name}\" was not found.");
+                }
             }
 
             return config;
         }
 
-        private static bool SkipTemplateProperty(IisAppPoolConfiguration template, PropertyInfo templateProperty)
+        private static bool IncludeTemplateProperty(IisAppPoolConfiguration template, PropertyInfo templateProperty)
         {
             if (templateProperty.Name == nameof(Status) || templateProperty.Name == nameof(Exists) || templateProperty.Name == nameof(CredentialName))
-                return true;
+                return false;
 
             var value = templateProperty.GetValue(template);
             if (value != null)
-                return false;
+                return true;
 
-            if (!string.IsNullOrEmpty(template.CredentialName) && (templateProperty.Name == nameof(ProcessModel_UserName) || templateProperty.Name == nameof(ProcessModel_Password)))
-                return false;
+            if (string.IsNullOrEmpty(template.CredentialName) && (templateProperty.Name == nameof(ProcessModel_UserName) || templateProperty.Name == nameof(ProcessModel_Password)))
+                return true;
 
-            return true;
+            return false;
         }
 
         public void SetCredentialProperties(ICredentialResolutionContext context)
         {
             if (!string.IsNullOrEmpty(this.CredentialName))
             {
-
                 if (SecureCredentials.Create(this.CredentialName, context) is not UsernamePasswordCredentials credentials)
                     throw new InvalidOperationException($"{this.CredentialName} is not a " + nameof(UsernamePasswordCredentials));
                 this.ProcessModel_UserName = credentials.UserName;
@@ -397,16 +396,16 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
             foreach (var configProperty in configProperties)
             {
-                if(SkipTemplateProperty(config, configProperty))
-                    continue;
+                if (IncludeTemplateProperty(config, configProperty))
+                {
+                    object value = configProperty.GetValue(config);
 
-                object value = configProperty.GetValue(config);
-                
-                var mappedProperty = FindMatchingProperty(configProperty.Name.Split('_'), pool);
-                if (mappedProperty != null)
-                    mappedProperty.SetValue(value);
-                else
-                    logger.LogWarning($"Matching MWA property \"{configProperty.Name}\" was not found.");
+                    var mappedProperty = FindMatchingProperty(configProperty.Name.Split('_'), pool);
+                    if (mappedProperty != null)
+                        mappedProperty.SetValue(value);
+                    else
+                        logger.LogWarning($"Matching MWA property \"{configProperty.Name}\" was not found.");
+                }
             }
         }
 
