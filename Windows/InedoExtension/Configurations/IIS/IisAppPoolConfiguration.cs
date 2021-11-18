@@ -315,7 +315,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [Description("Specific times of day to recycle the application pool. For example, @(3:30:00, 10:00:00, 23:59:59)")]
         [ScriptAlias("PeriodicRestartSchedule")]
         [Persistent]
-        public IEnumerable<string> Recycling_PeriodicRestart_Schedule { get; }
+        public IEnumerable<string> Recycling_PeriodicRestart_Schedule { get; set; }
 
         [Category("Recycling")]
         [DisplayName("Virtual memory limit (KB)")]
