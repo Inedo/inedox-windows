@@ -3,34 +3,17 @@
   <PropertyGroup>
     <AssemblyName>Windows</AssemblyName>
     <RootNamespace>Inedo.Extensions.Windows</RootNamespace>
-    <TargetFrameworks>net452;net5.0</TargetFrameworks>
+    <TargetFramework>net6.0</TargetFramework>
     <OutputType>Library</OutputType>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <SignAssembly>false</SignAssembly>
+    <NoWarn>CA1416</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Inedo.SDK" Version="1.12.0" ExcludeAssets="runtime" />
-    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="WindowsFirewallHelper" Version="1.6.3.40" />
-  </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework) == 'net452'">
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.ServiceProcess" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
-    <PackageReference Include="Microsoft.Web.Administration" Version="7.0.0.0" />
-  </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework) == 'net5.0'">
+    <PackageReference Include="Inedo.SDK" Version="1.14.1" ExcludeAssets="runtime" />
+    <PackageReference Include="WindowsFirewallHelper" Version="2.2.0.86" />
     <PackageReference Include="Microsoft.Web.Administration" Version="11.1.0.0" />
   </ItemGroup>
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$(TargetFramework) == 'net452'">
-    <Exec Command="powershell -Command &quot;if ((Test-Path C:\LocalDev\Tools\inedoxpack\inedoxpack.exe) -And (Test-Path C:\LocalDev\Otter\Extensions -PathType Container)) { C:\LocalDev\Tools\inedoxpack\inedoxpack.exe '$(TargetDir)..\$(TargetFileName)' 'C:\LocalDev\Otter\Extensions\$(TargetName).upack' 0.0.0 }&quot;" />
-  </Target>
 </Project>
