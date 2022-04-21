@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
@@ -139,17 +140,15 @@ IIS::Ensure-AppPool(
 
             lock (Locks.IIS)
             {
-                using (var manager = new ServerManager())
+                using var manager = new ServerManager();
+                var pool = manager.ApplicationPools[this.Template.Name];
+                if (pool == null)
                 {
-                    var pool = manager.ApplicationPools[this.Template.Name];
-                    if (pool == null)
-                    {
-                        this.LogInformation($"Application Pool \"{this.Template.Name}\" does not exist.");
-                        return Task.FromResult<PersistedConfiguration>(new IisAppPoolConfiguration { Exists = false, Name = this.Template.Name });
-                    }
-
-                    return Task.FromResult<PersistedConfiguration>(IisAppPoolConfiguration.FromMwaApplicationPool(this, pool, this.Template));
+                    this.LogInformation($"Application Pool \"{this.Template.Name}\" does not exist.");
+                    return Task.FromResult<PersistedConfiguration>(new IisAppPoolConfiguration { Exists = false, Name = this.Template.Name });
                 }
+
+                return Task.FromResult<PersistedConfiguration>(IisAppPoolConfiguration.FromMwaApplicationPool(this, pool, this.Template));
             }
         }
 
