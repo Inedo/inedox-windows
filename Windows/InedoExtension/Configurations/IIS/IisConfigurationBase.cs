@@ -6,7 +6,6 @@ using System.Reflection;
 using Inedo.Diagnostics;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
-using Inedo.Extensibility.Credentials;
 using Inedo.Serialization;
 using Microsoft.Web.Administration;
 
@@ -96,9 +95,6 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         protected virtual bool SkipTemplateProperty(IisConfigurationBase template, PropertyInfo templateProperty)
         {
             if (templateProperty.Name == nameof(IExistential.Exists))
-                return true;
-
-            if (templateProperty.Name == nameof(IHasCredentials.CredentialName))
                 return true;
 
             if (template == null)

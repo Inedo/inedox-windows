@@ -12,7 +12,7 @@
     <NoWarn>CA1416</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Inedo.SDK" Version="2.0.0-ci.12" ExcludeAssets="runtime" />
+    <PackageReference Include="Inedo.SDK" Version="2.0.0-ci.15" ExcludeAssets="runtime" />
     <PackageReference Include="WindowsFirewallHelper" Version="2.2.0.86" />
     <PackageReference Include="Microsoft.Web.Administration" Version="11.1.0.0" />
   </ItemGroup>
