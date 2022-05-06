@@ -14,7 +14,6 @@ namespace Inedo.Extensions.Windows.Configurations.Firewall
 {
     [Serializable]
     [DisplayName("Firewall Rule")]
-
     public sealed class NetFirewallRuleConfiguration : PersistedConfiguration, IExistential
     {
         [Persistent]
@@ -74,7 +73,7 @@ namespace Inedo.Extensions.Windows.Configurations.Firewall
                 throw new ArgumentNullException(nameof(ruleName));
 
             var firewallDirection = inbound ? FirewallDirection.Inbound : FirewallDirection.Outbound;
-            
+
             var firewall = FirewallManager.Instance;
             return firewall.Rules.Where(r => r.Name.Equals(ruleName, StringComparison.OrdinalIgnoreCase) && r.Direction == firewallDirection).Select(r => new NetFirewallRuleConfiguration
             {
@@ -86,7 +85,7 @@ namespace Inedo.Extensions.Windows.Configurations.Firewall
                 Allow = r.Action == FirewallAction.Allow,
                 Exists = true
 
-            }).FirstOrDefault() ?? new NetFirewallRuleConfiguration { Name = ruleName, Exists = false};
+            }).FirstOrDefault() ?? new NetFirewallRuleConfiguration { Name = ruleName, Exists = false };
 
         }
 
@@ -105,7 +104,7 @@ namespace Inedo.Extensions.Windows.Configurations.Firewall
 
                 return Task.FromResult(new ComparisonResult(differences));
             }
-            if(!CompareProfiles(rule.Profiles))
+            if (!CompareProfiles(rule.Profiles))
             {
                 differences.Add(new Difference(nameof(Profiles), this.Profiles, rule.Profiles));
             }
@@ -146,9 +145,9 @@ namespace Inedo.Extensions.Windows.Configurations.Firewall
         {
             var parsedPorts = new List<ushort>();
             var ports = this.Port.Split(',');
-            foreach(var port in ports)
+            foreach (var port in ports)
             {
-                if (port.Contains("-"))
+                if (port.Contains('-'))
                 {
                     var range = port.Split('-');
                     if (range.Length != 2)
@@ -181,7 +180,7 @@ namespace Inedo.Extensions.Windows.Configurations.Firewall
             var direction = this.Inbound ? FirewallDirection.Inbound : FirewallDirection.Outbound;
 
             var firewall = FirewallManager.Instance;
-            foreach(var rule in firewall.Rules.Where(r => r.Name.Equals(this.Name, StringComparison.OrdinalIgnoreCase) && r.Direction == direction).ToList())
+            foreach (var rule in firewall.Rules.Where(r => r.Name.Equals(this.Name, StringComparison.OrdinalIgnoreCase) && r.Direction == direction).ToList())
             {
                 firewall.Rules.Remove(firewall.Rules.Where(r => r.Name.Equals(this.Name, StringComparison.OrdinalIgnoreCase) && r.Direction == direction).FirstOrDefault());
             }

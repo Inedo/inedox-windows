@@ -8,7 +8,6 @@ using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
 using Inedo.Extensibility.Operations;
 using Inedo.Serialization;
-using Microsoft.Win32;
 
 namespace Inedo.Extensions.Windows.Configurations.Registry
 {
@@ -28,8 +27,8 @@ namespace Inedo.Extensions.Windows.Configurations.Registry
         [Persistent]
         [ScriptAlias("Kind")]
         [DisplayName("Value kind")]
-        [DefaultValue(RegistryValueKind.String)]
-        public RegistryValueKind ValueKind { get; set; } = RegistryValueKind.String;
+        [DefaultValue(InedoRegistryValueKind.String)]
+        public InedoRegistryValueKind ValueKind { get; set; } = InedoRegistryValueKind.String;
 
         [Persistent]
         [DefaultValue(true)]
@@ -55,14 +54,10 @@ namespace Inedo.Extensions.Windows.Configurations.Registry
             }
 
             if (this.ValueKind != reg.ValueKind)
-            {
                 differences.Add(new Difference(nameof(ValueKind), this.ValueKind, reg.ValueKind));
-            }
 
             if (!(this.Value ?? Enumerable.Empty<string>()).SequenceEqual(reg.Value ?? Enumerable.Empty<string>()))
-            {
                 differences.Add(new Difference(nameof(Value), string.Join("\n", this.Value), string.Join("\n", reg.Value)));
-            }
 
             return Task.FromResult(new ComparisonResult(differences));
         }

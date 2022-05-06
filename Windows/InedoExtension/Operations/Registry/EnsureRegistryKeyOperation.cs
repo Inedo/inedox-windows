@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
+using Inedo.ExecutionEngine.Executer;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
 using Inedo.Extensibility.Operations;
@@ -25,6 +26,9 @@ namespace Inedo.Extensions.Windows.Operations.Registry
     {
         protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationCollectionContext context)
         {
+            if (!OperatingSystem.IsWindows())
+                throw new ExecutionFailureException("This operation requires Windows.");
+
             this.LogDebug($"Collecting status of {this.Template.GetDisplayPath()}...");
 
             var config = new RegistryKeyConfiguration
@@ -33,7 +37,7 @@ namespace Inedo.Extensions.Windows.Operations.Registry
                 Key = this.Template.Key
             };
 
-            using (var baseKey = RegistryKey.OpenBaseKey(this.Template.Hive, RegistryView.Default))
+            using (var baseKey = RegistryKey.OpenBaseKey((RegistryHive)this.Template.Hive, RegistryView.Default))
             using (var key = baseKey.OpenSubKey(this.Template.Key))
             {
                 if (key == null)
@@ -55,23 +59,24 @@ namespace Inedo.Extensions.Windows.Operations.Registry
 
         protected override Task RemoteConfigureAsync(IRemoteOperationExecutionContext context)
         {
+            if (!OperatingSystem.IsWindows())
+                throw new ExecutionFailureException("This operation requires Windows.");
+
             this.LogDebug($"Configuring {this.Template.GetDisplayPath()}...");
 
-            using (var baseKey = RegistryKey.OpenBaseKey(this.Template.Hive, RegistryView.Default))
+            using (var baseKey = RegistryKey.OpenBaseKey((RegistryHive)this.Template.Hive, RegistryView.Default))
             {
                 if (this.Template.Exists)
                 {
                     this.LogInformation($"Ensuring that {this.Template.GetDisplayPath()} exists...");
 
-                    using (var key = createOrOpen())
+                    using var key = createOrOpen();
+                    this.LogInformation(this.Template.GetDisplayPath() + " created.");
+                    if (!string.IsNullOrWhiteSpace(this.Template.DefaultValue))
                     {
-                        this.LogInformation(this.Template.GetDisplayPath() + " created.");
-                        if (!string.IsNullOrWhiteSpace(this.Template.DefaultValue))
-                        {
-                            this.LogDebug($"Setting default value to {this.Template.DefaultValue}...");
-                            if (!context.Simulation)
-                                key.SetValue(null, this.Template.DefaultValue);
-                        }
+                        this.LogDebug($"Setting default value to {this.Template.DefaultValue}...");
+                        if (!context.Simulation)
+                            key.SetValue(null, this.Template.DefaultValue);
                     }
                 }
                 else
@@ -96,13 +101,13 @@ namespace Inedo.Extensions.Windows.Operations.Registry
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
             var hive = (string)config[nameof(RegistryConfiguration.Hive)];
-            if (Enum.TryParse<RegistryHive>(hive, true, out var h))
+            if (Enum.TryParse<InedoRegistryHive>(hive, true, out var h))
                 hive = h.GetAbbreviation();
 
             return new ExtendedRichDescription(
                 new RichDescription(
                     "Ensure Registry Key ",
-                    new Hilite(h + "\\" + RegistryConfiguration.GetCanonicalKey(config[nameof(RegistryConfiguration.Key)]))
+                    new Hilite(hive + "\\" + RegistryConfiguration.GetCanonicalKey(config[nameof(RegistryConfiguration.Key)]))
                 ),
                 new RichDescription(
                     string.Equals(config[nameof(RegistryConfiguration.Exists)], "false", StringComparison.OrdinalIgnoreCase) ? "does not exist" : "exists"

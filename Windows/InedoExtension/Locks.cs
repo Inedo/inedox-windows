@@ -6,6 +6,6 @@
     /// </summary>
     internal static class Locks
     {
-        public static readonly object IIS = new object();
+        public static readonly object IIS = new();
     }
 }

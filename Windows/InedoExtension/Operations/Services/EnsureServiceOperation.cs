@@ -1,10 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.ServiceProcess;
 using System.Threading.Tasks;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
+using Inedo.ExecutionEngine.Executer;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
 using Inedo.Extensibility.Credentials;
@@ -82,12 +84,18 @@ Windows::Ensure-Service
 
         protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationCollectionContext context)
         {
+            if (!OperatingSystem.IsWindows())
+                throw new ExecutionFailureException("This operation requires Windows.");
+
             this.LogDebug($"Looking for service \"{this.Template.Name}\"...");
             return Complete(WindowsServiceConfiguration.FromService(this.Template.Name));
         }
 
         protected async override Task RemoteConfigureAsync(IRemoteOperationExecutionContext context)
         {
+            if (!OperatingSystem.IsWindows())
+                throw new ExecutionFailureException("This operation requires Windows.");
+
             if (this.Template == null)
                 throw new InvalidOperationException("Template is not set.");
 
@@ -184,6 +192,7 @@ Windows::Ensure-Service
             }
         }
 
+        [SupportedOSPlatform("windows")]
         private bool FailureActionsChanged(WindowsService service)
         {
             if (this.Template.OnFirstFailure != null && this.Template.OnFirstFailure != service.FailureActions.Actions.Cast<ServiceControllerAction?>().FirstOrDefault()?.Type)
@@ -202,6 +211,7 @@ Windows::Ensure-Service
             return false;
         }
 
+        [SupportedOSPlatform("windows")]
         private async Task EnsureServiceStatusAsync(string serviceName, ServiceControllerStatus desiredStatus)
         {
             var timeout = this.Template?.StatusChangeTimeout ?? TimeSpan.FromSeconds(30);
@@ -269,26 +279,19 @@ Windows::Ensure-Service
                 || value == ServiceControllerStatus.StopPending;
         }
 
+        [SupportedOSPlatform("windows")]
         private static ServiceControllerStatus GetPendingGoalState(ServiceControllerStatus pendingStatus)
         {
-            switch (pendingStatus)
+            return pendingStatus switch
             {
-                case ServiceControllerStatus.ContinuePending:
-                case ServiceControllerStatus.StartPending:
-                    return ServiceControllerStatus.Running;
-
-                case ServiceControllerStatus.StopPending:
-                    return ServiceControllerStatus.Stopped;
-
-                case ServiceControllerStatus.PausePending:
-                    return ServiceControllerStatus.Paused;
-
-                default:
-                    return pendingStatus;
-            }
-
+                ServiceControllerStatus.ContinuePending or ServiceControllerStatus.StartPending => ServiceControllerStatus.Running,
+                ServiceControllerStatus.StopPending => ServiceControllerStatus.Stopped,
+                ServiceControllerStatus.PausePending => ServiceControllerStatus.Paused,
+                _ => pendingStatus
+            };
         }
 
+        [SupportedOSPlatform("windows")]
         private WindowsService GetOrCreateService(bool allowCreate)
         {
             var service = WindowsService.GetService(this.Template.Name);

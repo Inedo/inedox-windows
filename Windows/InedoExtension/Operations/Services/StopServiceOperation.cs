@@ -1,9 +1,11 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.ServiceProcess;
 using System.Threading.Tasks;
 using Inedo.Agents;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
+using Inedo.ExecutionEngine.Executer;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
 
@@ -34,6 +36,9 @@ Stop-Service HDARS;")]
 
         public override Task ExecuteAsync(IOperationExecutionContext context)
         {
+            if (!OperatingSystem.IsWindows())
+                throw new ExecutionFailureException("This operation requires Windows.");
+
             this.LogInformation($"Stopping service {this.ServiceName}...");
             if (context.Simulation)
             {

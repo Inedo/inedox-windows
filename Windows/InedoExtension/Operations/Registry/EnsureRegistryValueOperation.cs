@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Threading.Tasks;
 using Inedo.Diagnostics;
@@ -31,6 +32,9 @@ namespace Inedo.Extensions.Windows.Operations.Registry
     {
         protected override Task<PersistedConfiguration> RemoteCollectAsync(IRemoteOperationCollectionContext context)
         {
+            if (!OperatingSystem.IsWindows())
+                throw new ExecutionFailureException("This operation requires Windows.");
+
             this.LogDebug($"Collecting status of {this.Template.GetDisplayPath()}::{this.Template.ValueName}...");
 
             var config = new RegistryValueConfiguration
@@ -40,7 +44,7 @@ namespace Inedo.Extensions.Windows.Operations.Registry
                 ValueName = this.Template.ValueName
             };
 
-            using (var baseKey = RegistryKey.OpenBaseKey(this.Template.Hive, RegistryView.Default))
+            using (var baseKey = RegistryKey.OpenBaseKey((RegistryHive)this.Template.Hive, RegistryView.Default))
             using (var key = baseKey.OpenSubKey(this.Template.Key))
             {
                 if (key == null)
@@ -60,8 +64,8 @@ namespace Inedo.Extensions.Windows.Operations.Registry
                     {
                         this.LogInformation($"Value {this.Template.ValueName} exists.");
                         config.Exists = true;
-                        config.ValueKind = key.GetValueKind(this.Template.ValueName);
-                        config.Value = ReadRegistyValue(value, config.ValueKind);
+                        config.ValueKind =  (InedoRegistryValueKind)key.GetValueKind(this.Template.ValueName);
+                        config.Value = ReadRegistyValue(value, (RegistryValueKind)config.ValueKind);
                     }
                 }
             }
@@ -71,9 +75,12 @@ namespace Inedo.Extensions.Windows.Operations.Registry
 
         protected override Task RemoteConfigureAsync(IRemoteOperationExecutionContext context)
         {
+            if (!OperatingSystem.IsWindows())
+                throw new ExecutionFailureException("This operation requires Windows.");
+
             this.LogDebug($"Configuring {this.Template.GetDisplayPath()}::{this.Template.ValueName}...");
 
-            using (var baseKey = RegistryKey.OpenBaseKey(this.Template.Hive, RegistryView.Default))
+            using (var baseKey = RegistryKey.OpenBaseKey((RegistryHive)this.Template.Hive, RegistryView.Default))
             {
                 using (var key = createOrOpenKey())
                 {
@@ -83,7 +90,7 @@ namespace Inedo.Extensions.Windows.Operations.Registry
                         {
                             this.LogInformation($"Setting {this.Template.ValueName}...");
                             if (!context.Simulation)
-                                key.SetValue(this.Template.ValueName, this.GetRegistryValue(), this.Template.ValueKind);
+                                key.SetValue(this.Template.ValueName, this.GetRegistryValue(), (RegistryValueKind)this.Template.ValueKind);
                         }
                         else
                         {
@@ -118,7 +125,7 @@ namespace Inedo.Extensions.Windows.Operations.Registry
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
             var hive = (string)config[nameof(RegistryConfiguration.Hive)];
-            if (Enum.TryParse<RegistryHive>(hive, true, out var h))
+            if (Enum.TryParse<InedoRegistryHive>(hive, true, out var h))
                 hive = h.GetAbbreviation();
 
             return new ExtendedRichDescription(
@@ -129,11 +136,12 @@ namespace Inedo.Extensions.Windows.Operations.Registry
                 ),
                 new RichDescription(
                     "in key ",
-                    new Hilite(h + "\\" + RegistryConfiguration.GetCanonicalKey(config[nameof(RegistryConfiguration.Key)]))
+                    new Hilite(hive + "\\" + RegistryConfiguration.GetCanonicalKey(config[nameof(RegistryConfiguration.Key)]))
                )
             );
         }
 
+        [SupportedOSPlatform("windows")]
         private static string[] ReadRegistyValue(object value, RegistryValueKind kind)
         {
             if (value == null)
@@ -161,11 +169,12 @@ namespace Inedo.Extensions.Windows.Operations.Registry
                     return null;
             }
         }
+        [SupportedOSPlatform("windows")]
         private object GetRegistryValue()
         {
             var s = this.Template.Value.FirstOrDefault();
 
-            switch (this.Template.ValueKind)
+            switch ((RegistryValueKind)this.Template.ValueKind)
             {
                 case RegistryValueKind.String:
                 case RegistryValueKind.ExpandString:

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.ServiceProcess;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using Inedo.ExecutionEngine.Executer;
 
 namespace Inedo.Extensions.Windows.Operations.Services
 {
+    [SupportedOSPlatform("windows")]
     internal sealed class ControlServiceJob : RemoteJob
     {
         public string ServiceName { get; set; }
@@ -65,7 +67,6 @@ namespace Inedo.Extensions.Windows.Operations.Services
         }
 
         private ServiceController GetService() => ServiceController.GetServices().FirstOrDefault(s => string.Equals(s.ServiceName, this.ServiceName, StringComparison.OrdinalIgnoreCase));
-
         private async Task WaitForStartAsync(ServiceController service, CancellationToken cancellationToken)
         {
             ServiceControllerStatus status;
@@ -99,7 +100,7 @@ namespace Inedo.Extensions.Windows.Operations.Services
 
             this.LogDebug("Service status is " + status);
 
-            while ((status = service.Status) != ServiceControllerStatus.Stopped)
+            while (service.Status != ServiceControllerStatus.Stopped)
             {
                 service.Refresh();
                 await Task.Delay(100, cancellationToken);

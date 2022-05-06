@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.ServiceProcess;
 using Inedo.Documentation;
 using Inedo.Extensibility;
@@ -120,6 +121,7 @@ namespace Inedo.Extensions.Windows.Configurations.Services
         [IgnoreConfigurationDrift]
         public TimeSpan StatusChangeTimeout { get; set; } = TimeSpan.FromSeconds(30);
 
+        [SupportedOSPlatform("windows")]
         public static WindowsServiceConfiguration FromService(string serviceName)
         {
             if (string.IsNullOrEmpty(serviceName))
@@ -197,6 +199,5 @@ namespace Inedo.Extensions.Windows.Configurations.Services
                 this.Password = AH.Unprotect(credentials.Password);
             }
         }
-
     }
 }

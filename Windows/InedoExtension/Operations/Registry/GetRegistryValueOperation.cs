@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.ExecutionEngine;
+using Inedo.ExecutionEngine.Executer;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
 using Inedo.Extensions.Windows.Configurations.Registry;
@@ -28,7 +29,7 @@ namespace Inedo.Extensions.Windows.Operations.Registry
     {
         [Required]
         [ScriptAlias("Hive")]
-        public RegistryHive Hive { get; set; }
+        public InedoRegistryHive Hive { get; set; }
         [Required]
         [ScriptAlias("Key")]
         public string Key { get; set; }
@@ -47,29 +48,30 @@ namespace Inedo.Extensions.Windows.Operations.Registry
 
         protected override Task<object> RemoteExecuteAsync(IRemoteOperationExecutionContext context)
         {
-            using (var baseKey = RegistryKey.OpenBaseKey(this.Hive, RegistryView.Default))
+            if (!OperatingSystem.IsWindows())
+                throw new ExecutionFailureException("This operation requires Windows.");
+
+            using (var baseKey = RegistryKey.OpenBaseKey((RegistryHive)this.Hive, RegistryView.Default))
             {
-                using (var key = baseKey.OpenSubKey(this.Key))
+                using var key = baseKey.OpenSubKey(this.Key);
+                if (key == null)
                 {
-                    if (key == null)
-                    {
-                        this.Log(this.FailIfNotFound ? MessageLevel.Error : MessageLevel.Information, $"Key \"{this.Key}\" not found.");
-                        return Complete;
-                    }
-
-                    var value = key.GetValue(this.ValueName);
-                    if (value == null)
-                    {
-                        this.Log(this.FailIfNotFound ? MessageLevel.Error : MessageLevel.Information, $"Value \"{this.ValueName}\" not found in key \"{this.Key}\".");
-                        return Complete;
-                    }
-
-                    var kind = key.GetValueKind(this.ValueName);
-                    if (kind == RegistryValueKind.MultiString)
-                        this.Value = new RuntimeValue(((string[])value).Select(v => new RuntimeValue(v)).ToList());
-                    else
-                        this.Value = value.ToString();
+                    this.Log(this.FailIfNotFound ? MessageLevel.Error : MessageLevel.Information, $"Key \"{this.Key}\" not found.");
+                    return Complete;
                 }
+
+                var value = key.GetValue(this.ValueName);
+                if (value == null)
+                {
+                    this.Log(this.FailIfNotFound ? MessageLevel.Error : MessageLevel.Information, $"Value \"{this.ValueName}\" not found in key \"{this.Key}\".");
+                    return Complete;
+                }
+
+                var kind = key.GetValueKind(this.ValueName);
+                if (kind == RegistryValueKind.MultiString)
+                    this.Value = new RuntimeValue(((string[])value).Select(v => new RuntimeValue(v)).ToList());
+                else
+                    this.Value = value.ToString();
             }
 
             return Complete;
@@ -78,7 +80,7 @@ namespace Inedo.Extensions.Windows.Operations.Registry
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
             var hive = (string)config[nameof(Hive)];
-            if (Enum.TryParse<RegistryHive>(hive, true, out var h))
+            if (Enum.TryParse<InedoRegistryHive>(hive, true, out var h))
                 hive = h.GetAbbreviation();
 
             return new ExtendedRichDescription(
@@ -90,7 +92,7 @@ namespace Inedo.Extensions.Windows.Operations.Registry
                 ),
                 new RichDescription(
                     "from key ",
-                    new Hilite(h + "\\" + RegistryConfiguration.GetCanonicalKey(config[nameof(Key)]))
+                    new Hilite(hive + "\\" + RegistryConfiguration.GetCanonicalKey(config[nameof(Key)]))
                )
             );
         }

@@ -1,10 +1,8 @@
 ﻿using System;
-using System.ComponentModel;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
 using Inedo.Serialization;
-using Microsoft.Win32;
 
 namespace Inedo.Extensions.Windows.Configurations.Registry
 {
@@ -19,7 +17,7 @@ namespace Inedo.Extensions.Windows.Configurations.Registry
         [Persistent]
         [ConfigurationKey]
         [ScriptAlias("Hive")]
-        public RegistryHive Hive { get; set; }
+        public InedoRegistryHive Hive { get; set; }
         [Required]
         [Persistent]
         [ConfigurationKey]

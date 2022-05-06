@@ -9,10 +9,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <SignAssembly>false</SignAssembly>
-    <NoWarn>CA1416</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Inedo.SDK" Version="2.0.0-ci.15" ExcludeAssets="runtime" />
+    <PackageReference Include="Inedo.SDK" Version="2.0.0-ci.18" ExcludeAssets="runtime" />
     <PackageReference Include="WindowsFirewallHelper" Version="2.2.0.86" />
     <PackageReference Include="Microsoft.Web.Administration" Version="11.1.0.0" />
   </ItemGroup>

@@ -8,7 +8,7 @@ namespace Inedo.Extensions.Windows.Configurations.Firewall
 {
     internal static class FirewallHelpers
     {
-        private static Lazy<IDictionary<string, FirewallProtocol>> protocols = new Lazy<IDictionary<string, FirewallProtocol>>(() => typeof(FirewallProtocol).GetFields(BindingFlags.Static | BindingFlags.Public).ToDictionary(f => f.Name, f => (FirewallProtocol)f.GetValue(null)));
+        private static readonly Lazy<IDictionary<string, FirewallProtocol>> protocols = new(() => typeof(FirewallProtocol).GetFields(BindingFlags.Static | BindingFlags.Public).ToDictionary(f => f.Name, f => (FirewallProtocol)f.GetValue(null)));
 
         private static IDictionary<string, FirewallProtocol> Protocols => protocols.Value;
 

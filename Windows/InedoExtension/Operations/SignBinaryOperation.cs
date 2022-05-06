@@ -165,6 +165,9 @@ namespace Inedo.Extensions.Windows.Operations
 
         private static string GetWindowsSdkInstallRoot()
         {
+            if (!OperatingSystem.IsWindows())
+                return null;
+
             using var windowsKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Microsoft SDKs\Windows", false);
             if (windowsKey == null)
                 return null;
