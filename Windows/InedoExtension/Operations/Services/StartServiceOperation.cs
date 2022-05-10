@@ -16,9 +16,9 @@ namespace Inedo.Extensions.Windows.Operations.Services
     [DefaultProperty(nameof(ServiceName))]
     [ScriptAlias("Start-Service")]
     [Tag(Tags.Services)]
-    [Example(@"# starts the HDARS service on the remote server
-Start-Service HDARS;")]
-    [ScriptNamespace(Namespaces.Windows, PreferUnqualified = true)]
+    [Example(@"# starts the FOOBAR service on the remote server
+Start-Service FOOBAR;")]
+    [ScriptNamespace(Namespaces.Windows)]
     public sealed class StartServiceOperation : ExecuteOperation
     {
         [Required]
@@ -28,11 +28,11 @@ Start-Service HDARS;")]
         [ScriptAlias("WaitForRunningStatus")]
         [DisplayName("Wait for running status")]
         [DefaultValue(true)]
-        public bool WaitForRunningStatus { get; set; } = true;
+        public bool WaitForRunningStatus { get; set; }
         [DefaultValue(false)]
         [ScriptAlias("FailIfServiceDoesNotExist")]
         [DisplayName("Fail if service does not exist")]
-        public bool FailIfServiceDoesNotExist { get; set; } = false;
+        public bool FailIfServiceDoesNotExist { get; set; }
 
         public override Task ExecuteAsync(IOperationExecutionContext context)
         {

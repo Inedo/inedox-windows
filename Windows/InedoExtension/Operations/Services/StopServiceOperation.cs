@@ -18,7 +18,7 @@ namespace Inedo.Extensions.Windows.Operations.Services
     [Tag(Tags.Services)]
     [Example(@"# stops the HDARS service on the remote server
 Stop-Service HDARS;")]
-    [ScriptNamespace(Namespaces.Windows, PreferUnqualified = true)]
+    [ScriptNamespace(Namespaces.Windows)]
     public sealed class StopServiceOperation : ExecuteOperation
     {
         [Required]
@@ -28,11 +28,11 @@ Stop-Service HDARS;")]
         [ScriptAlias("WaitForStoppedStatus")]
         [DisplayName("Wait for stopped status")]
         [DefaultValue(true)]
-        public bool WaitForStoppedStatus { get; set; } = true;
+        public bool WaitForStoppedStatus { get; set; }
         [DefaultValue(true)]
         [ScriptAlias("FailIfServiceDoesNotExist")]
         [DisplayName("Fail if service does not exist")]
-        public bool FailIfServiceDoesNotExist { get; set; } = true;
+        public bool FailIfServiceDoesNotExist { get; set; }
 
         public override Task ExecuteAsync(IOperationExecutionContext context)
         {
