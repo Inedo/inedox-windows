@@ -365,9 +365,6 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             if (value != null)
                 return true;
 
-            if (string.IsNullOrEmpty(template.CredentialName) && (templateProperty.Name == nameof(ProcessModel_UserName) || templateProperty.Name == nameof(ProcessModel_Password)))
-                return true;
-
             return false;
         }
 
