@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.Versioning;
 using System.ServiceProcess;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
 using Inedo.Extensibility.Credentials;
+using Inedo.Extensions.Credentials;
 using Inedo.Serialization;
 using Inedo.Web;
 using Inedo.WindowsServices;
-using UsernamePasswordCredentials = Inedo.Extensions.Credentials.UsernamePasswordCredentials;
 
 namespace Inedo.Extensions.Windows.Configurations.Services
 {
@@ -58,7 +55,7 @@ namespace Inedo.Extensions.Windows.Configurations.Services
         [Category("Log On")]
         [DisplayName("Credentials")]
         [ScriptAlias("Credentials")]
-        [Description("The Otter credential name to use as the service's Log On user. If a credential name is specified, the username and password fields will be ignored.")]
+        [Description("The credential name to use as the service's Log On user. If a credential name is specified, the username and password fields will be ignored.")]
         [Persistent]
         [SuggestableValue(typeof(SecureCredentialsSuggestionProvider<UsernamePasswordCredentials>))]
         [IgnoreConfigurationDrift]

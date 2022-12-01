@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Reflection;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
@@ -10,7 +9,6 @@ using Inedo.Extensions.Credentials;
 using Inedo.Serialization;
 using Inedo.Web;
 using Microsoft.Web.Administration;
-using UsernamePasswordCredentials = Inedo.Extensions.Credentials.UsernamePasswordCredentials;
 
 namespace Inedo.Extensions.Windows.Configurations.IIS
 {
@@ -56,8 +54,8 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         public AuthenticationLogonMethod? LogonMethod { get; set; }
 
         [Category("Impersonation")]
-        [DisplayName("Otter credentials")]
-        [Description("The Otter credential name to be impersonated when accessing the physical path for the application. If a credential name is specified, the username and password fields will be ignored.")]
+        [DisplayName("Credentials")]
+        [Description("The credential name to be impersonated when accessing the physical path for the application. If a credential name is specified, the username and password fields will be ignored.")]
         [ScriptAlias("Credentials")]
         [Persistent]
         [SuggestableValue(typeof(SecureCredentialsSuggestionProvider<UsernamePasswordCredentials>))]

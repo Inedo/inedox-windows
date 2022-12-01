@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Reflection;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Configurations;
 using Inedo.Extensibility.Credentials;
+using Inedo.Extensions.Credentials;
 using Inedo.Serialization;
 using Inedo.Web;
 using Microsoft.Web.Administration;
-using UsernamePasswordCredentials = Inedo.Extensions.Credentials.UsernamePasswordCredentials;
 
 namespace Inedo.Extensions.Windows.Configurations.IIS
 {
@@ -32,9 +29,10 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         public string Name { get; set; }
 
         [DisplayName(".NET CLR version")]
-        [Description("The .NET runtime version used by this application pool. Current valid values are \"v4.0\", \"v2.0\", or \"v1.1\".")]
+        [Description("The .NET runtime version used by this application pool. Current valid values are v4.0, v2.0, v1.1, or none.")]
         [ScriptAlias("Runtime")]
         [Persistent]
+        [SuggestableValue("v4.0", "v2.0", "v1.1", "none")]
         public string ManagedRuntimeVersion { get; set; }
 
         [DisplayName("Enable 32-bit applications")]
@@ -77,8 +75,8 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         public ProcessModelIdentityType? ProcessModel_IdentityType { get; set; }
 
         [Category("Identity")]
-        [DisplayName("Otter credentials")]
-        [Description("The Otter credential name to use for the application pool's identity. If a credential name is specified, the username and password fields will be ignored.")]
+        [DisplayName("Credentials")]
+        [Description("The credential name to use for the application pool's identity. If a credential name is specified, the username and password fields will be ignored.")]
         [ScriptAlias("Credentials")]
         [Persistent]
         [SuggestableValue(typeof(SecureCredentialsSuggestionProvider<UsernamePasswordCredentials>))]
@@ -332,9 +330,12 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             if (pool == null)
                 throw new ArgumentNullException(nameof(pool));
 
-            var config = new IisAppPoolConfiguration();
-            config.Name = pool.Name;
-            config.Status = (IisObjectState)pool.State;
+            var config = new IisAppPoolConfiguration
+            {
+                Name = pool.Name,
+                Status = (IisObjectState)pool.State
+            };
+
             if (template == null)
                 return config;
 
@@ -426,13 +427,8 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         {
             public MappedProperty(object instance, PropertyInfo prop)
             {
-                if (instance == null)
-                    throw new ArgumentNullException(nameof(instance));
-                if (prop == null)
-                    throw new ArgumentNullException(nameof(prop));
-
-                this.Instance = instance;
-                this.MwaAppPoolProperty = prop;
+                this.Instance = instance ?? throw new ArgumentNullException(nameof(instance));
+                this.MwaAppPoolProperty = prop ?? throw new ArgumentNullException(nameof(prop));
             }
 
             public object Instance { get; }
