@@ -247,3 +247,4 @@ ModelManifest.xml
 /Windows/Visual Studio 2015/settings/CurrentSettings.vssettings
 /Visual Studio 2015/Visualizers
 /Visual Studio 2017
+/.config/dotnet-tools.json
