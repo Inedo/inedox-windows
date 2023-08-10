@@ -53,6 +53,12 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         [Persistent]
         public bool? AutoStart { get; set; }
 
+        [DisplayName("Start mode")]
+        [Description("Configures application pool to run in On Demand Mode or Always Running Mode")]
+        [ScriptAlias("StartMode")]
+        [Persistent]
+        public StartMode? StartMode { get; set; }
+
         [DisplayName("Queue length")]
         [Description("Maximum number of requests that Http.sys queues for the application pool. When the queue is full, new requests receive a 503 \"Service Unavailable\" response")]
         [ScriptAlias("QueueLength")]
