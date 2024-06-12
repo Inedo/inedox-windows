@@ -1,6 +1,4 @@
-﻿using System;
-using System.ComponentModel;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
@@ -16,34 +14,33 @@ namespace Inedo.Extensions.Windows.Operations.Firewall
     [ScriptAlias("Ensure-NetFirewallRule")]
     [Tag(Tags.Firewall)]
     [ScriptNamespace(Namespaces.Firewall)]
-    [Example(@"
-# ensures that TCP ports 80 and 443 are allowed on ""Domain"" and Private profiles in Window's Firewall
-Firewall::Ensure-NetFirewallRule(
-    Name: OtterHttpTCP80443,
-    Profiles: ""Domain, Private"",
-    Port: ""80,443"",
-    Protocol: TCP,
-    Inbound: true,
-    Allow: true
-);
+    [Example("""
+        # ensures that TCP ports 80 and 443 are allowed on "Domain" and Private profiles in Window's Firewall
+        Firewall::Ensure-NetFirewallRule(
+            Name: OtterHttpTCP80443,
+            Profiles: "Domain, Private",
+            Port: "80,443",
+            Protocol: TCP,
+            Inbound: true,
+            Allow: true
+        );
 
+        # ensures that UDP ports 5000 through 5004 and 5008 are allowed on the "Domain" profile Window's Firewall
+        Firewall::Ensure-NetFirewallRule(
+            Name: OtterHttpUdpTest,
+            Profiles: "Domain",
+            Port: "5000-5004,5008",
+            Protocol: UDP,
+            Inbound: true,
+            Allow: true
+        );
 
-# ensures that UDP ports 5000 through 5004 and 5008 are allowed on the ""Domain"" profile Window's Firewall
-Firewall::Ensure-NetFirewallRule(
-    Name: OtterHttpUdpTest,
-    Profiles: ""Domain"",
-    Port: ""5000-5004,5008"",
-    Protocol: UDP,
-    Inbound: true,
-    Allow: true
-);
-
-# ensures that the ""OtterHttpTCP80443"" Window's Firewall rule is removed
-IIS::Ensure-Site(
-    Name: OtterHttpTCP80443,
-    Exists: false
-);
-")]
+        # ensures that the "OtterHttpTCP80443" Window's Firewall rule is removed
+        IIS::Ensure-Site(
+            Name: OtterHttpTCP80443,
+            Exists: false
+        );
+        """)]
     public sealed class EnsureNetFirewallRuleOperation : RemoteEnsureOperation<NetFirewallRuleConfiguration>
     {
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
@@ -92,7 +89,7 @@ IIS::Ensure-Site(
                 if (!rule.Exists)
                 {
                     this.LogWarning("Firewall rule does not exist.");
-                    return InedoLib.NullTask;
+                    return Task.CompletedTask;
                 }
                 else
                 {
@@ -121,7 +118,7 @@ IIS::Ensure-Site(
                 }
             }
 
-            return InedoLib.NullTask;
+            return Task.CompletedTask;
         }
     }
 }

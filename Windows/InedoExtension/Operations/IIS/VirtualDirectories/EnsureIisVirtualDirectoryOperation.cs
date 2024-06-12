@@ -1,7 +1,4 @@
-﻿using System;
-using System.ComponentModel;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
@@ -22,14 +19,14 @@ namespace Inedo.Extensions.Windows.Operations.IIS.VirtualDirectories
     [SeeAlso(typeof(Applications.EnsureIisApplicationOperation))]
     [Tag(Tags.IIS)]
     [Tag(Tags.Sites)]
-    [Example(@"
-# ensures that the hdars virtual directory pool is present on the web server
-IIS::Ensure-VirtualDirectory(
-    Site: Hdars,
-    Path: /hdars,
-    PhysicalPath: C:\hdars
-);
-")]
+    [Example("""
+        # ensures that the hdars virtual directory pool is present on the web server
+        IIS::Ensure-VirtualDirectory(
+            Site: Hdars,
+            Path: /hdars,
+            PhysicalPath: C:\hdars
+        );
+        """)]
     public sealed class EnsureIisVirtualDirectoryOperation : EnsureOperation<IisVirtualDirectoryConfiguration>
     {
         public override Task<PersistedConfiguration> CollectAsync(IOperationCollectionContext context)
@@ -82,7 +79,7 @@ IIS::Ensure-VirtualDirectory(
             public override Task ConfigureAsync(CancellationToken cancellationToken)
             {
                 this.Configure();
-                return InedoLib.NullTask;
+                return Task.CompletedTask;
             }
 
             private IisVirtualDirectoryConfiguration Collect()

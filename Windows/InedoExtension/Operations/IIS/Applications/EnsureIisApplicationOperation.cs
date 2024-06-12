@@ -1,7 +1,4 @@
-﻿using System;
-using System.ComponentModel;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
@@ -22,14 +19,14 @@ namespace Inedo.Extensions.Windows.Operations.IIS.Applications
     [SeeAlso(typeof(VirtualDirectories.EnsureIisVirtualDirectoryOperation))]
     [Tag(Tags.IIS)]
     [Tag(Tags.Sites)]
-    [Example(@"
-# ensures that the hdars application is present on the web server
-IIS::Ensure-Application(
-    Site: Hdars,
-    Path: /hdars,
-    PhysicalPath: C:\hdars
-);
-")]
+    [Example("""
+        # ensures that the hdars application is present on the web server
+        IIS::Ensure-Application(
+            Site: Hdars,
+            Path: /hdars,
+            PhysicalPath: C:\hdars
+        );
+        """)]
     public sealed class EnsureIisApplicationOperation : EnsureOperation<IisApplicationConfiguration>
     {
         public override Task<PersistedConfiguration> CollectAsync(IOperationCollectionContext context) 
@@ -67,7 +64,7 @@ IIS::Ensure-Application(
             public override Task ConfigureAsync(CancellationToken cancellationToken)
             {
                 this.Configure();
-                return InedoLib.NullTask;
+                return Task.CompletedTask;
             }
 
             private IisApplicationConfiguration Collect()
