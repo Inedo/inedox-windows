@@ -164,26 +164,26 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
         {
             var config = new IisSiteBindingConfiguration();
 
-            if (map.ContainsKey("IPAddress"))
-                config.Address = map["IPAddress"].AsString();
+            if (map.TryGetValue("IPAddress", out var value))
+                config.Address = value.AsString();
 
-            if (map.ContainsKey("Port"))
-                config.Port = map["Port"].AsInt32() ?? config.Port;
+            if (map.TryGetValue("Port", out var value1))
+                config.Port = value1.AsInt32() ?? config.Port;
 
-            if (map.ContainsKey("HostName"))
-                config.HostName = map["HostName"].AsString();
+            if (map.TryGetValue("HostName", out var value2))
+                config.HostName = value2.AsString();
 
-            if (map.ContainsKey("CertificateStoreName"))
-                config.SslCertificateStore = map["CertificateStoreName"].AsString();
-            if (map.ContainsKey("Protocol"))
-                config.Protocol = map["Protocol"].AsString();
+            if (map.TryGetValue("CertificateStoreName", out var value3))
+                config.SslCertificateStore = value3.AsString();
+            if (map.TryGetValue("Protocol", out var value4))
+                config.Protocol = value4.AsString();
 
-            if (map.ContainsKey("CertificateHash"))
-                config.SslCertificateHash = map["CertificateHash"].AsString();
-            if (map.ContainsKey("ServerNameIndication"))
-                config.RequireServerNameIndication = map["ServerNameIndication"].AsBoolean() ?? config.RequireServerNameIndication;
-            if (map.ContainsKey("UseCentralizedStore"))
-                config.SslStoreLocation = map["UseCentralizedStore"].AsBoolean() == true ? StoreLocation.LocalMachine : StoreLocation.CurrentUser;
+            if (map.TryGetValue("CertificateHash", out var value5))
+                config.SslCertificateHash = value5.AsString();
+            if (map.TryGetValue("ServerNameIndication", out var value6))
+                config.RequireServerNameIndication = value6.AsBoolean() ?? config.RequireServerNameIndication;
+            if (map.TryGetValue("UseCentralizedStore", out var value7))
+                config.SslStoreLocation = value7.AsBoolean() == true ? StoreLocation.LocalMachine : StoreLocation.CurrentUser;
 
             return config;
         }
@@ -195,14 +195,14 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
             };
             
             var sslFlags = binding.GetSslFlagsSafe();
-            var info = binding.ParseBindingInformation();
+            var (ipAddress, port, hostName) = binding.ParseBindingInformation();
 
             if (template?.Address != null)
-                config.Address = info.ipAddress;
+                config.Address = ipAddress;
             if (template?.HostName != null)
-                config.HostName = info.hostName;
+                config.HostName = hostName;
             if (template?.Port != null)
-                config.Port = AH.ParseInt(info.port) ?? config.Port;
+                config.Port = AH.ParseInt(port) ?? config.Port;
             if (template?.Protocol != null)
                 config.Protocol = binding.Protocol;
             if (template?.RequireServerNameIndication != null)
@@ -279,7 +279,7 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
                 hash.Add((byte)n);
             }
 
-            return hash.ToArray();
+            return [.. hash];
 
             static int parseNibble(char c)
             {
@@ -297,6 +297,8 @@ namespace Inedo.Extensions.Windows.Configurations.IIS
 
     internal sealed class ProtocolProvider : ISuggestionProvider
     {
-        public Task<IEnumerable<string>> GetSuggestionsAsync(IComponentConfiguration config) => Task.FromResult<IEnumerable<string>>(new[] { "http", "https" });
+        private static readonly string[] protocols = ["http", "https"];
+
+        public IAsyncEnumerable<string> GetSuggestionsAsync(IComponentConfiguration config, CancellationToken cancellationToken) => protocols.ToAsyncEnumerable();
     }
 }
